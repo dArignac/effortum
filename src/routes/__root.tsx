@@ -9,6 +9,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { TasksProvider } from "../contexts/TasksContext";
 
 const theme = createTheme({
   /** Put your mantine theme override here */
@@ -48,7 +49,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       </head>
       <body>
         <MantineProvider theme={theme}>
-          {children}
+          <TasksProvider>{children}</TasksProvider>
           <Scripts />
         </MantineProvider>
       </body>
