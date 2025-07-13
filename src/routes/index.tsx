@@ -1,5 +1,7 @@
 // src/routes/index.tsx
+import { Grid } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
+import { Summary } from "../components/summary";
 import { TimeList } from "../components/timelist";
 
 export const Route = createFileRoute("/")({
@@ -7,12 +9,14 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  //   const router = useRouter();
-  //   const state = Route.useLoaderData();
-
   return (
-    <>
-      <TimeList />
-    </>
+    <Grid>
+      <Grid.Col span={8}>
+        <TimeList />
+      </Grid.Col>
+      <Grid.Col span={4}>
+        <Summary />
+      </Grid.Col>
+    </Grid>
   );
 }
