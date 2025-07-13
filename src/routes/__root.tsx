@@ -1,12 +1,18 @@
 // src/routes/__root.tsx
 /// <reference types="vite/client" />
-import type { ReactNode } from "react";
+import { createTheme, MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
 import {
-  Outlet,
   createRootRoute,
   HeadContent,
+  Outlet,
   Scripts,
 } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+
+const theme = createTheme({
+  /** Put your mantine theme override here */
+});
 
 export const Route = createRootRoute({
   head: () => ({
@@ -41,8 +47,10 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <HeadContent />
       </head>
       <body>
-        {children}
-        <Scripts />
+        <MantineProvider theme={theme}>
+          {children}
+          <Scripts />
+        </MantineProvider>
       </body>
     </html>
   );
