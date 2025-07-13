@@ -1,9 +1,13 @@
-import { Autocomplete, Table, TextInput } from "@mantine/core";
+import { Autocomplete, Button, Table, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
+import { useState } from "react";
+import { DatePickerInput } from "@mantine/dates";
+import dayjs from "dayjs";
 
 interface FormValues {
+  date: string;
   project: string;
   comment?: string;
 }
@@ -12,8 +16,11 @@ export function AddEntry() {
   const { setTasks } = useTasksContext();
   const { projects, setProjects } = useProjectsContext();
 
+  const [dateValue, setDateValue] = useState<string | null>(null);
+
   const form = useForm<FormValues>({
     initialValues: {
+      date: dayjs().format("YYYY-MM-DD"),
       project: "",
       comment: "",
     },
@@ -31,7 +38,7 @@ export function AddEntry() {
       ...prevTasks,
       {
         id: crypto.randomUUID(),
-        date: "2023-10-01",
+        date: dateValue || dayjs().format("YYYY-MM-DD"),
         timeStart: "08:00",
         timeEnd: "09:00",
         project: values.project,
@@ -48,7 +55,25 @@ export function AddEntry() {
         <Table.Tbody>
           <Table.Tr bd={"0px"}>
             <Table.Td>
-              <input type="date" />
+              <DatePickerInput
+                {...form.getInputProps("date")}
+                label="Date"
+                placeholder="Pick date"
+                value={dateValue}
+                onChange={setDateValue}
+                valueFormat="YYYY-MM-DD"
+                presets={[
+                  {
+                    value: dayjs().subtract(1, "day").format("YYYY-MM-DD"),
+                    label: "Yesterday",
+                  },
+                  { value: dayjs().format("YYYY-MM-DD"), label: "Today" },
+                  {
+                    value: dayjs().add(1, "day").format("YYYY-MM-DD"),
+                    label: "Tomorrow",
+                  },
+                ]}
+              />
             </Table.Td>
             <Table.Td>
               <input type="time" />
@@ -71,7 +96,9 @@ export function AddEntry() {
               />
             </Table.Td>
             <Table.Td>
-              <button type="submit">Add</button>
+              <Button variant="filled" type="submit" mt={20}>
+                Add
+              </Button>
             </Table.Td>
           </Table.Tr>
         </Table.Tbody>

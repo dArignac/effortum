@@ -1,4 +1,3 @@
-// src/routes/index.tsx
 import { Grid } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 import { AddEntry } from "../components/add-entry";

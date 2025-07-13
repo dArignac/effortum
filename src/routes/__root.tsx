@@ -1,7 +1,9 @@
 // src/routes/__root.tsx
 /// <reference types="vite/client" />
-import { createTheme, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
+
+import { createTheme, MantineProvider } from "@mantine/core";
 import {
   createRootRoute,
   HeadContent,
