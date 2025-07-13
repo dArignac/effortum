@@ -1,7 +1,9 @@
 import { Table } from "@mantine/core";
-import { AddEntry } from "./add-entry";
+import { useTasksContext } from "../contexts/TasksContext";
 
 export function TimeList() {
+  const { tasks } = useTasksContext();
+
   return (
     <Table>
       <Table.Thead>
@@ -15,7 +17,18 @@ export function TimeList() {
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
-        <AddEntry />
+        {tasks.map((task) => (
+          <Table.Tr key={task.id}>
+            <Table.Td>{task.date}</Table.Td>
+            <Table.Td>{task.timeStart}</Table.Td>
+            <Table.Td>{task.timeEnd}</Table.Td>
+            <Table.Td>{task.project}</Table.Td>
+            <Table.Td>{task.comment}</Table.Td>
+            <Table.Td>
+              {/* Actions like edit or delete can be added here */}
+            </Table.Td>
+          </Table.Tr>
+        ))}
       </Table.Tbody>
     </Table>
   );
