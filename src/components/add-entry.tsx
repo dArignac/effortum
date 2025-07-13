@@ -1,13 +1,15 @@
 import { Autocomplete, Button, Table, TextInput } from "@mantine/core";
+import { DatePickerInput, TimeInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
+import dayjs from "dayjs";
+import { useState } from "react";
 import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
-import { useState } from "react";
-import { DatePickerInput } from "@mantine/dates";
-import dayjs from "dayjs";
 
 interface FormValues {
   date: string;
+  start: string;
+  end: string;
   project: string;
   comment?: string;
 }
@@ -20,11 +22,25 @@ export function AddEntry() {
 
   const form = useForm<FormValues>({
     initialValues: {
-      date: dayjs().format("YYYY-MM-DD"),
+      date: "",
+      start: "",
+      end: "",
       project: "",
       comment: "",
     },
     validate: {
+      date: () => (dateValue ? null : "Date is required"),
+      start: (value) => (value ? null : "Start time is required"),
+      end: (value, values) => {
+        if (value) {
+          return dayjs(`${dayjs().format("YYYY-MM-DD")} ${value}`).isBefore(
+            dayjs(`${dayjs().format("YYYY-MM-DD")} ${values.start}`),
+          )
+            ? "End time must be after start time"
+            : null;
+        }
+        return null;
+      },
       project: (value) => (value ? null : "Project is required"),
     },
   });
@@ -39,8 +55,8 @@ export function AddEntry() {
       {
         id: crypto.randomUUID(),
         date: dateValue || dayjs().format("YYYY-MM-DD"),
-        timeStart: "08:00",
-        timeEnd: "09:00",
+        timeStart: values.start,
+        timeEnd: values.end || "",
         project: values.project,
         comment: values.comment || "",
       },
@@ -57,6 +73,7 @@ export function AddEntry() {
             <Table.Td>
               <DatePickerInput
                 {...form.getInputProps("date")}
+                defaultDate={dayjs().format("YYYY-MM-DD")}
                 label="Date"
                 placeholder="Pick date"
                 value={dateValue}
@@ -73,13 +90,14 @@ export function AddEntry() {
                     label: "Tomorrow",
                   },
                 ]}
+                w={100}
               />
             </Table.Td>
             <Table.Td>
-              <input type="time" />
+              <TimeInput {...form.getInputProps("start")} label="Start" />
             </Table.Td>
             <Table.Td>
-              <input type="time" />
+              <TimeInput {...form.getInputProps("end")} label="End" />
             </Table.Td>
             <Table.Td>
               <Autocomplete
