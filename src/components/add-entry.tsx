@@ -1,15 +1,32 @@
-import { Table, TextInput } from "@mantine/core";
-import { useField } from "@mantine/form";
+import { Autocomplete, Table, TextInput } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
 
-export function AddEntry() {
-  const { tasks, setTasks } = useTasksContext();
+interface FormValues {
+  project: string;
+  comment?: string;
+}
 
-  const fieldComment = useField({
-    initialValue: "",
+export function AddEntry() {
+  const { setTasks } = useTasksContext();
+  const { projects, setProjects } = useProjectsContext();
+
+  const form = useForm<FormValues>({
+    initialValues: {
+      project: "",
+      comment: "",
+    },
+    validate: {
+      project: (value) => (value ? null : "Project is required"),
+    },
   });
 
-  const addEntry = () => {
+  const addEntry = (values: FormValues) => {
+    if (values.project && !projects.includes(values.project)) {
+      setProjects((prevProjects) => [...prevProjects, values.project]);
+    }
+
     setTasks((prevTasks) => [
       ...prevTasks,
       {
@@ -17,36 +34,48 @@ export function AddEntry() {
         date: "2023-10-01",
         timeStart: "08:00",
         timeEnd: "09:00",
-        project: "New Project",
-        comment: fieldComment.getValue(),
+        project: values.project,
+        comment: values.comment || "",
       },
     ]);
+
+    form.reset();
   };
 
   return (
-    <Table.Tr>
-      <Table.Td>
-        <input type="date" />
-      </Table.Td>
-      <Table.Td>
-        <input type="time" />
-      </Table.Td>
-      <Table.Td>
-        <input type="time" />
-      </Table.Td>
-      <Table.Td>
-        <input type="text" placeholder="Project Name" />
-      </Table.Td>
-      <Table.Td>
-        <TextInput
-          {...fieldComment.getInputProps()}
-          label="Comment"
-          placeholder="Enter a comment"
-        />
-      </Table.Td>
-      <Table.Td>
-        <button onClick={addEntry}>Add</button>
-      </Table.Td>
-    </Table.Tr>
+    <form onSubmit={form.onSubmit((values) => addEntry(values))}>
+      <Table>
+        <Table.Tbody>
+          <Table.Tr bd={"0px"}>
+            <Table.Td>
+              <input type="date" />
+            </Table.Td>
+            <Table.Td>
+              <input type="time" />
+            </Table.Td>
+            <Table.Td>
+              <input type="time" />
+            </Table.Td>
+            <Table.Td>
+              <Autocomplete
+                {...form.getInputProps("project")}
+                label="Project"
+                data={projects}
+              />
+            </Table.Td>
+            <Table.Td>
+              <TextInput
+                {...form.getInputProps("comment")}
+                label="Comment"
+                placeholder="Enter a comment"
+              />
+            </Table.Td>
+            <Table.Td>
+              <button type="submit">Add</button>
+            </Table.Td>
+          </Table.Tr>
+        </Table.Tbody>
+      </Table>
+    </form>
   );
 }

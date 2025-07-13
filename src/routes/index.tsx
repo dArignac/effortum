@@ -1,6 +1,7 @@
 // src/routes/index.tsx
 import { Grid } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
+import { AddEntry } from "../components/add-entry";
 import { Summary } from "../components/summary";
 import { TimeList } from "../components/timelist";
 
@@ -14,6 +15,7 @@ function Home() {
     <Grid>
       <Grid.Col span={8}>
         <TimeList />
+        <AddEntry />
       </Grid.Col>
       <Grid.Col span={4}>
         <Summary />

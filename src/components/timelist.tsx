@@ -1,6 +1,5 @@
 import { Table } from "@mantine/core";
 import { useTasksContext } from "../contexts/TasksContext";
-import { AddEntry } from "./add-entry";
 
 export function TimeList() {
   const { tasks } = useTasksContext();
@@ -30,7 +29,6 @@ export function TimeList() {
             </Table.Td>
           </Table.Tr>
         ))}
-        <AddEntry />
       </Table.Tbody>
     </Table>
   );
