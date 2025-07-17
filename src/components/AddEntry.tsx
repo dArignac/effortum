@@ -94,7 +94,7 @@ export function AddEntry() {
                     label: "Tomorrow",
                   },
                 ]}
-                w={100}
+                w={120}
               />
             </Table.Td>
             <Table.Td>
