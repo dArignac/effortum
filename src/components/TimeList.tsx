@@ -1,5 +1,6 @@
 import { Table } from "@mantine/core";
 import { useTasksContext } from "../contexts/TasksContext";
+import { StopEntry } from "./StopEntry";
 
 export function TimeList() {
   const { tasks } = useTasksContext();
@@ -25,7 +26,7 @@ export function TimeList() {
             <Table.Td>{task.project}</Table.Td>
             <Table.Td>{task.comment}</Table.Td>
             <Table.Td>
-              {/* Actions like edit or delete can be added here */}
+              <StopEntry taskId={task.id} />
             </Table.Td>
           </Table.Tr>
         ))}
