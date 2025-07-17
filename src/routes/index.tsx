@@ -1,8 +1,8 @@
 import { Grid } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
-import { AddEntry } from "../components/add-entry";
-import { Summary } from "../components/summary";
-import { TimeList } from "../components/timelist";
+import { AddEntry } from "../components/AddEntry";
+import { Summary } from "../components/Summary";
+import { TaskList } from "../components/TaskList";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -13,7 +13,7 @@ function Home() {
   return (
     <Grid>
       <Grid.Col span={8}>
-        <TimeList />
+        <TaskList />
         <AddEntry />
       </Grid.Col>
       <Grid.Col span={4}>

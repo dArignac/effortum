@@ -15,9 +15,8 @@ interface FormValues {
 }
 
 export function AddEntry() {
-  const { setTasks } = useTasksContext();
+  const { tasks, setTasks } = useTasksContext();
   const { projects, setProjects } = useProjectsContext();
-
   const [dateValue, setDateValue] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -65,6 +64,11 @@ export function AddEntry() {
     form.reset();
   };
 
+  const cannotAddEntry = tasks.some(
+    (task) => !task.timeEnd || task.timeEnd.length === 0,
+  );
+  if (cannotAddEntry) return null;
+
   return (
     <form onSubmit={form.onSubmit((values) => addEntry(values))}>
       <Table>
@@ -90,7 +94,7 @@ export function AddEntry() {
                     label: "Tomorrow",
                   },
                 ]}
-                w={100}
+                w={120}
               />
             </Table.Td>
             <Table.Td>
