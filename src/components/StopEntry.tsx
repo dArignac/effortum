@@ -13,10 +13,11 @@ export function StopEntry(props: { taskId: string }) {
   }
 
   const handleClick = () => {
-    const updatedTasks = tasks.map((t) =>
-      t.id === props.taskId ? { ...t, timeEnd: dayjs().format("HH:mm") } : t,
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === props.taskId ? { ...t, timeEnd: dayjs().format("HH:mm") } : t,
+      ),
     );
-    setTasks(updatedTasks);
   };
 
   return (

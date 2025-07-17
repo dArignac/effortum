@@ -1,10 +1,10 @@
-import { ActionIcon, Table, TextInput } from "@mantine/core";
+import { ActionIcon, Table } from "@mantine/core";
+import { TimeInput } from "@mantine/dates";
+import { useField } from "@mantine/form";
+import { IconPencilCheck } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { useTasksContext } from "../contexts/TasksContext";
 import { StopEntry } from "./StopEntry";
-import { IconPencilCheck } from "@tabler/icons-react";
-import { useField } from "@mantine/form";
-import { TimeInput } from "@mantine/dates";
-import dayjs from "dayjs";
 
 export function TaskListRow(props: { taskId: string }) {
   const { tasks } = useTasksContext();
@@ -49,11 +49,11 @@ export function TaskListRow(props: { taskId: string }) {
       <Table.Td>{task.project}</Table.Td>
       <Table.Td>{task.comment}</Table.Td>
       <Table.Td>
-        {/* FIXME maybe move the stop entry code here as well */}
-        <StopEntry taskId={task.id} />
         <ActionIcon variant="default" size="sm" aria-label="Update Task">
           <IconPencilCheck />
-        </ActionIcon>
+        </ActionIcon>{" "}
+        {/* FIXME maybe move the stop entry code here as well, also it does not re-render currently */}
+        <StopEntry taskId={task.id} />
       </Table.Td>
     </Table.Tr>
   );
