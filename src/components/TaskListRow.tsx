@@ -88,13 +88,14 @@ export function TaskListRow(props: { taskId: string | null }) {
     notifications.show({ message: "Task updated successfully!" });
   };
 
-  // FIXME does not rerender
   const stopTask = () => {
+    const endTime = dayjs().format("HH:mm");
     setTasks((prevTasks) =>
       prevTasks.map((t) =>
-        t.id === props.taskId ? { ...t, timeEnd: dayjs().format("HH:mm") } : t,
+        t.id === props.taskId ? { ...t, timeEnd: endTime } : t,
       ),
     );
+    fieldEnd.setValue(endTime);
   };
 
   // FIXME only enable the edit button if values have changed
