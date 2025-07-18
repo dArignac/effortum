@@ -59,10 +59,24 @@ export function TaskListRow(props: { taskId: string | null }) {
 
   const fieldComment = useField({
     initialValue: task.comment,
-    validate: (value) => (value ? null : "Comment is required"),
   });
 
-  const updateEntry = () => {
+  const updateEntry = async () => {
+    // Validate all fields
+    const dateError = await fieldDate.validate();
+    const startError = await fieldStart.validate();
+    const endError = await fieldEnd.validate();
+    const projectError = await fieldProject.validate();
+    const commentError = await fieldComment.validate();
+
+    if (dateError || startError || endError || projectError || commentError) {
+      notifications.show({
+        message: "Please fix validation errors before updating the task.",
+        color: "red",
+      });
+      return;
+    }
+
     if (
       fieldProject.getValue() &&
       !projects.includes(fieldProject.getValue())
