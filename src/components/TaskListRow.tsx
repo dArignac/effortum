@@ -1,20 +1,38 @@
-import { ActionIcon, Table } from "@mantine/core";
-import { TimeInput } from "@mantine/dates";
+import { ActionIcon, Autocomplete, Table, TextInput } from "@mantine/core";
+import { DatePickerInput, TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
-import { IconPencilCheck } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
-import { StopEntry } from "./StopEntry";
 
-export function TaskListRow(props: { taskId: string }) {
-  const { tasks } = useTasksContext();
+export function TaskListRow(props: { taskId: string | null }) {
+  const { tasks, setTasks } = useTasksContext();
+  const { projects, setProjects } = useProjectsContext();
+  const [dateValue, setDateValue] = useState<string | null>(null);
+  const [canStopTask, setCanStopTask] = useState(false);
 
   const task = tasks.find((task) => task.id === props.taskId);
   if (!task) {
-    return null; // No action needed if task is not found
+    return null;
   }
 
+  useEffect(() => {
+    setDateValue(task.date);
+  }, [task.date]);
+
+  useEffect(() => {
+    setCanStopTask(!task.timeEnd || task.timeEnd.length === 0);
+  }, [task.timeEnd]);
+
   // FYI cant use form due to table
+  const fieldDate = useField({
+    initialValue: task.date,
+    validate: (value) => (value ? null : "Date is required"),
+  });
+
   const fieldStart = useField({
     initialValue: task.timeStart,
     validate: (value) => (value ? null : "Start time is required"),
@@ -34,26 +52,132 @@ export function TaskListRow(props: { taskId: string }) {
     },
   });
 
-  // FIXME all columns editable
-  // FIXME centralize validation - is alreay in AddEntry -> maybe we can get rid of AddEntry and have it handled in this component
+  const fieldProject = useField({
+    initialValue: task.project,
+    validate: (value) => (value ? null : "Project is required"),
+  });
+
+  const fieldComment = useField({
+    initialValue: task.comment,
+  });
+
+  const updateEntry = async () => {
+    // Validate all fields
+    const dateError = await fieldDate.validate();
+    const startError = await fieldStart.validate();
+    const endError = await fieldEnd.validate();
+    const projectError = await fieldProject.validate();
+    const commentError = await fieldComment.validate();
+
+    if (dateError || startError || endError || projectError || commentError) {
+      notifications.show({
+        message: "Please fix validation errors before updating the task.",
+        color: "red",
+      });
+      return;
+    }
+
+    if (
+      fieldProject.getValue() &&
+      !projects.includes(fieldProject.getValue())
+    ) {
+      setProjects((prevProjects) => [...prevProjects, fieldProject.getValue()]);
+    }
+
+    setTasks((prevTasks) =>
+      prevTasks.map((t) =>
+        t.id === task.id
+          ? {
+              ...t,
+              date: dateValue || dayjs().format("YYYY-MM-DD"),
+              timeStart: fieldStart.getValue(),
+              timeEnd: fieldEnd.getValue() || "",
+              project: fieldProject.getValue(),
+              comment: fieldComment.getValue() || "",
+            }
+          : t,
+      ),
+    );
+
+    notifications.show({ message: "Task updated successfully!" });
+  };
+
+  const stopTask = () => {
+    const endTime = dayjs().format("HH:mm");
+    setTasks((prevTasks) =>
+      prevTasks.map((t) =>
+        t.id === props.taskId ? { ...t, timeEnd: endTime } : t,
+      ),
+    );
+    fieldEnd.setValue(endTime);
+  };
+
+  // FIXME only enable the edit button if values have changed
 
   return (
     <Table.Tr key={task.id}>
-      <Table.Td>{task.date}</Table.Td>
+      <Table.Td>
+        <DatePickerInput
+          {...fieldDate.getInputProps()}
+          defaultDate={dayjs().format("YYYY-MM-DD")}
+          placeholder="Pick date"
+          value={dateValue}
+          onChange={setDateValue}
+          valueFormat="YYYY-MM-DD"
+          presets={[
+            {
+              value: dayjs().subtract(1, "day").format("YYYY-MM-DD"),
+              label: "Yesterday",
+            },
+            { value: dayjs().format("YYYY-MM-DD"), label: "Today" },
+            {
+              value: dayjs().add(1, "day").format("YYYY-MM-DD"),
+              label: "Tomorrow",
+            },
+          ]}
+          size="xs"
+        />
+      </Table.Td>
       <Table.Td>
         <TimeInput size="xs" {...fieldStart.getInputProps()} />
       </Table.Td>
       <Table.Td>
         <TimeInput size="xs" {...fieldEnd.getInputProps()} />
       </Table.Td>
-      <Table.Td>{task.project}</Table.Td>
-      <Table.Td>{task.comment}</Table.Td>
       <Table.Td>
-        <ActionIcon variant="default" size="sm" aria-label="Update Task">
+        <Autocomplete
+          {...fieldProject.getInputProps()}
+          data={projects}
+          size="xs"
+        />
+      </Table.Td>
+      <Table.Td>
+        <TextInput
+          {...fieldComment.getInputProps()}
+          placeholder="Enter a comment"
+          size="xs"
+        />
+      </Table.Td>
+      <Table.Td>
+        <ActionIcon
+          variant="default"
+          size="md"
+          aria-label="Update Task"
+          mt={1}
+          onClick={updateEntry}
+        >
           <IconPencilCheck />
         </ActionIcon>{" "}
-        {/* FIXME maybe move the stop entry code here as well, also it does not re-render currently */}
-        <StopEntry taskId={task.id} />
+        {canStopTask && (
+          <ActionIcon
+            variant="light"
+            size="md"
+            aria-label="Stop Task"
+            onClick={stopTask}
+          >
+            <IconClockPause />
+          </ActionIcon>
+        )}
       </Table.Td>
     </Table.Tr>
   );
