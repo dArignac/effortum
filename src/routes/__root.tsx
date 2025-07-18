@@ -2,8 +2,10 @@
 /// <reference types="vite/client" />
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
+import "@mantine/notifications/styles.css";
 
 import { createTheme, MantineProvider } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
 import {
   createRootRoute,
   HeadContent,
@@ -11,8 +13,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { TasksProvider } from "../contexts/TasksContext";
 import { ProjectsProvider } from "../contexts/ProjectsContext";
+import { TasksProvider } from "../contexts/TasksContext";
 
 const theme = createTheme({
   /** Put your mantine theme override here */
@@ -55,6 +57,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
           <TasksProvider>
             <ProjectsProvider>{children}</ProjectsProvider>
           </TasksProvider>
+          <Notifications />
           <Scripts />
         </MantineProvider>
       </body>

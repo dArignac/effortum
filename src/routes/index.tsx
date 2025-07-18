@@ -11,10 +11,10 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   return (
-    <Grid>
+    <Grid overflow="hidden">
       <Grid.Col span={8}>
         <TaskList />
-        <AddEntry />
+        {/* <AddEntry /> */}
       </Grid.Col>
       <Grid.Col span={4}>
         <Summary />

@@ -1,6 +1,7 @@
 import { ActionIcon, Autocomplete, Table, TextInput } from "@mantine/core";
 import { DatePickerInput, TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
 import { IconPencilCheck } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
@@ -8,7 +9,7 @@ import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
 import { StopEntry } from "./StopEntry";
 
-export function TaskListRow(props: { taskId: string }) {
+export function TaskListRow(props: { taskId: string | null }) {
   const { tasks, setTasks } = useTasksContext();
   const { projects, setProjects } = useProjectsContext();
   const [dateValue, setDateValue] = useState<string | null>(null);
@@ -80,7 +81,7 @@ export function TaskListRow(props: { taskId: string }) {
       ),
     );
 
-    // FIXME some snackbar would be nice
+    notifications.show({ message: "Task updated successfully!" });
   };
 
   return (
@@ -105,7 +106,6 @@ export function TaskListRow(props: { taskId: string }) {
             },
           ]}
           size="xs"
-          w={120}
         />
       </Table.Td>
       <Table.Td>
