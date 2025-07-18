@@ -24,7 +24,7 @@ export function TaskListRow(props: { taskId: string | null }) {
   }, [task.date]);
 
   useEffect(() => {
-    setCanStopTask(!task.timeEnd || task.timeEnd.length == 0);
+    setCanStopTask(!task.timeEnd || task.timeEnd.length === 0);
   }, [task.timeEnd]);
 
   // FYI cant use form due to table
