@@ -2,17 +2,17 @@ import { ActionIcon, Autocomplete, Table, TextInput } from "@mantine/core";
 import { DatePickerInput, TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconPencilCheck } from "@tabler/icons-react";
+import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
-import { StopEntry } from "./StopEntry";
 
 export function TaskListRow(props: { taskId: string | null }) {
   const { tasks, setTasks } = useTasksContext();
   const { projects, setProjects } = useProjectsContext();
   const [dateValue, setDateValue] = useState<string | null>(null);
+  const [canStopTask, setCanStopTask] = useState(false);
 
   const task = tasks.find((task) => task.id === props.taskId);
   if (!task) {
@@ -22,6 +22,10 @@ export function TaskListRow(props: { taskId: string | null }) {
   useEffect(() => {
     setDateValue(task.date);
   }, [task.date]);
+
+  useEffect(() => {
+    setCanStopTask(!task.timeEnd || task.timeEnd.length == 0);
+  }, [task.timeEnd]);
 
   // FYI cant use form due to table
   const fieldDate = useField({
@@ -84,6 +88,17 @@ export function TaskListRow(props: { taskId: string | null }) {
     notifications.show({ message: "Task updated successfully!" });
   };
 
+  // FIXME does not rerender
+  const stopTask = () => {
+    setTasks((prevTasks) =>
+      prevTasks.map((t) =>
+        t.id === props.taskId ? { ...t, timeEnd: dayjs().format("HH:mm") } : t,
+      ),
+    );
+  };
+
+  // FIXME only enable the edit button if values have changed
+
   return (
     <Table.Tr key={task.id}>
       <Table.Td>
@@ -138,8 +153,16 @@ export function TaskListRow(props: { taskId: string | null }) {
         >
           <IconPencilCheck />
         </ActionIcon>{" "}
-        {/* FIXME maybe move the stop entry code here as well, also it does not re-render currently */}
-        <StopEntry taskId={task.id} />
+        {canStopTask && (
+          <ActionIcon
+            variant="light"
+            size="md"
+            aria-label="Stop Task"
+            onClick={stopTask}
+          >
+            <IconClockPause />
+          </ActionIcon>
+        )}
       </Table.Td>
     </Table.Tr>
   );
