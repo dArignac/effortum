@@ -64,6 +64,7 @@ export function AddEntry() {
     form.reset();
   };
 
+  // FIXME handle in TaskListRow
   const cannotAddEntry = tasks.some(
     (task) => !task.timeEnd || task.timeEnd.length === 0,
   );
