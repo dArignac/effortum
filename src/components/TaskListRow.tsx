@@ -1,5 +1,5 @@
 import { ActionIcon, Autocomplete, Table, TextInput } from "@mantine/core";
-import { DatePickerInput, TimeInput } from "@mantine/dates";
+import { TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
@@ -7,10 +7,20 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
+import {
+  validateDate,
+  validateEnd,
+  validateProject,
+  validateStart,
+} from "../validations";
+import { DateField } from "./DateField";
 
 export function TaskListRow(props: { taskId: string | null }) {
   const { tasks, setTasks } = useTasksContext();
   const { projects, setProjects } = useProjectsContext();
+
+  const [hasChanges, setHasChanges] = useState(false);
+
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [canStopTask, setCanStopTask] = useState(false);
 
@@ -30,35 +40,42 @@ export function TaskListRow(props: { taskId: string | null }) {
   // FYI cant use form due to table
   const fieldDate = useField({
     initialValue: task.date,
-    validate: (value) => (value ? null : "Date is required"),
+    validate: validateDate,
+    onValueChange: (value) => {
+      setDateValue(value);
+      setHasChanges(value !== task.date);
+    },
   });
 
   const fieldStart = useField({
     initialValue: task.timeStart,
-    validate: (value) => (value ? null : "Start time is required"),
+    validate: validateStart,
+    onValueChange: (value) => {
+      setHasChanges(value !== task.timeStart);
+    },
   });
 
   const fieldEnd = useField({
     initialValue: task.timeEnd || "",
-    validate: (value) => {
-      if (value) {
-        return dayjs(`${dayjs().format("YYYY-MM-DD")} ${value}`).isBefore(
-          dayjs(`${dayjs().format("YYYY-MM-DD")} ${fieldStart.getValue()}`),
-        )
-          ? "End time must be after start time"
-          : null;
-      }
-      return null;
+    validate: (value) => validateEnd(value, fieldStart.getValue()),
+    onValueChange: (value) => {
+      setHasChanges(value !== task.timeEnd);
     },
   });
 
   const fieldProject = useField({
     initialValue: task.project,
-    validate: (value) => (value ? null : "Project is required"),
+    validate: (value) => validateProject(value),
+    onValueChange: (value) => {
+      setHasChanges(value !== task.project);
+    },
   });
 
   const fieldComment = useField({
     initialValue: task.comment,
+    onValueChange: (value) => {
+      setHasChanges(value !== task.comment);
+    },
   });
 
   const updateEntry = async () => {
@@ -112,31 +129,10 @@ export function TaskListRow(props: { taskId: string | null }) {
     fieldEnd.setValue(endTime);
   };
 
-  // FIXME only enable the edit button if values have changed
-
   return (
     <Table.Tr key={task.id}>
       <Table.Td>
-        <DatePickerInput
-          {...fieldDate.getInputProps()}
-          defaultDate={dayjs().format("YYYY-MM-DD")}
-          placeholder="Pick date"
-          value={dateValue}
-          onChange={setDateValue}
-          valueFormat="YYYY-MM-DD"
-          presets={[
-            {
-              value: dayjs().subtract(1, "day").format("YYYY-MM-DD"),
-              label: "Yesterday",
-            },
-            { value: dayjs().format("YYYY-MM-DD"), label: "Today" },
-            {
-              value: dayjs().add(1, "day").format("YYYY-MM-DD"),
-              label: "Tomorrow",
-            },
-          ]}
-          size="xs"
-        />
+        <DateField {...fieldDate.getInputProps()} />
       </Table.Td>
       <Table.Td>
         <TimeInput size="xs" {...fieldStart.getInputProps()} />
@@ -165,6 +161,7 @@ export function TaskListRow(props: { taskId: string | null }) {
           aria-label="Update Task"
           mt={1}
           onClick={updateEntry}
+          disabled={!hasChanges}
         >
           <IconPencilCheck />
         </ActionIcon>{" "}

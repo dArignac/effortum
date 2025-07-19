@@ -1,9 +1,14 @@
-import { Table } from "@mantine/core";
+import { Space, Table } from "@mantine/core";
+import { useMemo } from "react";
 import { useTasksContext } from "../contexts/TasksContext";
+import { AddEntryRow } from "./AddEntry";
 import { TaskListRow } from "./TaskListRow";
 
 export function TaskList() {
   const { tasks } = useTasksContext();
+  const canAddTask = useMemo(() => {
+    return !tasks.some((task) => !task.timeEnd || task.timeEnd.length === 0);
+  }, [tasks]);
 
   return (
     <Table stickyHeader stickyHeaderOffset={0}>
@@ -21,6 +26,12 @@ export function TaskList() {
         {tasks.map((task) => (
           <TaskListRow key={task.id} taskId={task.id} />
         ))}
+        <Table.Tr>
+          <Table.Td colSpan={6}>
+            <Space h="md" />
+          </Table.Td>
+        </Table.Tr>
+        {canAddTask && <AddEntryRow />}
       </Table.Tbody>
     </Table>
   );
