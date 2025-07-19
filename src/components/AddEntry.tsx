@@ -25,31 +25,31 @@ export function AddEntryRow() {
   const [commentValue, setCommentValue] = useState<string>("");
 
   const fieldDate = useField({
-    initialValue: dateValue,
+    initialValue: dayjs().format("YYYY-MM-DD"),
     validate: validateDate,
     onValueChange: (value) => setDateValue(value),
   });
 
   const fieldStart = useField({
-    initialValue: startValue,
+    initialValue: "",
     validate: validateStart,
     onValueChange: (value) => setStartValue(value),
   });
 
   const fieldEnd = useField({
-    initialValue: endValue,
+    initialValue: "",
     validate: (value) => validateEnd(value, fieldStart.getValue()),
     onValueChange: (value) => setEndValue(value),
   });
 
   const fieldProject = useField({
-    initialValue: projectValue,
+    initialValue: "",
     validate: (value) => validateProject(value),
     onValueChange: (value) => setProjectValue(value),
   });
 
   const fieldComment = useField({
-    initialValue: commentValue,
+    initialValue: "",
     onValueChange: (value) => setCommentValue(value),
   });
 
