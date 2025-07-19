@@ -1,4 +1,4 @@
-import { Table } from "@mantine/core";
+import { Space, Table } from "@mantine/core";
 import { useTasksContext } from "../contexts/TasksContext";
 import { TaskListRow } from "./TaskListRow";
 
@@ -21,6 +21,11 @@ export function TaskList() {
         {tasks.map((task) => (
           <TaskListRow key={task.id} taskId={task.id} />
         ))}
+        <Table.Tr>
+          <Table.Td colSpan={6}>
+            <Space h="md" />
+          </Table.Td>
+        </Table.Tr>
       </Table.Tbody>
     </Table>
   );
