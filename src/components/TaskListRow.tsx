@@ -1,5 +1,5 @@
 import { ActionIcon, Autocomplete, Table, TextInput } from "@mantine/core";
-import { DatePickerInput, TimeInput } from "@mantine/dates";
+import { TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
@@ -13,6 +13,7 @@ import {
   validateProject,
   validateStart,
 } from "../validations";
+import { DateField } from "./DateField";
 
 export function TaskListRow(props: { taskId: string | null }) {
   const { tasks, setTasks } = useTasksContext();
@@ -37,6 +38,7 @@ export function TaskListRow(props: { taskId: string | null }) {
   const fieldDate = useField({
     initialValue: task.date,
     validate: validateDate,
+    onValueChange: (value) => setDateValue(value),
   });
 
   const fieldStart = useField({
@@ -114,26 +116,7 @@ export function TaskListRow(props: { taskId: string | null }) {
   return (
     <Table.Tr key={task.id}>
       <Table.Td>
-        <DatePickerInput
-          {...fieldDate.getInputProps()}
-          defaultDate={dayjs().format("YYYY-MM-DD")}
-          placeholder="Pick date"
-          value={dateValue}
-          onChange={setDateValue}
-          valueFormat="YYYY-MM-DD"
-          presets={[
-            {
-              value: dayjs().subtract(1, "day").format("YYYY-MM-DD"),
-              label: "Yesterday",
-            },
-            { value: dayjs().format("YYYY-MM-DD"), label: "Today" },
-            {
-              value: dayjs().add(1, "day").format("YYYY-MM-DD"),
-              label: "Tomorrow",
-            },
-          ]}
-          size="xs"
-        />
+        <DateField {...fieldDate.getInputProps()} />
       </Table.Td>
       <Table.Td>
         <TimeInput size="xs" {...fieldStart.getInputProps()} />
