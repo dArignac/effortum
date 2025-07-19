@@ -14,11 +14,11 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [projects, setProjects] = useState<string[]>(() => {
-    return getItem("projects").sort() ?? [];
+    return (getItem("projects") ?? []).sort();
   });
 
   useEffect(() => {
-    setItem("projects", projects.sort());
+    setItem("projects", [...projects].sort());
   }, [projects]);
 
   return (
