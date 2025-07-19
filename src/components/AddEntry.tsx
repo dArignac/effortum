@@ -5,6 +5,12 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
+import {
+  validateDate,
+  validateEnd,
+  validateProject,
+  validateStart,
+} from "../validations";
 
 interface FormValues {
   date: string;
@@ -28,19 +34,10 @@ export function AddEntry() {
       comment: "",
     },
     validate: {
-      date: () => (dateValue ? null : "Date is required"),
-      start: (value) => (value ? null : "Start time is required"),
-      end: (value, values) => {
-        if (value) {
-          return dayjs(`${dayjs().format("YYYY-MM-DD")} ${value}`).isBefore(
-            dayjs(`${dayjs().format("YYYY-MM-DD")} ${values.start}`),
-          )
-            ? "End time must be after start time"
-            : null;
-        }
-        return null;
-      },
-      project: (value) => (value ? null : "Project is required"),
+      date: () => validateDate(dateValue),
+      start: (value) => validateStart(value),
+      end: (value, values) => validateEnd(value, values.start),
+      project: (value) => validateProject(value),
     },
   });
 

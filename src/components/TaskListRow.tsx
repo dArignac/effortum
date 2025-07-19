@@ -7,6 +7,12 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
+import {
+  validateDate,
+  validateEnd,
+  validateProject,
+  validateStart,
+} from "../validations";
 
 export function TaskListRow(props: { taskId: string | null }) {
   const { tasks, setTasks } = useTasksContext();
@@ -30,31 +36,22 @@ export function TaskListRow(props: { taskId: string | null }) {
   // FYI cant use form due to table
   const fieldDate = useField({
     initialValue: task.date,
-    validate: (value) => (value ? null : "Date is required"),
+    validate: validateDate,
   });
 
   const fieldStart = useField({
     initialValue: task.timeStart,
-    validate: (value) => (value ? null : "Start time is required"),
+    validate: validateStart,
   });
 
   const fieldEnd = useField({
     initialValue: task.timeEnd || "",
-    validate: (value) => {
-      if (value) {
-        return dayjs(`${dayjs().format("YYYY-MM-DD")} ${value}`).isBefore(
-          dayjs(`${dayjs().format("YYYY-MM-DD")} ${fieldStart.getValue()}`),
-        )
-          ? "End time must be after start time"
-          : null;
-      }
-      return null;
-    },
+    validate: (value) => validateEnd(value, fieldStart.getValue()),
   });
 
   const fieldProject = useField({
     initialValue: task.project,
-    validate: (value) => (value ? null : "Project is required"),
+    validate: (value) => validateProject(value),
   });
 
   const fieldComment = useField({
