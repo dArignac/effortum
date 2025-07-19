@@ -18,6 +18,9 @@ import { DateField } from "./DateField";
 export function TaskListRow(props: { taskId: string | null }) {
   const { tasks, setTasks } = useTasksContext();
   const { projects, setProjects } = useProjectsContext();
+
+  const [hasChanges, setHasChanges] = useState(false);
+
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [canStopTask, setCanStopTask] = useState(false);
 
@@ -38,26 +41,41 @@ export function TaskListRow(props: { taskId: string | null }) {
   const fieldDate = useField({
     initialValue: task.date,
     validate: validateDate,
-    onValueChange: (value) => setDateValue(value),
+    onValueChange: (value) => {
+      setDateValue(value);
+      setHasChanges(value !== task.date);
+    },
   });
 
   const fieldStart = useField({
     initialValue: task.timeStart,
     validate: validateStart,
+    onValueChange: (value) => {
+      setHasChanges(value !== task.timeStart);
+    },
   });
 
   const fieldEnd = useField({
     initialValue: task.timeEnd || "",
     validate: (value) => validateEnd(value, fieldStart.getValue()),
+    onValueChange: (value) => {
+      setHasChanges(value !== task.timeEnd);
+    },
   });
 
   const fieldProject = useField({
     initialValue: task.project,
     validate: (value) => validateProject(value),
+    onValueChange: (value) => {
+      setHasChanges(value !== task.project);
+    },
   });
 
   const fieldComment = useField({
     initialValue: task.comment,
+    onValueChange: (value) => {
+      setHasChanges(value !== task.comment);
+    },
   });
 
   const updateEntry = async () => {
@@ -111,8 +129,6 @@ export function TaskListRow(props: { taskId: string | null }) {
     fieldEnd.setValue(endTime);
   };
 
-  // FIXME only enable the edit button if values have changed
-
   return (
     <Table.Tr key={task.id}>
       <Table.Td>
@@ -145,6 +161,7 @@ export function TaskListRow(props: { taskId: string | null }) {
           aria-label="Update Task"
           mt={1}
           onClick={updateEntry}
+          disabled={!hasChanges}
         >
           <IconPencilCheck />
         </ActionIcon>{" "}
