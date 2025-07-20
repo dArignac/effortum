@@ -19,6 +19,7 @@ export function TaskList() {
           <Table.Th w={80}>End</Table.Th>
           <Table.Th>Project</Table.Th>
           <Table.Th>Comment</Table.Th>
+          <Table.Th>Duration</Table.Th>
           <Table.Th>Actions</Table.Th>
         </Table.Tr>
       </Table.Thead>

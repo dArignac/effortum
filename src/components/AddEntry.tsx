@@ -114,6 +114,7 @@ export function AddEntryRow() {
           size="xs"
         />
       </Table.Td>
+      <Table.Td></Table.Td>
       <Table.Td>
         <Button variant="filled" size="xs" onClick={addEntry}>
           Add
