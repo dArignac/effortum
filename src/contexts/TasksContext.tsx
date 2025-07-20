@@ -24,6 +24,12 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({
       if (a.timeEnd && b.timeEnd) {
         return a.timeEnd.localeCompare(b.timeEnd);
       }
+      if (a.timeEnd && !b.timeEnd) {
+        return 1;
+      }
+      if (!a.timeEnd && b.timeEnd) {
+        return -1;
+      }
       return 0;
     });
   });
