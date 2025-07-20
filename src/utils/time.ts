@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 
 export function getDuration(start: string, end?: string): string {
-  if (!end) return "...";
+  if (end === undefined || end === "") return "...";
   const startTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${start}`);
   const endTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${end}`);
   const diff = endTime.diff(startTime, "minute");
