@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
+import { getDuration } from "../utils/time";
 import {
   validateDate,
   validateEnd,
@@ -129,24 +130,6 @@ export function TaskListRow(props: { taskId: string | null }) {
     fieldEnd.setValue(endTime);
   };
 
-  const duration = () => {
-    if (!fieldEnd.getValue()) {
-      return "...";
-    }
-
-    const start = dayjs(
-      `${dayjs().format("YYYY-MM-DD")} ${fieldStart.getValue()}`,
-    );
-    const end = dayjs(`${dayjs().format("YYYY-MM-DD")} ${fieldEnd.getValue()}`);
-
-    const diff = end.diff(start, "minute");
-    const hours = Math.floor(diff / 60)
-      .toString()
-      .padStart(2, "0");
-    const minutes = (diff % 60).toString().padStart(2, "0");
-    return `${hours}:${minutes}`;
-  };
-
   return (
     <Table.Tr key={task.id}>
       <Table.Td>
@@ -172,7 +155,9 @@ export function TaskListRow(props: { taskId: string | null }) {
           size="xs"
         />
       </Table.Td>
-      <Table.Td>{duration()}</Table.Td>
+      <Table.Td>
+        {getDuration(fieldStart.getValue(), fieldEnd.getValue())}
+      </Table.Td>
       <Table.Td>
         <ActionIcon
           variant="default"
