@@ -13,7 +13,19 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [tasks, setTasks] = useState<Task[]>(() => {
-    return getItem("tasks") ?? [];
+    const storedTasks = getItem("tasks") ?? [];
+    return storedTasks.sort((a: Task, b: Task) => {
+      if (a.date !== b.date) {
+        return a.date.localeCompare(b.date);
+      }
+      if (a.timeStart !== b.timeStart) {
+        return a.timeStart.localeCompare(b.timeStart);
+      }
+      if (a.timeEnd && b.timeEnd) {
+        return a.timeEnd.localeCompare(b.timeEnd);
+      }
+      return 0;
+    });
   });
 
   useEffect(() => {

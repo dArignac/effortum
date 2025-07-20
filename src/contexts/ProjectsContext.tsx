@@ -18,7 +18,7 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   useEffect(() => {
-    setItem("projects", [...projects].sort());
+    setItem("projects", projects);
   }, [projects]);
 
   return (
