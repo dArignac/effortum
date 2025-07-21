@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
-import { getDuration } from "../utils/time";
+import { getDurationAsTime } from "../utils/time";
 import {
   validateDate,
   validateEnd,
@@ -156,7 +156,7 @@ export function TaskListRow(props: { taskId: string | null }) {
         />
       </Table.Td>
       <Table.Td>
-        {getDuration(fieldStart.getValue(), fieldEnd.getValue())}
+        {getDurationAsTime(fieldStart.getValue(), fieldEnd.getValue())}
       </Table.Td>
       <Table.Td>
         <ActionIcon
