@@ -5,11 +5,7 @@ export function getDurationAsTime(start: string, end?: string): string {
   const startTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${start}`);
   const endTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${end}`);
   const diff = endTime.diff(startTime, "minute");
-  const hours = Math.floor(diff / 60)
-    .toString()
-    .padStart(2, "0");
-  const minutes = (diff % 60).toString().padStart(2, "0");
-  return `${hours}:${minutes}`;
+  return formatDuration(diff);
 }
 
 export function getDuration(start: string, end?: string): number {
@@ -17,4 +13,12 @@ export function getDuration(start: string, end?: string): number {
   const startTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${start}`);
   const endTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${end}`);
   return endTime.diff(startTime, "minute");
+}
+
+export function formatDuration(duration: number): string {
+  const hours = Math.floor(duration / 60)
+    .toString()
+    .padStart(2, "0");
+  const minutes = (duration % 60).toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
 }
