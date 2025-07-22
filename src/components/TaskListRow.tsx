@@ -14,7 +14,7 @@ import {
   validateProject,
   validateStart,
 } from "../validations";
-import { DateField } from "./DateField";
+import { DateSelectionField } from "./DateField";
 
 export function TaskListRow(props: { taskId: string | null }) {
   const { tasks, setTasks } = useTasksContext();
@@ -133,7 +133,7 @@ export function TaskListRow(props: { taskId: string | null }) {
   return (
     <Table.Tr key={task.id}>
       <Table.Td>
-        <DateField {...fieldDate.getInputProps()} />
+        <DateSelectionField {...fieldDate.getInputProps()} />
       </Table.Td>
       <Table.Td>
         <TimeInput size="xs" {...fieldStart.getInputProps()} />

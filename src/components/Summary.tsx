@@ -1,18 +1,36 @@
 import { BarChart } from "@mantine/charts";
 import { Grid } from "@mantine/core";
+import { DatePicker } from "@mantine/dates";
 import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+import { useState } from "react";
 import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
 import { formatDuration, getDuration } from "../utils/time";
+
+dayjs.extend(isBetween);
 
 export function Summary() {
   const { projects } = useProjectsContext();
   const { tasks } = useTasksContext();
 
-  // TODO is set to month, should be day
+  const [selectedDate, setSelectedDate] = useState<
+    [string | null, string | null]
+  >([dayjs().format("YYYY-MM-DD"), dayjs().format("YYYY-MM-DD")]);
+
   const data = Object.values(
     tasks
-      .filter((task) => dayjs(task.date).isSame(dayjs(), "month"))
+      .filter((task) => {
+        if (selectedDate[1] === null || selectedDate[0] === selectedDate[1]) {
+          return dayjs(task.date).isSame(dayjs(selectedDate[0]));
+        }
+        return dayjs(task.date).isBetween(
+          dayjs(selectedDate[0]),
+          dayjs(selectedDate[1]),
+          "day",
+          "[]",
+        );
+      })
       .reduce(
         (acc, task) => {
           acc[task.project] = acc[task.project]
@@ -34,7 +52,15 @@ export function Summary() {
 
   return (
     <Grid>
-      <Grid.Col span={12}>TODO data selector</Grid.Col>
+      <Grid.Col span={12} style={{ display: "flex", justifyContent: "center" }}>
+        <DatePicker
+          type="range"
+          allowSingleDateInRange
+          value={selectedDate}
+          onChange={(value) => setSelectedDate(value || "")}
+          size="xs"
+        />
+      </Grid.Col>
       <Grid.Col span={12}>
         <BarChart
           h={300}

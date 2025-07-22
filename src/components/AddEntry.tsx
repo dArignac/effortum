@@ -12,7 +12,7 @@ import {
   validateProject,
   validateStart,
 } from "../validations";
-import { DateField } from "./DateField";
+import { DateSelectionField } from "./DateField";
 
 export function AddEntryRow() {
   const { setTasks } = useTasksContext();
@@ -92,7 +92,7 @@ export function AddEntryRow() {
   return (
     <Table.Tr>
       <Table.Td>
-        <DateField {...fieldDate.getInputProps()} />
+        <DateSelectionField {...fieldDate.getInputProps()} />
       </Table.Td>
       <Table.Td>
         <TimeInput size="xs" {...fieldStart.getInputProps()} />
