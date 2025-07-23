@@ -55,7 +55,7 @@ export function Summary() {
           type="range"
           allowSingleDateInRange
           value={selectedDate}
-          onChange={(value) => setSelectedDate(value || "")}
+          onChange={(value) => setSelectedDate(value || [null, null])}
           size="xs"
         />
       </Grid.Col>
