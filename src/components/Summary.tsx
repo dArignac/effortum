@@ -4,14 +4,12 @@ import { DatePicker } from "@mantine/dates";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { useState } from "react";
-import { useProjectsContext } from "../contexts/ProjectsContext";
 import { useTasksContext } from "../contexts/TasksContext";
 import { formatDuration, getDuration } from "../utils/time";
 
 dayjs.extend(isBetween);
 
 export function Summary() {
-  const { projects } = useProjectsContext();
   const { tasks } = useTasksContext();
 
   const [selectedDate, setSelectedDate] = useState<
@@ -62,17 +60,23 @@ export function Summary() {
         />
       </Grid.Col>
       <Grid.Col span={12}>
-        <BarChart
-          h={300}
-          w={350}
-          data={data}
-          dataKey="project"
-          orientation="vertical"
-          barProps={{ barSize: 25 }}
-          withBarValueLabel
-          valueFormatter={(value) => formatDuration(value)}
-          series={[{ name: "time", color: "blue.6" }]}
-        />
+        {data.length === 0 ? (
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            No data available
+          </div>
+        ) : (
+          <BarChart
+            h={300}
+            w={350}
+            data={data}
+            dataKey="project"
+            orientation="vertical"
+            barProps={{ barSize: 25 }}
+            withBarValueLabel
+            valueFormatter={(value) => formatDuration(value)}
+            series={[{ name: "time", color: "blue.6" }]}
+          />
+        )}
       </Grid.Col>
     </Grid>
   );
