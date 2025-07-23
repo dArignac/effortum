@@ -2,7 +2,7 @@ import { DatePickerInput } from "@mantine/dates";
 import dayjs from "dayjs";
 import React from "react";
 
-export function DateField(props: {
+export function DateSelectionField(props: {
   value: string | null;
   onChange: (value: string | null) => void;
   error?: React.ReactNode | undefined;
