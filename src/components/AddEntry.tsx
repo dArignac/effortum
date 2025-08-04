@@ -4,8 +4,6 @@ import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { useState } from "react";
-import { useProjectsContext } from "../contexts/ProjectsContext";
-import { useTasksContext } from "../contexts/TasksContext";
 import {
   validateDate,
   validateEnd,
@@ -13,10 +11,12 @@ import {
   validateStart,
 } from "../validations";
 import { DateSelectionField } from "./DateField";
+import { useStore } from "../store";
 
 export function AddEntryRow() {
-  const { setTasks } = useTasksContext();
-  const { projects, setProjects } = useProjectsContext();
+  const projects = useStore((state) => state.projects);
+  const addTask = useStore((state) => state.addTask);
+  const addProject = useStore((state) => state.addProject);
 
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [startValue, setStartValue] = useState<string>("");
@@ -73,20 +73,17 @@ export function AddEntryRow() {
       fieldProject.getValue() &&
       !projects.includes(fieldProject.getValue())
     ) {
-      setProjects((prevProjects) => [...prevProjects, fieldProject.getValue()]);
+      addProject(fieldProject.getValue());
     }
 
-    setTasks((prevTasks) => [
-      ...prevTasks,
-      {
-        id: crypto.randomUUID(),
-        date: dateValue || dayjs().format("YYYY-MM-DD"),
-        timeStart: startValue,
-        timeEnd: endValue || "",
-        project: projectValue,
-        comment: commentValue || "",
-      },
-    ]);
+    addTask({
+      id: crypto.randomUUID(),
+      date: dateValue || dayjs().format("YYYY-MM-DD"),
+      timeStart: startValue,
+      timeEnd: endValue || "",
+      project: projectValue,
+      comment: commentValue || "",
+    });
   };
 
   return (

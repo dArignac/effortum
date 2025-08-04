@@ -5,8 +5,7 @@ import { notifications } from "@mantine/notifications";
 import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { useProjectsContext } from "../contexts/ProjectsContext";
-import { useTasksContext } from "../contexts/TasksContext";
+import { useStore } from "../store";
 import { getDurationAsTime } from "../utils/time";
 import {
   validateDate,
@@ -17,8 +16,10 @@ import {
 import { DateSelectionField } from "./DateField";
 
 export function TaskListRow(props: { taskId: string | null }) {
-  const { tasks, setTasks } = useTasksContext();
-  const { projects, setProjects } = useProjectsContext();
+  const tasks = useStore((state) => state.tasks);
+  const addTask = useStore((state) => state.addTask);
+  const projects = useStore((state) => state.projects);
+  const addProject = useStore((state) => state.addProject);
 
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -99,34 +100,35 @@ export function TaskListRow(props: { taskId: string | null }) {
       fieldProject.getValue() &&
       !projects.includes(fieldProject.getValue())
     ) {
-      setProjects((prevProjects) => [...prevProjects, fieldProject.getValue()]);
+      addProject(fieldProject.getValue());
     }
 
-    setTasks((prevTasks) =>
-      prevTasks.map((t) =>
-        t.id === task.id
-          ? {
-              ...t,
-              date: dateValue || dayjs().format("YYYY-MM-DD"),
-              timeStart: fieldStart.getValue(),
-              timeEnd: fieldEnd.getValue() || "",
-              project: fieldProject.getValue(),
-              comment: fieldComment.getValue() || "",
-            }
-          : t,
-      ),
-    );
+    // FIXME implement task update
+    // setTasks((prevTasks) =>
+    //   prevTasks.map((t) =>
+    //     t.id === task.id
+    //       ? {
+    //           ...t,
+    //           date: dateValue || dayjs().format("YYYY-MM-DD"),
+    //           timeStart: fieldStart.getValue(),
+    //           timeEnd: fieldEnd.getValue() || "",
+    //           project: fieldProject.getValue(),
+    //           comment: fieldComment.getValue() || "",
+    //         }
+    //       : t,
+    //   ),
 
     notifications.show({ message: "Task updated successfully!" });
   };
 
   const stopTask = () => {
     const endTime = dayjs().format("HH:mm");
-    setTasks((prevTasks) =>
-      prevTasks.map((t) =>
-        t.id === props.taskId ? { ...t, timeEnd: endTime } : t,
-      ),
-    );
+    // FIXME implement task update
+    // setTasks((prevTasks) =>
+    //   prevTasks.map((t) =>
+    //     t.id === props.taskId ? { ...t, timeEnd: endTime } : t,
+    //   ),
+    // );
     fieldEnd.setValue(endTime);
   };
 
