@@ -1,8 +1,8 @@
 import Dexie, { Table } from "dexie";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { Task } from "./models/Task";
 import { Project } from "./models/Project";
+import { Task } from "./models/Task";
 
 // FIXME move to own file, else it gets messed up with the version updates
 class EffortumDB extends Dexie {
@@ -43,9 +43,8 @@ interface EffortumStore {
   addProject: (project: Project) => void;
 }
 
-// FIXME devtools only when devmode and messes up with type safety
 // FIXME the ids should only be generated here
-export const useEffortumStore = create<EffortumStore>()((set, get) => ({
+export const storeCreator = (set, get) => ({
   projects: [],
   tasks: [],
 
@@ -72,4 +71,10 @@ export const useEffortumStore = create<EffortumStore>()((set, get) => ({
     const projects = await db.projects.toArray();
     set({ projects });
   },
-}));
+});
+
+export const useEffortumStore = create<EffortumStore>()(
+  process.env.NODE_ENV === "development"
+    ? devtools(storeCreator)
+    : storeCreator,
+);

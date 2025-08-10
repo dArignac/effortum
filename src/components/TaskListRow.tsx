@@ -17,7 +17,7 @@ import { DateSelectionField } from "./DateField";
 
 export function TaskListRow(props: { taskId: string | null }) {
   const tasks = useEffortumStore((state) => state.tasks);
-  const addTask = useEffortumStore((state) => state.addTask);
+  const updateTask = useEffortumStore((state) => state.updateTask);
   const projects = useEffortumStore((state) => state.projects);
   const addProject = useEffortumStore((state) => state.addProject);
 
@@ -124,12 +124,7 @@ export function TaskListRow(props: { taskId: string | null }) {
 
   const stopTask = () => {
     const endTime = dayjs().format("HH:mm");
-    // FIXME implement task update
-    // setTasks((prevTasks) =>
-    //   prevTasks.map((t) =>
-    //     t.id === props.taskId ? { ...t, timeEnd: endTime } : t,
-    //   ),
-    // );
+    updateTask(task.id, { timeEnd: endTime });
     fieldEnd.setValue(endTime);
   };
 
