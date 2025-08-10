@@ -19,7 +19,6 @@ export function TaskListRow(props: { taskId: string | null }) {
   const tasks = useEffortumStore((state) => state.tasks);
   const updateTask = useEffortumStore((state) => state.updateTask);
   const projects = useEffortumStore((state) => state.projects);
-  const addProject = useEffortumStore((state) => state.addProject);
 
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -96,28 +95,13 @@ export function TaskListRow(props: { taskId: string | null }) {
       return;
     }
 
-    // FIXME move to store
-    if (
-      fieldProject.getValue() &&
-      !projects.some((p) => p.name === fieldProject.getValue())
-    ) {
-      addProject({ id: crypto.randomUUID(), name: fieldProject.getValue() });
-    }
-
-    // FIXME implement task update
-    // setTasks((prevTasks) =>
-    //   prevTasks.map((t) =>
-    //     t.id === task.id
-    //       ? {
-    //           ...t,
-    //           date: dateValue || dayjs().format("YYYY-MM-DD"),
-    //           timeStart: fieldStart.getValue(),
-    //           timeEnd: fieldEnd.getValue() || "",
-    //           project: fieldProject.getValue(),
-    //           comment: fieldComment.getValue() || "",
-    //         }
-    //       : t,
-    //   ),
+    updateTask(task.id, {
+      date: dateValue || dayjs().format("YYYY-MM-DD"),
+      timeStart: fieldStart.getValue(),
+      timeEnd: fieldEnd.getValue() || "",
+      project: fieldProject.getValue(),
+      comment: fieldComment.getValue() || "",
+    });
 
     notifications.show({ message: "Task updated successfully!" });
   };

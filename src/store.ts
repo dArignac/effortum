@@ -18,7 +18,6 @@ interface EffortumStore {
   addProject: (project: Project) => void;
 }
 
-// FIXME the ids should only be generated here
 export const storeCreator = (set, get) => ({
   projects: [],
   tasks: [],
@@ -30,12 +29,32 @@ export const storeCreator = (set, get) => ({
   },
 
   addTask: async (task) => {
+    // create project if not already existing
+    let projectInstance = get().projects.find((p) => p.name === task.project);
+    if (!projectInstance) {
+      projectInstance = { id: crypto.randomUUID(), name: task.project };
+      await db.projects.add(projectInstance);
+      set({ projects: [...get().projects, projectInstance] });
+    }
+
+    // add task to db
     await db.tasks.add(task);
     const tasks = await db.tasks.toArray();
     set({ tasks });
   },
 
   updateTask: async (id, updates) => {
+    const task = get().tasks.find((t) => t.id === id);
+    console.warn(task);
+    let projectInstance = get().projects.find((p) => p.name === task.project);
+    console.warn(projectInstance);
+    if (!projectInstance) {
+      console.warn("Creating new project instance");
+      projectInstance = { id: crypto.randomUUID(), name: task.project };
+      await db.projects.add(projectInstance);
+      set({ projects: [...get().projects, projectInstance] });
+    }
+
     await db.tasks.update(id, updates);
     const tasks = await db.tasks.toArray();
     set({ tasks });

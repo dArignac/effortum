@@ -4,6 +4,7 @@ import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { useState } from "react";
+import { useEffortumStore } from "../store";
 import {
   validateDate,
   validateEnd,
@@ -11,12 +12,10 @@ import {
   validateStart,
 } from "../validations";
 import { DateSelectionField } from "./DateField";
-import { useEffortumStore } from "../store";
 
 export function AddEntryRow() {
   const projects = useEffortumStore((state) => state.projects);
   const addTask = useEffortumStore((state) => state.addTask);
-  const addProject = useEffortumStore((state) => state.addProject);
 
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [startValue, setStartValue] = useState<string>("");
@@ -67,14 +66,6 @@ export function AddEntryRow() {
         color: "red",
       });
       return;
-    }
-
-    // FIXME move to store
-    if (
-      fieldProject.getValue() &&
-      !projects.some((p) => p.name === fieldProject.getValue())
-    ) {
-      addProject({ id: crypto.randomUUID(), name: fieldProject.getValue() });
     }
 
     addTask({
