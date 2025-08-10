@@ -1,24 +1,15 @@
 import { Space, Table } from "@mantine/core";
-import { useEffect, useMemo, useState } from "react";
-import { Task } from "../models/Task";
+import { useMemo } from "react";
+import { useEffortumStore } from "../store";
 import { AddEntryRow } from "./AddEntry";
 import { TaskListRow } from "./TaskListRow";
-import { getTasks } from "../db";
 
 export function TaskList() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const tasks = useEffortumStore((state) => state.tasks);
 
   const canAddTask = useMemo(() => {
     return !tasks.some((task) => !task.timeEnd || task.timeEnd.length === 0);
   }, [tasks]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const loadedTasks = await getTasks();
-      setTasks(loadedTasks);
-    };
-    fetchData();
-  }, []);
 
   return (
     <Table stickyHeader stickyHeaderOffset={0}>

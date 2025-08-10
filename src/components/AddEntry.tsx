@@ -11,12 +11,12 @@ import {
   validateStart,
 } from "../validations";
 import { DateSelectionField } from "./DateField";
-import { useStore } from "../store";
+import { useEffortumStore } from "../store";
 
 export function AddEntryRow() {
-  const projects = useStore((state) => state.projects);
-  const addTask = useStore((state) => state.addTask);
-  const addProject = useStore((state) => state.addProject);
+  const projects = useEffortumStore((state) => state.projects);
+  const addTask = useEffortumStore((state) => state.addTask);
+  const addProject = useEffortumStore((state) => state.addProject);
 
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [startValue, setStartValue] = useState<string>("");
@@ -69,11 +69,12 @@ export function AddEntryRow() {
       return;
     }
 
+    // FIXME move to store
     if (
       fieldProject.getValue() &&
-      !projects.includes(fieldProject.getValue())
+      !projects.some((p) => p.name === fieldProject.getValue())
     ) {
-      addProject(fieldProject.getValue());
+      addProject({ id: crypto.randomUUID(), name: fieldProject.getValue() });
     }
 
     addTask({
@@ -100,7 +101,7 @@ export function AddEntryRow() {
       <Table.Td>
         <Autocomplete
           {...fieldProject.getInputProps()}
-          data={projects}
+          data={projects.map((p) => p.name)}
           size="xs"
         />
       </Table.Td>

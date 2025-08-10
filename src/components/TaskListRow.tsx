@@ -5,7 +5,7 @@ import { notifications } from "@mantine/notifications";
 import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { useStore } from "../store";
+import { useEffortumStore } from "../store";
 import { getDurationAsTime } from "../utils/time";
 import {
   validateDate,
@@ -16,10 +16,10 @@ import {
 import { DateSelectionField } from "./DateField";
 
 export function TaskListRow(props: { taskId: string | null }) {
-  const tasks = useStore((state) => state.tasks);
-  const addTask = useStore((state) => state.addTask);
-  const projects = useStore((state) => state.projects);
-  const addProject = useStore((state) => state.addProject);
+  const tasks = useEffortumStore((state) => state.tasks);
+  const addTask = useEffortumStore((state) => state.addTask);
+  const projects = useEffortumStore((state) => state.projects);
+  const addProject = useEffortumStore((state) => state.addProject);
 
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -96,11 +96,12 @@ export function TaskListRow(props: { taskId: string | null }) {
       return;
     }
 
+    // FIXME move to store
     if (
       fieldProject.getValue() &&
-      !projects.includes(fieldProject.getValue())
+      !projects.some((p) => p.name === fieldProject.getValue())
     ) {
-      addProject(fieldProject.getValue());
+      addProject({ id: crypto.randomUUID(), name: fieldProject.getValue() });
     }
 
     // FIXME implement task update
@@ -146,7 +147,7 @@ export function TaskListRow(props: { taskId: string | null }) {
       <Table.Td>
         <Autocomplete
           {...fieldProject.getInputProps()}
-          data={projects}
+          data={projects.map((p) => p.name)}
           size="xs"
         />
       </Table.Td>
