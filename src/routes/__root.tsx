@@ -13,9 +13,8 @@ import {
   Outlet,
   Scripts,
 } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { ProjectsProvider } from "../contexts/ProjectsContext";
-import { TasksProvider } from "../contexts/TasksContext";
+import { useEffect, type ReactNode } from "react";
+import { useEffortumStore } from "../store";
 
 const theme = createTheme({
   /** Put your mantine theme override here */
@@ -62,6 +61,10 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
+  useEffect(() => {
+    useEffortumStore.getState().loadFromIndexedDb();
+  }, []);
+
   return (
     <html>
       <head>
@@ -69,9 +72,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       </head>
       <body>
         <MantineProvider theme={theme}>
-          <TasksProvider>
-            <ProjectsProvider>{children}</ProjectsProvider>
-          </TasksProvider>
+          {children}
           <Notifications />
           <Scripts />
         </MantineProvider>

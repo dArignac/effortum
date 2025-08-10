@@ -5,8 +5,7 @@ import { notifications } from "@mantine/notifications";
 import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { useProjectsContext } from "../contexts/ProjectsContext";
-import { useTasksContext } from "../contexts/TasksContext";
+import { useEffortumStore } from "../store";
 import { getDurationAsTime } from "../utils/time";
 import {
   validateDate,
@@ -17,8 +16,9 @@ import {
 import { DateSelectionField } from "./DateField";
 
 export function TaskListRow(props: { taskId: string | null }) {
-  const { tasks, setTasks } = useTasksContext();
-  const { projects, setProjects } = useProjectsContext();
+  const tasks = useEffortumStore((state) => state.tasks);
+  const updateTask = useEffortumStore((state) => state.updateTask);
+  const projects = useEffortumStore((state) => state.projects);
 
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -95,38 +95,20 @@ export function TaskListRow(props: { taskId: string | null }) {
       return;
     }
 
-    if (
-      fieldProject.getValue() &&
-      !projects.includes(fieldProject.getValue())
-    ) {
-      setProjects((prevProjects) => [...prevProjects, fieldProject.getValue()]);
-    }
-
-    setTasks((prevTasks) =>
-      prevTasks.map((t) =>
-        t.id === task.id
-          ? {
-              ...t,
-              date: dateValue || dayjs().format("YYYY-MM-DD"),
-              timeStart: fieldStart.getValue(),
-              timeEnd: fieldEnd.getValue() || "",
-              project: fieldProject.getValue(),
-              comment: fieldComment.getValue() || "",
-            }
-          : t,
-      ),
-    );
+    updateTask(task.id, {
+      date: dateValue || dayjs().format("YYYY-MM-DD"),
+      timeStart: fieldStart.getValue(),
+      timeEnd: fieldEnd.getValue() || "",
+      project: fieldProject.getValue(),
+      comment: fieldComment.getValue() || "",
+    });
 
     notifications.show({ message: "Task updated successfully!" });
   };
 
   const stopTask = () => {
     const endTime = dayjs().format("HH:mm");
-    setTasks((prevTasks) =>
-      prevTasks.map((t) =>
-        t.id === props.taskId ? { ...t, timeEnd: endTime } : t,
-      ),
-    );
+    updateTask(task.id, { timeEnd: endTime });
     fieldEnd.setValue(endTime);
   };
 
@@ -144,7 +126,7 @@ export function TaskListRow(props: { taskId: string | null }) {
       <Table.Td>
         <Autocomplete
           {...fieldProject.getInputProps()}
-          data={projects}
+          data={projects.map((p) => p.name)}
           size="xs"
         />
       </Table.Td>

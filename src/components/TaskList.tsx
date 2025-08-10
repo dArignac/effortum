@@ -1,11 +1,12 @@
 import { Space, Table } from "@mantine/core";
 import { useMemo } from "react";
-import { useTasksContext } from "../contexts/TasksContext";
+import { useEffortumStore } from "../store";
 import { AddEntryRow } from "./AddEntry";
 import { TaskListRow } from "./TaskListRow";
 
 export function TaskList() {
-  const { tasks } = useTasksContext();
+  const tasks = useEffortumStore((state) => state.tasks);
+
   const canAddTask = useMemo(() => {
     return !tasks.some((task) => !task.timeEnd || task.timeEnd.length === 0);
   }, [tasks]);

@@ -4,13 +4,13 @@ import { DatePicker } from "@mantine/dates";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { useState } from "react";
-import { useTasksContext } from "../contexts/TasksContext";
+import { useEffortumStore } from "../store";
 import { formatDuration, getDuration } from "../utils/time";
 
 dayjs.extend(isBetween);
 
 export function Summary() {
-  const { tasks } = useTasksContext();
+  const tasks = useEffortumStore((state) => state.tasks);
 
   const [selectedDate, setSelectedDate] = useState<
     [string | null, string | null]
