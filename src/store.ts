@@ -45,11 +45,8 @@ export const storeCreator = (set, get) => ({
 
   updateTask: async (id, updates) => {
     const task = get().tasks.find((t) => t.id === id);
-    console.warn(task);
     let projectInstance = get().projects.find((p) => p.name === task.project);
-    console.warn(projectInstance);
     if (!projectInstance) {
-      console.warn("Creating new project instance");
       projectInstance = { id: crypto.randomUUID(), name: task.project };
       await db.projects.add(projectInstance);
       set({ projects: [...get().projects, projectInstance] });
