@@ -1,33 +1,8 @@
-import Dexie, { Table } from "dexie";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
+import { EffortumDB } from "./db";
 import { Project } from "./models/Project";
 import { Task } from "./models/Task";
-
-// FIXME move to own file, else it gets messed up with the version updates
-class EffortumDB extends Dexie {
-  tasks!: Table<Task>;
-  projects!: Table<Project>;
-
-  constructor() {
-    super("EffortumDatabase");
-    this.version(1).stores({
-      tasks: "++id, date, timeStart, timeEnd, project",
-      projects: "++id, &name",
-    });
-
-    //     db.version(2).stores({
-    //   friends: '++id, firstName, lastName'
-    // }).upgrade(tx => {
-    //   return tx.friends.toCollection().modify(friend => {
-    //     const [firstName, lastName] = friend.name.split(' ');
-    //     friend.firstName = firstName;
-    //     friend.lastName = lastName || '';
-    //     delete friend.name;
-    //   });
-    // });
-  }
-}
 
 const db = new EffortumDB();
 
