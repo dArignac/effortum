@@ -4,8 +4,23 @@ import { useEffortumStore } from "../store";
 import { AddEntryRow } from "./AddEntry";
 import { TaskListRow } from "./TaskListRow";
 
+function compareTasksByTimeStart(
+  a: { timeStart: string },
+  b: { timeStart: string },
+) {
+  if (a.timeStart == null && b.timeStart == null) return 0;
+  if (a.timeStart == null) return 1;
+  if (b.timeStart == null) return -1;
+  if (a.timeStart < b.timeStart) return -1;
+  if (a.timeStart > b.timeStart) return 1;
+  return 0;
+}
+
 export function TaskList() {
   const tasks = useEffortumStore((state) => state.tasks);
+  const sortedTasks = useMemo(() => {
+    return [...tasks].sort(compareTasksByTimeStart);
+  }, [tasks]);
 
   const canAddTask = useMemo(() => {
     return !tasks.some((task) => !task.timeEnd || task.timeEnd.length === 0);
@@ -25,7 +40,7 @@ export function TaskList() {
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
-        {tasks.map((task) => (
+        {sortedTasks.map((task) => (
           <TaskListRow key={task.id} taskId={task.id} />
         ))}
         <Table.Tr>
