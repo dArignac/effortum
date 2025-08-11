@@ -6,6 +6,13 @@ import { TaskListRow } from "./TaskListRow";
 
 export function TaskList() {
   const tasks = useEffortumStore((state) => state.tasks);
+  const sortedTasks = useMemo(() => {
+    return [...tasks].sort((a, b) => {
+      if (a.timeStart < b.timeStart) return -1;
+      if (a.timeStart > b.timeStart) return 1;
+      return 0;
+    });
+  }, [tasks]);
 
   const canAddTask = useMemo(() => {
     return !tasks.some((task) => !task.timeEnd || task.timeEnd.length === 0);
@@ -25,7 +32,7 @@ export function TaskList() {
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
-        {tasks.map((task) => (
+        {sortedTasks.map((task) => (
           <TaskListRow key={task.id} taskId={task.id} />
         ))}
         <Table.Tr>
