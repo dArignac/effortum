@@ -3,17 +3,13 @@ import { useMemo } from "react";
 import { useEffortumStore } from "../store";
 import { AddEntryRow } from "./AddEntry";
 import { TaskListRow } from "./TaskListRow";
+import { Task } from "../models/Task";
+import dayjs from "dayjs";
 
-function compareTasksByTimeStart(
-  a: { timeStart: string },
-  b: { timeStart: string },
-) {
-  if (a.timeStart == null && b.timeStart == null) return 0;
-  if (a.timeStart == null) return 1;
-  if (b.timeStart == null) return -1;
-  if (a.timeStart < b.timeStart) return -1;
-  if (a.timeStart > b.timeStart) return 1;
-  return 0;
+function compareTasksByTimeStart(a: Task, b: Task) {
+  const dateTimeA = dayjs(`${a.date} ${a.timeStart}`, "YYYY-MM-DD HH:mm");
+  const dateTimeB = dayjs(`${b.date} ${b.timeStart}`, "YYYY-MM-DD HH:mm");
+  return dateTimeA.valueOf() - dateTimeB.valueOf();
 }
 
 export function TaskList() {
