@@ -9,6 +9,7 @@ const db = new EffortumDB();
 interface EffortumStore {
   tasks: Task[];
   projects: Project[];
+  selectedDateRange: [string | null, string | null];
 
   loadFromIndexedDb: () => void;
 
@@ -16,11 +17,14 @@ interface EffortumStore {
   updateTask: (id: string, updates: Partial<Task>) => void;
 
   addProject: (project: Project) => void;
+
+  setSelectedDateRange: (range: [string | null, string | null]) => void;
 }
 
 export const storeCreator = (set, get) => ({
   projects: [],
   tasks: [],
+  selectedDateRange: [null, null] as [string | null, string | null],
 
   loadFromIndexedDb: async () => {
     const tasks = await db.tasks.orderBy("date").toArray();
@@ -61,6 +65,10 @@ export const storeCreator = (set, get) => ({
     await db.projects.add(project);
     const projects = await db.projects.toArray();
     set({ projects });
+  },
+
+  setSelectedDateRange: (range: [string | null, string | null]) => {
+    set({ selectedDateRange: range });
   },
 });
 

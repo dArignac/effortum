@@ -3,7 +3,7 @@ import { Grid } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import { useState } from "react";
+import { useEffect } from "react";
 import { useEffortumStore } from "../store";
 import { formatDuration, getDuration } from "../utils/time";
 
@@ -11,20 +11,32 @@ dayjs.extend(isBetween);
 
 export function Summary() {
   const tasks = useEffortumStore((state) => state.tasks);
+  const selectedDateRange = useEffortumStore(
+    (state) => state.selectedDateRange,
+  );
+  const setSelectedDateRange = useEffortumStore(
+    (state) => state.setSelectedDateRange,
+  );
 
-  const [selectedDate, setSelectedDate] = useState<
-    [string | null, string | null]
-  >([dayjs().format("YYYY-MM-DD"), dayjs().format("YYYY-MM-DD")]);
+  useEffect(() => {
+    setSelectedDateRange([
+      dayjs().format("YYYY-MM-DD"),
+      dayjs().format("YYYY-MM-DD"),
+    ]);
+  }, []);
 
   const data = Object.values(
     tasks
       .filter((task) => {
-        if (selectedDate[1] === null || selectedDate[0] === selectedDate[1]) {
-          return dayjs(task.date).isSame(dayjs(selectedDate[0]));
+        if (
+          selectedDateRange[1] === null ||
+          selectedDateRange[0] === selectedDateRange[1]
+        ) {
+          return dayjs(task.date).isSame(dayjs(selectedDateRange[0]));
         }
         return dayjs(task.date).isBetween(
-          dayjs(selectedDate[0]),
-          dayjs(selectedDate[1]),
+          dayjs(selectedDateRange[0]),
+          dayjs(selectedDateRange[1]),
           "day",
           "[]",
         );
@@ -54,8 +66,8 @@ export function Summary() {
         <DatePicker
           type="range"
           allowSingleDateInRange
-          value={selectedDate}
-          onChange={(value) => setSelectedDate(value || [null, null])}
+          value={selectedDateRange}
+          onChange={(value) => setSelectedDateRange(value || [null, null])}
           size="xs"
         />
       </Grid.Col>
