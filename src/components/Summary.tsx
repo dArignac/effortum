@@ -24,7 +24,7 @@ export function Summary() {
       dayjs().format("YYYY-MM-DD"),
       dayjs().format("YYYY-MM-DD"),
     ]);
-  }, []);
+  }, [setSelectedDateRange]);
 
   const data = Object.values(
     tasks.filter(filterTasksByDateRange(selectedDateRange)).reduce(
