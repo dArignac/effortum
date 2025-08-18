@@ -1,10 +1,11 @@
 import { Space, Table } from "@mantine/core";
+import dayjs from "dayjs";
 import { useMemo } from "react";
+import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
+import { filterTasksByDateRange } from "../utils/filters";
 import { AddEntryRow } from "./AddEntry";
 import { TaskListRow } from "./TaskListRow";
-import { Task } from "../models/Task";
-import dayjs from "dayjs";
 
 function compareTasksByTimeStart(a: Task, b: Task) {
   const dateTimeA = dayjs(`${a.date} ${a.timeStart}`, "YYYY-MM-DD HH:mm");
@@ -14,9 +15,15 @@ function compareTasksByTimeStart(a: Task, b: Task) {
 
 export function TaskList() {
   const tasks = useEffortumStore((state) => state.tasks);
+  const selectedDateRange = useEffortumStore(
+    (state) => state.selectedDateRange,
+  );
+
   const sortedTasks = useMemo(() => {
-    return [...tasks].sort(compareTasksByTimeStart);
-  }, [tasks]);
+    return [...tasks]
+      .filter(filterTasksByDateRange(selectedDateRange))
+      .sort(compareTasksByTimeStart);
+  }, [tasks, selectedDateRange]);
 
   const canAddTask = useMemo(() => {
     return !tasks.some((task) => !task.timeEnd || task.timeEnd.length === 0);
