@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { useEffect } from "react";
 import { useEffortumStore } from "../store";
+import { filterTasksByDateRange } from "../utils/filters";
 import { formatDuration, getDuration } from "../utils/time";
 
 dayjs.extend(isBetween);
@@ -26,38 +27,23 @@ export function Summary() {
   }, []);
 
   const data = Object.values(
-    tasks
-      .filter((task) => {
-        if (
-          selectedDateRange[1] === null ||
-          selectedDateRange[0] === selectedDateRange[1]
-        ) {
-          return dayjs(task.date).isSame(dayjs(selectedDateRange[0]));
-        }
-        return dayjs(task.date).isBetween(
-          dayjs(selectedDateRange[0]),
-          dayjs(selectedDateRange[1]),
-          "day",
-          "[]",
-        );
-      })
-      .reduce(
-        (acc, task) => {
-          acc[task.project] = acc[task.project]
-            ? {
-                project: task.project,
-                time:
-                  acc[task.project].time +
-                  getDuration(task.timeStart, task.timeEnd),
-              }
-            : {
-                project: task.project,
-                time: getDuration(task.timeStart, task.timeEnd),
-              };
-          return acc;
-        },
-        {} as Record<string, { project: string; time: number }>,
-      ),
+    tasks.filter(filterTasksByDateRange(selectedDateRange)).reduce(
+      (acc, task) => {
+        acc[task.project] = acc[task.project]
+          ? {
+              project: task.project,
+              time:
+                acc[task.project].time +
+                getDuration(task.timeStart, task.timeEnd),
+            }
+          : {
+              project: task.project,
+              time: getDuration(task.timeStart, task.timeEnd),
+            };
+        return acc;
+      },
+      {} as Record<string, { project: string; time: number }>,
+    ),
   ).sort((a, b) => a.project.localeCompare(b.project));
 
   return (
