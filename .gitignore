@@ -1,2 +1,5 @@
+.netlify
+.nitro
 .tanstack
+dist
 node_modules
