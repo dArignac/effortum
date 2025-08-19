@@ -62,7 +62,6 @@ export function Summary() {
         size="xs"
       />
       <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs" mt={5}>
-        {data.map((task) => (
         {data.map((task, idx) => (
           <Fragment key={idx}>
             <Box component="strong">{task.project}:</Box>
