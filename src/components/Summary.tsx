@@ -63,7 +63,8 @@ export function Summary() {
       />
       <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs" mt={5}>
         {data.map((task) => (
-          <Fragment key={task.project}>
+        {data.map((task, idx) => (
+          <Fragment key={idx}>
             <Box component="strong">{task.project}:</Box>
             <Box>{formatDuration(task.time)}</Box>
           </Fragment>
