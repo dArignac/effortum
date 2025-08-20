@@ -1,0 +1,181 @@
+import { test, expect } from "@playwright/test";
+
+test.describe("Task Creation", () => {
+  test("should create a new task successfully", async ({ page }) => {
+    // Navigate to the application
+    await page.goto("/");
+
+    // Wait for the page to load - target the main task table specifically
+    await expect(page.locator("table.mantine-Table-table")).toBeVisible();
+
+    // Check if the Add button is visible (only shows when no incomplete tasks exist)
+    const addButton = page.locator('button:has-text("Add")');
+
+    // If Add button is not visible, it means there's an incomplete task
+    // We need to complete it first by adding an end time
+    const isAddButtonVisible = await addButton.isVisible();
+
+    if (!isAddButtonVisible) {
+      // Find the first row with an empty end time and fill it
+      const emptyEndTimeInput = page
+        .locator('input[placeholder="HH:mm"]')
+        .first();
+      if (await emptyEndTimeInput.isVisible()) {
+        await emptyEndTimeInput.fill("17:00");
+        await emptyEndTimeInput.blur(); // Trigger validation
+
+        // Wait for the Add button to appear
+        await expect(addButton).toBeVisible({ timeout: 5000 });
+      }
+    }
+
+    // Now proceed with creating a new task
+    await expect(addButton).toBeVisible();
+
+    // Fill in the task details in the add entry row
+    // Date field (DatePickerInput with "Pick date" placeholder)
+    const dateInput = page.locator('input[placeholder="Pick date"]');
+    await expect(dateInput).toBeVisible();
+    await dateInput.click();
+    await dateInput.fill("2024-08-20");
+
+    // Start time (TimeInput)
+    const startTimeInput = page.locator('input[placeholder="HH:mm"]').first();
+    await startTimeInput.fill("09:00");
+
+    // End time (TimeInput)
+    const endTimeInput = page.locator('input[placeholder="HH:mm"]').nth(1);
+    await endTimeInput.fill("17:00");
+
+    // Project field (Autocomplete)
+    const projectInput = page.locator("input").filter({ hasText: "" }).last();
+    await projectInput.fill("Test Project");
+
+    // Comment field
+    const commentInput = page.locator('input[placeholder="Enter a comment"]');
+    await commentInput.fill("E2E test task");
+
+    // Get the initial number of task rows
+    const initialTaskRows = await page.locator("table tbody tr").count();
+
+    // Click the Add button
+    await addButton.click();
+
+    // Wait for the task to be added
+    await page.waitForTimeout(1000); // Give time for the task to be processed
+
+    // Verify the task was added by checking if there's one more row
+    const finalTaskRows = await page.locator("table tbody tr").count();
+    expect(finalTaskRows).toBeGreaterThan(initialTaskRows);
+
+    // Verify the task appears in the table with correct data
+    const taskRows = page.locator("table tbody tr");
+
+    // Look for a row containing our test data
+    const testTaskRow = taskRows
+      .filter({
+        has: page.locator('text="Test Project"'),
+      })
+      .filter({
+        has: page.locator('text="E2E test task"'),
+      });
+
+    await expect(testTaskRow).toBeVisible();
+
+    // Verify the time fields are displayed correctly
+    await expect(testTaskRow.locator('text="09:00"')).toBeVisible();
+    await expect(testTaskRow.locator('text="17:00"')).toBeVisible();
+
+    // Verify duration is calculated (should be 08:00 for 9:00-17:00)
+    await expect(testTaskRow.locator('text="08:00"')).toBeVisible();
+  });
+
+  test("should show validation errors for invalid task data", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Wait for the page to load - target the main task table specifically
+    await expect(page.locator("table.mantine-Table-table")).toBeVisible();
+
+    // Ensure Add button is visible
+    const addButton = page.locator('button:has-text("Add")');
+
+    // If Add button is not visible, complete any incomplete task first
+    const isAddButtonVisible = await addButton.isVisible();
+    if (!isAddButtonVisible) {
+      const emptyEndTimeInput = page
+        .locator('input[placeholder="HH:mm"]')
+        .first();
+      if (await emptyEndTimeInput.isVisible()) {
+        await emptyEndTimeInput.fill("17:00");
+        await emptyEndTimeInput.blur();
+        await expect(addButton).toBeVisible({ timeout: 5000 });
+      }
+    }
+
+    // Try to add a task without required fields
+    await addButton.click();
+
+    // Should show a notification about validation errors
+    await expect(
+      page.locator(
+        'text="Please fix validation errors before adding the task."',
+      ),
+    ).toBeVisible({ timeout: 5000 });
+  });
+
+  test("should prevent adding task when there's an incomplete task", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Wait for the page to load - target the main task table specifically
+    await expect(page.locator("table.mantine-Table-table")).toBeVisible();
+
+    // First, ensure we have a complete task, then create an incomplete one
+    const addButton = page.locator('button:has-text("Add")');
+
+    // If Add button is not visible, complete any incomplete task first
+    let isAddButtonVisible = await addButton.isVisible();
+    if (!isAddButtonVisible) {
+      const emptyEndTimeInput = page
+        .locator('input[placeholder="HH:mm"]')
+        .first();
+      if (await emptyEndTimeInput.isVisible()) {
+        await emptyEndTimeInput.fill("17:00");
+        await emptyEndTimeInput.blur();
+        await expect(addButton).toBeVisible({ timeout: 5000 });
+      }
+    }
+
+    // Create an incomplete task (without end time)
+    const startTimeInput = page.locator('input[placeholder="HH:mm"]').first();
+    await startTimeInput.fill("10:00");
+
+    const projectInput = page.locator("input").filter({ hasText: "" }).last();
+    await projectInput.fill("Incomplete Task Project");
+
+    const commentInput = page.locator('input[placeholder="Enter a comment"]');
+    await commentInput.fill("This task has no end time");
+
+    // Click Add to create incomplete task
+    await addButton.click();
+
+    // Wait for task to be added
+    await page.waitForTimeout(1000);
+
+    // Now the Add button should be hidden because there's an incomplete task
+    await expect(addButton).not.toBeVisible();
+
+    // Verify the incomplete task is shown in the table
+    const incompleteTaskRow = page.locator("table tbody tr").filter({
+      has: page.locator('text="Incomplete Task Project"'),
+    });
+
+    await expect(incompleteTaskRow).toBeVisible();
+
+    // The duration should show "..." for incomplete tasks
+    await expect(incompleteTaskRow.locator('text="..."')).toBeVisible();
+  });
+});
