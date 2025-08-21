@@ -1,5 +1,8 @@
 import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
 import { Task } from "../models/Task";
+
+dayjs.extend(isBetween);
 
 export function filterTasksByDateRange(
   selectedDateRange: [string | null, string | null],

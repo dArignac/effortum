@@ -6,6 +6,7 @@ export function DateSelectionField(props: {
   value: string | null;
   onChange: (value: string | null) => void;
   error?: React.ReactNode | undefined;
+  dataTestId: string;
 }) {
   return (
     <DatePickerInput
@@ -27,6 +28,7 @@ export function DateSelectionField(props: {
       ]}
       size="xs"
       error={props.error}
+      data-testid={props.dataTestId}
     />
   );
 }
