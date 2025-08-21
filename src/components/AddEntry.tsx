@@ -81,19 +81,31 @@ export function AddEntryRow() {
   return (
     <Table.Tr>
       <Table.Td>
-        <DateSelectionField {...fieldDate.getInputProps()} />
+        <DateSelectionField
+          {...fieldDate.getInputProps()}
+          dataTestId="add-entry-input-date"
+        />
       </Table.Td>
       <Table.Td>
-        <TimeInput size="xs" {...fieldStart.getInputProps()} />
+        <TimeInput
+          size="xs"
+          {...fieldStart.getInputProps()}
+          data-testid="add-entry-input-start-time"
+        />
       </Table.Td>
       <Table.Td>
-        <TimeInput size="xs" {...fieldEnd.getInputProps()} />
+        <TimeInput
+          size="xs"
+          {...fieldEnd.getInputProps()}
+          data-testid="add-entry-input-end-time"
+        />
       </Table.Td>
       <Table.Td>
         <Autocomplete
           {...fieldProject.getInputProps()}
           data={projects.map((p) => p.name)}
           size="xs"
+          data-testid="add-entry-input-project"
         />
       </Table.Td>
       <Table.Td>
@@ -101,11 +113,17 @@ export function AddEntryRow() {
           {...fieldComment.getInputProps()}
           placeholder="Enter a comment"
           size="xs"
+          data-testid="add-entry-input-comment"
         />
       </Table.Td>
       <Table.Td></Table.Td>
       <Table.Td>
-        <Button variant="filled" size="xs" onClick={addEntry}>
+        <Button
+          variant="filled"
+          size="xs"
+          onClick={addEntry}
+          data-testid="button-add-task"
+        >
           Add
         </Button>
       </Table.Td>
