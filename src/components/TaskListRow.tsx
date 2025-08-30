@@ -104,6 +104,8 @@ export function TaskListRow(props: { taskId: string | null }) {
     });
 
     notifications.show({ message: "Task updated successfully!" });
+
+    setHasChanges(false);
   };
 
   const stopTask = () => {
@@ -115,7 +117,10 @@ export function TaskListRow(props: { taskId: string | null }) {
   return (
     <Table.Tr key={task.id}>
       <Table.Td>
-        <DateSelectionField {...fieldDate.getInputProps()} />
+        <DateSelectionField
+          dataTestId={`date-selection-${task.date}`}
+          {...fieldDate.getInputProps()}
+        />
       </Table.Td>
       <Table.Td>
         <TimeInput size="xs" {...fieldStart.getInputProps()} />
