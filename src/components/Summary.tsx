@@ -1,13 +1,15 @@
-import { Box, Flex, SimpleGrid } from "@mantine/core";
-import { DatePicker } from "@mantine/dates";
+import { Box, Flex, Indicator, SimpleGrid } from "@mantine/core";
+import { DatePicker, DatePickerProps } from "@mantine/dates";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
+import isToday from "dayjs/plugin/isToday";
 import { Fragment, useEffect } from "react";
 import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
 import { formatDuration, getDuration } from "../utils/time";
 
 dayjs.extend(isBetween);
+dayjs.extend(isToday);
 
 export function Summary() {
   const tasks = useEffortumStore((state) => state.tasks);
@@ -45,6 +47,20 @@ export function Summary() {
     ),
   ).sort((a, b) => a.project.localeCompare(b.project));
 
+  const dayRenderer: DatePickerProps["renderDay"] = (date) => {
+    const day = dayjs(date).date();
+    return (
+      <Indicator
+        size={6}
+        position="bottom-center"
+        color="green"
+        disabled={!dayjs(date).isToday()}
+      >
+        <div>{day}</div>
+      </Indicator>
+    );
+  };
+
   return (
     <Flex
       mih={50}
@@ -60,6 +76,7 @@ export function Summary() {
         value={selectedDateRange}
         onChange={(value) => setSelectedDateRange(value || [null, null])}
         size="xs"
+        renderDay={dayRenderer}
       />
       <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs" mt={5}>
         {data.map((task, idx) => (
