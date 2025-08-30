@@ -3,12 +3,15 @@ import { devtools } from "zustand/middleware";
 import { EffortumDB } from "./db";
 import { Project } from "./models/Project";
 import { Task } from "./models/Task";
+import { Comment } from "./models/Comment";
+import { comment } from "postcss";
 
 const db = new EffortumDB();
 
 interface EffortumStore {
   tasks: Task[];
   projects: Project[];
+  comments: Comment[];
   selectedDateRange: [string | null, string | null];
   endTimeOfLastStoppedTask: string | null;
 
@@ -16,6 +19,9 @@ interface EffortumStore {
 
   addTask: (task: Task) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
+
+  addComment: (comment: Comment) => void;
+  getCommentsForProject: (projectId: string) => Comment[];
 
   addProject: (project: Project) => void;
 
@@ -27,6 +33,7 @@ interface EffortumStore {
 export const storeCreator = (set, get) => ({
   projects: [],
   tasks: [],
+  comments: [],
   selectedDateRange: [null, null] as [string | null, string | null],
   endTimeOfLastStoppedTask: null,
 
@@ -69,6 +76,16 @@ export const storeCreator = (set, get) => ({
     await db.projects.add(project);
     const projects = await db.projects.toArray();
     set({ projects });
+  },
+
+  addComment: async (comment) => {
+    await db.comments.add(comment);
+    const comments = await db.comments.toArray();
+    set({ comments });
+  },
+
+  getCommentsForProject: (projectId: string) => {
+    return get().comments.filter((comment) => comment.projectId === projectId);
   },
 
   setSelectedDateRange: (range: [string | null, string | null]) => {
