@@ -5,7 +5,13 @@ import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/charts/styles.css";
 
-import { createTheme, MantineProvider } from "@mantine/core";
+import {
+  Center,
+  Container,
+  createTheme,
+  MantineProvider,
+  Text,
+} from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import {
   createRootRoute,
@@ -15,6 +21,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { useEffortumStore } from "../store";
+import { VERSION } from "../version";
 
 const theme = createTheme({
   /** Put your mantine theme override here */
@@ -73,6 +80,11 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       <body>
         <MantineProvider theme={theme}>
           {children}
+          <Container size="xs" mt={40}>
+            <Center>
+              <Text size="xs">Version: {VERSION}</Text>
+            </Center>
+          </Container>
           <Notifications />
           <Scripts />
         </MantineProvider>
