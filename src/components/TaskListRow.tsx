@@ -112,6 +112,7 @@ export function TaskListRow(props: { taskId: string | null }) {
     const endTime = dayjs().format("HH:mm");
     updateTask(task.id, { timeEnd: endTime });
     fieldEnd.setValue(endTime);
+    setHasChanges(false);
   };
 
   return (
