@@ -19,6 +19,9 @@ export function TaskListRow(props: { taskId: string | null }) {
   const tasks = useEffortumStore((state) => state.tasks);
   const updateTask = useEffortumStore((state) => state.updateTask);
   const projects = useEffortumStore((state) => state.projects);
+  const setEndTimeOfLastStoppedTask = useEffortumStore(
+    (state) => state.setEndTimeOfLastStoppedTask,
+  );
 
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -113,6 +116,9 @@ export function TaskListRow(props: { taskId: string | null }) {
     updateTask(task.id, { timeEnd: endTime });
     fieldEnd.setValue(endTime);
     setHasChanges(false);
+
+    // store the end time to be able to set it as new start time
+    setEndTimeOfLastStoppedTask(endTime);
   };
 
   return (

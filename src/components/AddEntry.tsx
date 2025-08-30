@@ -3,7 +3,7 @@ import { TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useEffortumStore } from "../store";
 import {
   validateDate,
@@ -16,12 +16,21 @@ import { DateSelectionField } from "./DateField";
 export function AddEntryRow() {
   const projects = useEffortumStore((state) => state.projects);
   const addTask = useEffortumStore((state) => state.addTask);
+  const endTimeOfLastStoppedTask = useEffortumStore(
+    (state) => state.endTimeOfLastStoppedTask,
+  );
 
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [startValue, setStartValue] = useState<string>("");
   const [endValue, setEndValue] = useState<string>("");
   const [projectValue, setProjectValue] = useState<string>("");
   const [commentValue, setCommentValue] = useState<string>("");
+
+  useEffect(() => {
+    if (endTimeOfLastStoppedTask != null && startValue.length === 0) {
+      fieldStart.setValue(endTimeOfLastStoppedTask);
+    }
+  }, [startValue, endTimeOfLastStoppedTask]);
 
   const fieldDate = useField({
     initialValue: dayjs().format("YYYY-MM-DD"),

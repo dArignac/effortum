@@ -10,6 +10,7 @@ interface EffortumStore {
   tasks: Task[];
   projects: Project[];
   selectedDateRange: [string | null, string | null];
+  endTimeOfLastStoppedTask: string | null;
 
   loadFromIndexedDb: () => void;
 
@@ -19,12 +20,15 @@ interface EffortumStore {
   addProject: (project: Project) => void;
 
   setSelectedDateRange: (range: [string | null, string | null]) => void;
+
+  setEndTimeOfLastStoppedTask: (time: string | null) => void;
 }
 
 export const storeCreator = (set, get) => ({
   projects: [],
   tasks: [],
   selectedDateRange: [null, null] as [string | null, string | null],
+  endTimeOfLastStoppedTask: null,
 
   loadFromIndexedDb: async () => {
     const tasks = await db.tasks.orderBy("date").toArray();
@@ -69,6 +73,10 @@ export const storeCreator = (set, get) => ({
 
   setSelectedDateRange: (range: [string | null, string | null]) => {
     set({ selectedDateRange: range });
+  },
+
+  setEndTimeOfLastStoppedTask: (time: string | null) => {
+    set({ endTimeOfLastStoppedTask: time });
   },
 });
 
