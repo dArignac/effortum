@@ -113,7 +113,11 @@ export function TaskListRow(props: { taskId: string | null }) {
 
   const stopTask = () => {
     const endTime = dayjs().format("HH:mm");
-    updateTask(task.id, { timeEnd: endTime });
+    updateTask(task.id, {
+      timeEnd: endTime,
+      project: fieldProject.getValue(),
+      comment: fieldComment.getValue() || "",
+    });
     fieldEnd.setValue(endTime);
     setHasChanges(false);
 
