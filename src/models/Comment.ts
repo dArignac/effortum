@@ -1,5 +1,5 @@
 export type Comment = {
   id: string;
-  projectId: string;
+  project: string;
   comment: string;
 };

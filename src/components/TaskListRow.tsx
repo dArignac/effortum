@@ -14,19 +14,24 @@ import {
   validateStart,
 } from "../validations";
 import { DateSelectionField } from "./DateField";
+import { Comment } from "../models/Comment";
 
 export function TaskListRow(props: { taskId: string | null }) {
   const tasks = useEffortumStore((state) => state.tasks);
+  const comments = useEffortumStore((state) => state.comments);
   const updateTask = useEffortumStore((state) => state.updateTask);
+  const getCommentsForProject = useEffortumStore(
+    (state) => state.getCommentsForProject,
+  );
   const projects = useEffortumStore((state) => state.projects);
   const setEndTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.setEndTimeOfLastStoppedTask,
   );
 
   const [hasChanges, setHasChanges] = useState(false);
-
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [canStopTask, setCanStopTask] = useState(false);
+  const [availableComments, setAvailableComments] = useState<Comment[]>([]);
 
   const task = tasks.find((task) => task.id === props.taskId);
   if (!task) {
@@ -81,6 +86,17 @@ export function TaskListRow(props: { taskId: string | null }) {
       setHasChanges(value !== task.comment);
     },
   });
+
+  useEffect(() => {
+    const loadComments = async () => {
+      // only fill comments if a project is selected
+      if (fieldProject.getValue().length > 0) {
+        const comments = await getCommentsForProject(fieldProject.getValue());
+        setAvailableComments(comments);
+      }
+    };
+    loadComments();
+  }, [fieldProject.getValue()]);
 
   const updateEntry = async () => {
     // Validate all fields
@@ -147,9 +163,9 @@ export function TaskListRow(props: { taskId: string | null }) {
         />
       </Table.Td>
       <Table.Td>
-        <TextInput
+        <Autocomplete
           {...fieldComment.getInputProps()}
-          placeholder="Enter a comment"
+          data={availableComments?.map((c: Comment) => c.comment) || []}
           size="xs"
         />
       </Table.Td>

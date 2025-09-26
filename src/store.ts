@@ -1,10 +1,9 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { EffortumDB } from "./db";
+import { Comment } from "./models/Comment";
 import { Project } from "./models/Project";
 import { Task } from "./models/Task";
-import { Comment } from "./models/Comment";
-import { comment } from "postcss";
 
 const db = new EffortumDB();
 
@@ -21,7 +20,7 @@ interface EffortumStore {
   updateTask: (id: string, updates: Partial<Task>) => void;
 
   addComment: (comment: Comment) => void;
-  getCommentsForProject: (projectId: string) => Comment[];
+  getCommentsForProject: (project: string) => Comment[];
 
   addProject: (project: Project) => void;
 
@@ -43,7 +42,7 @@ export const storeCreator = (set, get) => ({
     set({ tasks, projects });
   },
 
-  addTask: async (task) => {
+  addTask: async (task: Task) => {
     // create project if not already existing
     let projectInstance = get().projects.find((p) => p.name === task.project);
     if (!projectInstance) {
@@ -72,20 +71,29 @@ export const storeCreator = (set, get) => ({
     set({ tasks });
   },
 
-  addProject: async (project) => {
+  addProject: async (project: Project) => {
     await db.projects.add(project);
     const projects = await db.projects.toArray();
     set({ projects });
   },
 
-  addComment: async (comment) => {
-    await db.comments.add(comment);
-    const comments = await db.comments.toArray();
-    set({ comments });
+  addComment: async (comment: Comment) => {
+    const isExisting =
+      get().comments.filter(
+        (c: Comment) =>
+          c.project === comment.project && c.comment == comment.comment,
+      ).length > 0;
+
+    if (!isExisting) {
+      await db.comments.add(comment);
+      const comments = await db.comments.toArray();
+      set({ comments });
+    }
   },
 
-  getCommentsForProject: (projectId: string) => {
-    return get().comments.filter((comment) => comment.projectId === projectId);
+  getCommentsForProject: (project: string) => {
+    // FIXME get().comments is always []
+    return get().comments.filter((comment) => comment.project === project);
   },
 
   setSelectedDateRange: (range: [string | null, string | null]) => {

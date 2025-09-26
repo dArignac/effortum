@@ -15,7 +15,7 @@ export class EffortumDB extends Dexie {
       projects: "++id, &name",
     });
     this.version(2).stores({
-      comments: "++id, projectId, comment",
+      comments: "++id, project, comment",
     });
   }
 }
