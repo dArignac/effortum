@@ -4,6 +4,7 @@ import { EffortumDB } from "./db";
 import { Comment } from "./models/Comment";
 import { Project } from "./models/Project";
 import { Task } from "./models/Task";
+import { addSyntheticLeadingComment } from "typescript";
 
 const db = new EffortumDB();
 
@@ -59,13 +60,21 @@ export const storeCreator = (set, get) => ({
     set({ tasks });
   },
 
-  updateTask: async (id, updates) => {
+  updateTask: async (id: string, updates: Partial<Task>) => {
     const task = get().tasks.find((t) => t.id === id);
     let projectInstance = get().projects.find((p) => p.name === task.project);
     if (!projectInstance) {
       projectInstance = { id: crypto.randomUUID(), name: task.project };
       await db.projects.add(projectInstance);
       set({ projects: [...get().projects, projectInstance] });
+    }
+
+    // If there's a comment in the updates, add it to comments
+    if (updates.comment) {
+      await get().addComment({
+        project: task.project,
+        comment: updates.comment,
+      });
     }
 
     await db.tasks.update(id, updates);
