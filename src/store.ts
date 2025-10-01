@@ -4,7 +4,6 @@ import { EffortumDB } from "./db";
 import { Comment } from "./models/Comment";
 import { Project } from "./models/Project";
 import { Task } from "./models/Task";
-import { addSyntheticLeadingComment } from "typescript";
 
 const db = new EffortumDB();
 
@@ -92,7 +91,7 @@ export const storeCreator = (set, get) => ({
     const isExisting =
       get().comments.filter(
         (c: Comment) =>
-          c.project === comment.project && c.comment == comment.comment,
+          c.project === comment.project && c.comment === comment.comment,
       ).length > 0;
 
     if (!isExisting) {

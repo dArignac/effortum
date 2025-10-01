@@ -106,7 +106,6 @@ export function AddEntryRow() {
     if (commentValue.length > 0) {
       addComment({
         comment: commentValue,
-        id: crypto.randomUUID(),
         project: projectValue,
       });
     }
