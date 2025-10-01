@@ -36,10 +36,12 @@ export const storeCreator = (set, get) => ({
   selectedDateRange: [null, null] as [string | null, string | null],
   endTimeOfLastStoppedTask: null,
 
+  // adjust this whenever a new entity is added to the db
   loadFromIndexedDb: async () => {
     const tasks = await db.tasks.orderBy("date").toArray();
     const projects = await db.projects.orderBy("name").toArray();
-    set({ tasks, projects });
+    const comments = await db.comments.toArray();
+    set({ tasks, projects, comments });
   },
 
   addTask: async (task: Task) => {
@@ -92,7 +94,6 @@ export const storeCreator = (set, get) => ({
   },
 
   getCommentsForProject: (project: string) => {
-    // FIXME get().comments is always []
     return get().comments.filter((comment) => comment.project === project);
   },
 

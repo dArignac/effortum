@@ -44,7 +44,6 @@ export function AddEntryRow() {
       if (projectValue.length > 0) {
         const comments = await getCommentsForProject(projectValue);
         setAvailableComments(comments);
-        console.warn("loaded comments", comments);
       }
     };
     loadComments();
