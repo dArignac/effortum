@@ -160,6 +160,7 @@ export function TaskListRow(props: { taskId: string | null }) {
           {...fieldProject.getInputProps()}
           data={projects.map((p) => p.name)}
           size="xs"
+          placeholder="Select or enter a project"
         />
       </Table.Td>
       <Table.Td>
@@ -167,6 +168,7 @@ export function TaskListRow(props: { taskId: string | null }) {
           {...fieldComment.getInputProps()}
           data={availableComments?.map((c: Comment) => c.comment) || []}
           size="xs"
+          placeholder="Select or enter a comment"
         />
       </Table.Td>
       <Table.Td>

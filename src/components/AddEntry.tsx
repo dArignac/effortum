@@ -139,6 +139,7 @@ export function AddEntryRow() {
           data={projects.map((p) => p.name)}
           size="xs"
           data-testid="add-entry-input-project"
+          placeholder="Select or enter a project"
         />
       </Table.Td>
       <Table.Td>
@@ -147,6 +148,7 @@ export function AddEntryRow() {
           data={availableComments?.map((c) => c.comment) || []}
           size="xs"
           data-testid="add-entry-input-comment"
+          placeholder="Select or enter a comment"
         />
       </Table.Td>
       <Table.Td></Table.Td>
