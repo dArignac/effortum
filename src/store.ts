@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { EffortumDB } from "./db";
+import { Comment } from "./models/Comment";
 import { Project } from "./models/Project";
 import { Task } from "./models/Task";
 
@@ -9,6 +10,7 @@ const db = new EffortumDB();
 interface EffortumStore {
   tasks: Task[];
   projects: Project[];
+  comments: Comment[];
   selectedDateRange: [string | null, string | null];
   endTimeOfLastStoppedTask: string | null;
 
@@ -16,6 +18,9 @@ interface EffortumStore {
 
   addTask: (task: Task) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
+
+  addComment: (comment: Comment) => void;
+  getCommentsForProject: (project: string) => Comment[];
 
   addProject: (project: Project) => void;
 
@@ -27,16 +32,19 @@ interface EffortumStore {
 export const storeCreator = (set, get) => ({
   projects: [],
   tasks: [],
+  comments: [],
   selectedDateRange: [null, null] as [string | null, string | null],
   endTimeOfLastStoppedTask: null,
 
+  // adjust this whenever a new entity is added to the db
   loadFromIndexedDb: async () => {
     const tasks = await db.tasks.orderBy("date").toArray();
     const projects = await db.projects.orderBy("name").toArray();
-    set({ tasks, projects });
+    const comments = await db.comments.orderBy("comment").toArray();
+    set({ tasks, projects, comments });
   },
 
-  addTask: async (task) => {
+  addTask: async (task: Task) => {
     // create project if not already existing
     let projectInstance = get().projects.find((p) => p.name === task.project);
     if (!projectInstance) {
@@ -51,13 +59,23 @@ export const storeCreator = (set, get) => ({
     set({ tasks });
   },
 
-  updateTask: async (id, updates) => {
+  updateTask: async (id: string, updates: Partial<Task>) => {
     const task = get().tasks.find((t) => t.id === id);
-    let projectInstance = get().projects.find((p) => p.name === task.project);
+    let projectInstance: Project | undefined = get().projects.find(
+      (p) => p.name === task.project,
+    );
     if (!projectInstance) {
       projectInstance = { id: crypto.randomUUID(), name: task.project };
       await db.projects.add(projectInstance);
       set({ projects: [...get().projects, projectInstance] });
+    }
+
+    // If there's a comment in the updates, add it to comments
+    if (updates.comment) {
+      await get().addComment({
+        project: projectInstance.name,
+        comment: updates.comment,
+      });
     }
 
     await db.tasks.update(id, updates);
@@ -65,10 +83,27 @@ export const storeCreator = (set, get) => ({
     set({ tasks });
   },
 
-  addProject: async (project) => {
+  addProject: async (project: Project) => {
     await db.projects.add(project);
     const projects = await db.projects.toArray();
     set({ projects });
+  },
+
+  addComment: async (comment: Comment) => {
+    const isExisting = get().comments.some(
+      (c: Comment) =>
+        c.project === comment.project && c.comment === comment.comment,
+    );
+
+    if (!isExisting) {
+      await db.comments.add(comment);
+      const comments = await db.comments.toArray();
+      set({ comments });
+    }
+  },
+
+  getCommentsForProject: (project: string) => {
+    return get().comments.filter((comment) => comment.project === project);
   },
 
   setSelectedDateRange: (range: [string | null, string | null]) => {

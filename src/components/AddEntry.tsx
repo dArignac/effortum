@@ -1,9 +1,10 @@
-import { Autocomplete, Button, Table, TextInput } from "@mantine/core";
+import { Autocomplete, Button, Table } from "@mantine/core";
 import { TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { Comment } from "../models/Comment";
 import { useEffortumStore } from "../store";
 import {
   validateDate,
@@ -16,6 +17,10 @@ import { DateSelectionField } from "./DateField";
 export function AddEntryRow() {
   const projects = useEffortumStore((state) => state.projects);
   const addTask = useEffortumStore((state) => state.addTask);
+  const addComment = useEffortumStore((state) => state.addComment);
+  const getCommentsForProject = useEffortumStore(
+    (state) => state.getCommentsForProject,
+  );
   const endTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.endTimeOfLastStoppedTask,
   );
@@ -25,12 +30,24 @@ export function AddEntryRow() {
   const [endValue, setEndValue] = useState<string>("");
   const [projectValue, setProjectValue] = useState<string>("");
   const [commentValue, setCommentValue] = useState<string>("");
+  const [availableComments, setAvailableComments] = useState<Comment[]>([]);
 
   useEffect(() => {
     if (endTimeOfLastStoppedTask != null && startValue.length === 0) {
       fieldStart.setValue(endTimeOfLastStoppedTask);
     }
   }, [startValue, endTimeOfLastStoppedTask]);
+
+  useEffect(() => {
+    const loadComments = async () => {
+      // only fill comments if a project is selected
+      if (projectValue.length > 0) {
+        const comments = await getCommentsForProject(projectValue);
+        setAvailableComments(comments);
+      }
+    };
+    loadComments();
+  }, [projectValue]);
 
   const fieldDate = useField({
     initialValue: dayjs().format("YYYY-MM-DD"),
@@ -85,6 +102,13 @@ export function AddEntryRow() {
       project: projectValue,
       comment: commentValue || "",
     });
+
+    if (commentValue.length > 0) {
+      addComment({
+        comment: commentValue,
+        project: projectValue,
+      });
+    }
   };
 
   return (
@@ -115,14 +139,16 @@ export function AddEntryRow() {
           data={projects.map((p) => p.name)}
           size="xs"
           data-testid="add-entry-input-project"
+          placeholder="Select or enter a project"
         />
       </Table.Td>
       <Table.Td>
-        <TextInput
+        <Autocomplete
           {...fieldComment.getInputProps()}
-          placeholder="Enter a comment"
+          data={availableComments?.map((c) => c.comment) || []}
           size="xs"
           data-testid="add-entry-input-comment"
+          placeholder="Select or enter a comment"
         />
       </Table.Td>
       <Table.Td></Table.Td>
