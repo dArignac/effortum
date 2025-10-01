@@ -61,7 +61,9 @@ export const storeCreator = (set, get) => ({
 
   updateTask: async (id: string, updates: Partial<Task>) => {
     const task = get().tasks.find((t) => t.id === id);
-    let projectInstance = get().projects.find((p) => p.name === task.project);
+    let projectInstance: Project | undefined = get().projects.find(
+      (p) => p.name === task.project,
+    );
     if (!projectInstance) {
       projectInstance = { id: crypto.randomUUID(), name: task.project };
       await db.projects.add(projectInstance);
@@ -71,7 +73,7 @@ export const storeCreator = (set, get) => ({
     // If there's a comment in the updates, add it to comments
     if (updates.comment) {
       await get().addComment({
-        project: task.project,
+        project: projectInstance.name,
         comment: updates.comment,
       });
     }
@@ -88,11 +90,10 @@ export const storeCreator = (set, get) => ({
   },
 
   addComment: async (comment: Comment) => {
-    const isExisting =
-      get().comments.some(
-        (c: Comment) =>
-          c.project === comment.project && c.comment === comment.comment,
-      );
+    const isExisting = get().comments.some(
+      (c: Comment) =>
+        c.project === comment.project && c.comment === comment.comment,
+    );
 
     if (!isExisting) {
       await db.comments.add(comment);
