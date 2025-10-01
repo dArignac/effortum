@@ -13,4 +13,7 @@ export default defineConfig({
     tanstackStart({ target: "netlify", customViteReactPlugin: true }),
     viteReact(),
   ],
+  test: {
+    exclude: ["**/node_modules/**", "**/e2e/**"],
+  },
 });
