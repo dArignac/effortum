@@ -89,10 +89,10 @@ export const storeCreator = (set, get) => ({
 
   addComment: async (comment: Comment) => {
     const isExisting =
-      get().comments.filter(
+      get().comments.some(
         (c: Comment) =>
           c.project === comment.project && c.comment === comment.comment,
-      ).length > 0;
+      );
 
     if (!isExisting) {
       await db.comments.add(comment);
