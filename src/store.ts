@@ -41,7 +41,7 @@ export const storeCreator = (set, get) => ({
   loadFromIndexedDb: async () => {
     const tasks = await db.tasks.orderBy("date").toArray();
     const projects = await db.projects.orderBy("name").toArray();
-    const comments = await db.comments.toArray();
+    const comments = await db.comments.orderBy("comment").toArray();
     set({ tasks, projects, comments });
   },
 
