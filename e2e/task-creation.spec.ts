@@ -146,8 +146,11 @@ test.describe("Task Creation", () => {
     await expect(dateInput).toBeVisible();
     await dateInput.click();
 
-    // Wait for the date picker to open
-    await expect(page.locator(".mantine-Popover-dropdown")).toBeVisible();
+    // Wait for the date picker to open - be more specific to avoid multiple matches
+    const datePickerPopover = page
+      .locator(".mantine-Popover-dropdown")
+      .filter({ has: page.locator(".mantine-DatePickerInput-day") });
+    await expect(datePickerPopover).toBeVisible();
 
     // Test selecting a specific date (e.g., 15th of current month)
     // First, let's try to find and click on day 15
@@ -167,7 +170,7 @@ test.describe("Task Creation", () => {
     }
 
     // Verify the date picker closes and a date is selected
-    await expect(page.locator(".mantine-Popover-dropdown")).not.toBeVisible();
+    await expect(datePickerPopover).not.toBeVisible();
 
     // Verify that the input now has a value (should be in YYYY-MM-DD format)
     // For Mantine DatePickerInput, the value is displayed as text content
@@ -177,7 +180,7 @@ test.describe("Task Creation", () => {
 
     // Test using preset buttons
     await dateInput.click();
-    await expect(page.locator(".mantine-Popover-dropdown")).toBeVisible();
+    await expect(datePickerPopover).toBeVisible();
 
     // Click on "Today" preset
     const todayPreset = page
@@ -187,7 +190,7 @@ test.describe("Task Creation", () => {
     await todayPreset.click();
 
     // Verify the date picker closes and today's date is selected
-    await expect(page.locator(".mantine-Popover-dropdown")).not.toBeVisible();
+    await expect(datePickerPopover).not.toBeVisible();
 
     const todayValue = await dateInput.textContent();
     const expectedToday = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
@@ -195,7 +198,7 @@ test.describe("Task Creation", () => {
 
     // Test "Yesterday" preset
     await dateInput.click();
-    await expect(page.locator(".mantine-Popover-dropdown")).toBeVisible();
+    await expect(datePickerPopover).toBeVisible();
 
     const yesterdayPreset = page
       .locator(".mantine-DatePickerInput-presetButton")
@@ -203,7 +206,7 @@ test.describe("Task Creation", () => {
     await expect(yesterdayPreset).toBeVisible();
     await yesterdayPreset.click();
 
-    await expect(page.locator(".mantine-Popover-dropdown")).not.toBeVisible();
+    await expect(datePickerPopover).not.toBeVisible();
 
     const yesterdayValue = await dateInput.textContent();
     const expectedYesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
