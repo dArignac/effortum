@@ -135,4 +135,151 @@ test.describe("Task Creation", () => {
       .split("T")[0];
     expect(yesterdayValue).toBe(expectedYesterday);
   });
+
+  test("should show newly added task in task list with correct button states", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Wait for the page to load
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    // Ensure Add button is visible by completing any incomplete task first
+    const addButton = page.getByTestId("button-add-task");
+    const isAddButtonVisible = await addButton.isVisible();
+
+    if (!isAddButtonVisible) {
+      const emptyEndTimeInput = page.getByTestId("add-entry-input-end-time");
+      if (await emptyEndTimeInput.isVisible()) {
+        await emptyEndTimeInput.fill("17:00");
+        await emptyEndTimeInput.blur();
+        await expect(addButton).toBeVisible({ timeout: 5000 });
+      }
+    }
+
+    // Fill in the required fields for a new task
+    const startTimeInput = page.getByTestId("add-entry-input-start-time");
+    const projectInput = page.getByTestId("add-entry-input-project");
+
+    await startTimeInput.fill("09:00");
+    await projectInput.fill("Test Project");
+
+    // Add the task
+    await addButton.click();
+
+    // Wait for the task to appear in the list
+    // The task row should be visible
+    const taskRows = page.locator('[data-testid^="task-row-"]');
+    await expect(taskRows).toHaveCount(1, { timeout: 5000 });
+
+    const taskRow = taskRows.first();
+
+    // Verify the task contains the correct data by checking specific cells
+    // Check start time in the second column
+    const startTimeCell = taskRow.locator("td").nth(1);
+    await expect(startTimeCell.locator("input")).toHaveValue("09:00");
+
+    // Check project in the fourth column
+    const projectCell = taskRow.locator("td").nth(3);
+    await expect(projectCell.locator("input")).toHaveValue("Test Project");
+
+    // Check button states within this specific task row
+    // Since we don't know the task ID, we'll find buttons within the task row
+    const updateButton = taskRow.locator(
+      '[data-testid^="button-update-task-"]',
+    );
+    const stopButton = taskRow.locator('[data-testid^="button-stop-task-"]');
+
+    // Update button should be visible but disabled (no changes yet)
+    await expect(updateButton).toBeVisible();
+    await expect(updateButton).toBeDisabled();
+
+    // Stop button should be visible and enabled (incomplete task)
+    await expect(stopButton).toBeVisible();
+    await expect(stopButton).toBeEnabled();
+
+    // Verify that the task is incomplete (no end time filled in by default)
+    const endTimeCell = taskRow.locator("td").nth(2);
+    const endTimeInput = endTimeCell.locator("input");
+    const endTimeValue = await endTimeInput.inputValue();
+    expect(endTimeValue).toBe("");
+  });
+
+  test("should handle multiple tasks with unique button identifiers", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Wait for the page to load
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    // Ensure Add button is visible by completing any incomplete task first
+    let addButton = page.getByTestId("button-add-task");
+    let isAddButtonVisible = await addButton.isVisible();
+
+    if (!isAddButtonVisible) {
+      const emptyEndTimeInput = page.getByTestId("add-entry-input-end-time");
+      if (await emptyEndTimeInput.isVisible()) {
+        await emptyEndTimeInput.fill("17:00");
+        await emptyEndTimeInput.blur();
+        await expect(addButton).toBeVisible({ timeout: 5000 });
+      }
+    }
+
+    // Add first task
+    await page.getByTestId("add-entry-input-start-time").fill("09:00");
+    await page.getByTestId("add-entry-input-end-time").fill("10:00");
+    await page.getByTestId("add-entry-input-project").fill("Project A");
+    await addButton.click();
+
+    // Wait for add button to be visible again (first task is complete)
+    await expect(addButton).toBeVisible({ timeout: 5000 });
+
+    // Add second task (incomplete)
+    await page.getByTestId("add-entry-input-start-time").fill("11:00");
+    await page.getByTestId("add-entry-input-end-time").clear(); // Leave empty for incomplete task
+    await page.getByTestId("add-entry-input-project").fill("Project B");
+    await addButton.click();
+
+    // Should have 2 task rows now
+    const taskRows = page.locator('[data-testid^="task-row-"]');
+    await expect(taskRows).toHaveCount(2, { timeout: 5000 });
+
+    // Check first task (complete) - should have update button but no stop button
+    const firstTaskRow = taskRows.first();
+    const firstUpdateButton = firstTaskRow.locator(
+      '[data-testid^="button-update-task-"]',
+    );
+    const firstStopButton = firstTaskRow.locator(
+      '[data-testid^="button-stop-task-"]',
+    );
+
+    await expect(firstUpdateButton).toBeVisible();
+    await expect(firstUpdateButton).toBeDisabled(); // No changes made
+    await expect(firstStopButton).not.toBeVisible(); // Complete task has no stop button
+
+    // Check second task (incomplete) - should have both update and stop buttons
+    const secondTaskRow = taskRows.nth(1);
+    const secondUpdateButton = secondTaskRow.locator(
+      '[data-testid^="button-update-task-"]',
+    );
+    const secondStopButton = secondTaskRow.locator(
+      '[data-testid^="button-stop-task-"]',
+    );
+
+    await expect(secondUpdateButton).toBeVisible();
+    await expect(secondUpdateButton).toBeDisabled(); // No changes made
+    await expect(secondStopButton).toBeVisible(); // Incomplete task has stop button
+    await expect(secondStopButton).toBeEnabled();
+
+    // Verify buttons have different data-testid values
+    const firstUpdateId = await firstUpdateButton.getAttribute("data-testid");
+    const secondUpdateId = await secondUpdateButton.getAttribute("data-testid");
+    const secondStopId = await secondStopButton.getAttribute("data-testid");
+
+    expect(firstUpdateId).toMatch(/^button-update-task-/);
+    expect(secondUpdateId).toMatch(/^button-update-task-/);
+    expect(secondStopId).toMatch(/^button-stop-task-/);
+    expect(firstUpdateId).not.toBe(secondUpdateId); // Should be different
+  });
 });

@@ -1,10 +1,11 @@
-import { ActionIcon, Autocomplete, Table, TextInput } from "@mantine/core";
+import { ActionIcon, Autocomplete, Table } from "@mantine/core";
 import { TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { Comment } from "../models/Comment";
 import { useEffortumStore } from "../store";
 import { getDurationAsTime } from "../utils/time";
 import {
@@ -14,7 +15,6 @@ import {
   validateStart,
 } from "../validations";
 import { DateSelectionField } from "./DateField";
-import { Comment } from "../models/Comment";
 
 export function TaskListRow(props: { taskId: string | null }) {
   const tasks = useEffortumStore((state) => state.tasks);
@@ -142,7 +142,7 @@ export function TaskListRow(props: { taskId: string | null }) {
   };
 
   return (
-    <Table.Tr key={task.id}>
+    <Table.Tr key={task.id} data-testid={`task-row-${task.id}`}>
       <Table.Td>
         <DateSelectionField
           dataTestId={`date-selection-${task.date}`}
@@ -182,6 +182,7 @@ export function TaskListRow(props: { taskId: string | null }) {
           mt={1}
           onClick={updateEntry}
           disabled={!hasChanges}
+          data-testid={`button-update-task-${task.id}`}
         >
           <IconPencilCheck />
         </ActionIcon>{" "}
@@ -191,6 +192,7 @@ export function TaskListRow(props: { taskId: string | null }) {
             size="md"
             aria-label="Stop Task"
             onClick={stopTask}
+            data-testid={`button-stop-task-${task.id}`}
           >
             <IconClockPause />
           </ActionIcon>
