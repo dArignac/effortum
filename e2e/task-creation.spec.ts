@@ -1,13 +1,15 @@
 import { test, expect } from "@playwright/test";
 
+// felder einzeln testen, dann task creation, dann rest. KI ist überfordert. Muss es manuell tun.
+
 test.describe("Task Creation", () => {
-  test("should show validation errors for invalid task data", async ({
+  test("should show validation errors for start and project fields if no value is given and task is added", async ({
     page,
   }) => {
     await page.goto("/");
 
     // Wait for the page to load - target the main task table specifically
-    await expect(page.locator("table.mantine-Table-table")).toBeVisible();
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
 
     // Ensure Add button is visible
     const addButton = page.getByTestId("button-add-task");
@@ -32,13 +34,20 @@ test.describe("Task Creation", () => {
         'text="Please fix validation errors before adding the task."',
       ),
     ).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.getByTestId("add-entry-input-start-time"),
+    ).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByTestId("add-entry-input-project")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
   });
 
   test("should select date using date picker", async ({ page }) => {
     await page.goto("/");
 
     // Wait for the page to load - target the main task table specifically
-    await expect(page.locator("table.mantine-Table-table")).toBeVisible();
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
 
     // Ensure Add button is visible by completing any incomplete task first
     const addButton = page.getByTestId("button-add-task");

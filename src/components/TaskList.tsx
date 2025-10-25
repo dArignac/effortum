@@ -30,7 +30,7 @@ export function TaskList() {
   }, [tasks]);
 
   return (
-    <Table stickyHeader stickyHeaderOffset={0}>
+    <Table stickyHeader stickyHeaderOffset={0} data-testid="task-list-table">
       <Table.Thead>
         <Table.Tr>
           <Table.Th>Date</Table.Th>
