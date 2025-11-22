@@ -1,10 +1,10 @@
-// src/routes/__root.tsx
-/// <reference types="vite/client" />
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/charts/styles.css";
 
+import { useEffortumStore } from "@/store";
+import { VERSION } from "@/version";
 import {
   Center,
   Container,
@@ -13,15 +13,8 @@ import {
   Text,
 } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
-import {
-  createRootRoute,
-  HeadContent,
-  Outlet,
-  Scripts,
-} from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
-import { useEffortumStore } from "../store";
-import { VERSION } from "../version";
+import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 const theme = createTheme({
   /** Put your mantine theme override here */
@@ -56,24 +49,17 @@ export const Route = createRootRoute({
       },
     ],
   }),
-  component: RootComponent,
+
+  shellComponent: RootDocument,
 });
 
-function RootComponent() {
-  return (
-    <RootDocument>
-      <Outlet />
-    </RootDocument>
-  );
-}
-
-function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
+function RootDocument({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     useEffortumStore.getState().loadFromIndexedDb();
   }, []);
 
   return (
-    <html>
+    <html lang="en">
       <head>
         <HeadContent />
       </head>

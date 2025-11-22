@@ -1,28 +1,16 @@
 {
-  "name": "timetracker",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "xxx",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "vite dev --port 3000",
     "build": "vite build",
-    "test": "vitest",
+    "serve": "vite preview",
+    "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dArignac/timetracker.git"
-  },
-  "keywords": [],
-  "author": "Alexander Herrmann",
-  "license": "MIT",
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/dArignac/timetracker/issues"
-  },
-  "homepage": "https://github.com/dArignac/timetracker#readme",
   "dependencies": {
     "@mantine/charts": "^8.3.8",
     "@mantine/core": "^8.3.8",
@@ -30,25 +18,40 @@
     "@mantine/form": "^8.3.8",
     "@mantine/hooks": "^8.3.8",
     "@mantine/notifications": "^8.3.8",
+    "@netlify/vite-plugin-tanstack-start": "^1.0.2",
     "@tabler/icons-react": "^3.34.0",
-    "@tanstack/react-router": "^1.127.3",
-    "@tanstack/react-start": "^1.127.6",
+    "@tailwindcss/vite": "^4.0.6",
+    "@tanstack/react-devtools": "^0.7.0",
+    "@tanstack/react-router": "^1.132.0",
+    "@tanstack/react-router-devtools": "^1.132.0",
+    "@tanstack/react-router-ssr-query": "^1.131.7",
+    "@tanstack/react-start": "^1.132.0",
+    "@tanstack/router-plugin": "^1.132.0",
     "dayjs": "^1.11.19",
     "dexie": "^4.2.1",
+    "lucide-react": "^0.544.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "vite": "^7.2.0",
+    "tailwindcss": "^4.0.6",
+    "vite-tsconfig-paths": "^5.1.4",
     "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
-    "@types/react": "^19.2.6",
-    "@types/react-dom": "^19.2.3",
+    "@tanstack/devtools-vite": "^0.3.11",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.2.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "jsdom": "^27.0.0",
     "postcss": "^8.5.6",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
-    "typescript": "^5.9.3",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.0.0"
+    "typescript": "^5.7.2",
+    "vite": "^7.1.7",
+    "vitest": "^3.0.5",
+    "web-vitals": "^5.1.0"
   }
 }
