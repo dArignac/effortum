@@ -1,14 +1,11 @@
+import { Summary } from "@/components/Summary";
+import { TaskList } from "@/components/TaskList";
 import { Grid } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
-import { Summary } from "../components/Summary";
-import { TaskList } from "../components/TaskList";
 
-export const Route = createFileRoute("/")({
-  ssr: false,
-  component: Home,
-});
+export const Route = createFileRoute("/")({ ssr: false, component: App });
 
-function Home() {
+function App() {
   return (
     <Grid overflow="hidden">
       <Grid.Col span={8}>

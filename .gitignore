@@ -1,7 +1,18 @@
-.netlify
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+count.txt
+.env
 .nitro
 .tanstack
-dist
-node_modules
+.wrangler
+.output
+.vinxi
+todos.json
+
 playwright-report
 test-results
+# Local Netlify folder
+.netlify

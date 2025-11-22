@@ -1,21 +1,17 @@
 import { Loader } from "@mantine/core";
-import { createRouter as createTanStackRouter } from "@tanstack/react-router";
+import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
-export function createRouter() {
-  const router = createTanStackRouter({
+// Create a new router instance
+export const getRouter = () => {
+  const router = createRouter({
     routeTree,
     scrollRestoration: true,
+    defaultPreloadStaleTime: 0,
     defaultPendingComponent: () => (
       <Loader color="blue" size="lg" type="bars" />
     ),
   });
 
   return router;
-}
-
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: ReturnType<typeof createRouter>;
-  }
-}
+};
