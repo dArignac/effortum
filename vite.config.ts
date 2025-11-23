@@ -1,19 +1,29 @@
-// vite.config.ts
+import netlify from "@netlify/vite-plugin-tanstack-start";
+import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import tsConfigPaths from "vite-tsconfig-paths";
+import viteTsConfigPaths from "vite-tsconfig-paths";
+import { nitro } from "nitro/vite";
 
-export default defineConfig({
-  server: {
-    port: 3000,
-  },
+const config = defineConfig({
   plugins: [
-    tsConfigPaths(),
-    tanstackStart({ target: "netlify", customViteReactPlugin: true }),
+    devtools(),
+    nitro(),
+    // netlify(),
+    // this is the plugin that enables path aliases
+    viteTsConfigPaths({
+      projects: ["./tsconfig.json"],
+    }),
+    tanstackStart(),
     viteReact(),
   ],
+  nitro: {
+    preset: "netlify",
+  },
   test: {
-    exclude: ["**/node_modules/**", "**/e2e/**"],
+    exclude: ["e2e/**", "node_modules/**"],
   },
 });
+
+export default config;
