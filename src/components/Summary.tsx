@@ -54,7 +54,10 @@ export function Summary() {
       .map((task) => task.comment as string)
       .sort((a, b) => a.localeCompare(b))
       .join("\n");
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).catch((err) => {
+      // FIXME add notification #39
+      console.error("Could not copy text: ", err);
+    });
   };
 
   const dayRenderer: DatePickerProps["renderDay"] = (date) => {
@@ -96,7 +99,11 @@ export function Summary() {
           </Fragment>
         ))}
       </SimpleGrid>
-      <Button size="compact-xs" onClick={copyTasksToClipboard}>
+      <Button
+        size="compact-xs"
+        onClick={copyTasksToClipboard}
+        data-testid="copy-comments-button"
+      >
         Copy to clipboard
       </Button>
     </Flex>
