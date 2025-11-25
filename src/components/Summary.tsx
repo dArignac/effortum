@@ -71,7 +71,7 @@ export function Summary() {
     navigator.clipboard.writeText(text).catch((err) => {
       console.error("Could not copy text: ", err);
       notifications.show({
-        message: "Please fix validation errors before updating the task.",
+        message: "Failed to copy comments to clipboard.",
         color: "red",
       });
     });
