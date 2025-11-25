@@ -48,10 +48,14 @@ export function Summary() {
   ).sort((a, b) => a.project.localeCompare(b.project));
 
   const copyTasksToClipboard = () => {
-    const text = tasks
-      .filter(filterTasksByDateRange(selectedDateRange))
-      .filter((task) => task.comment) // Only include tasks with a comment
-      .map((task) => task.comment as string)
+    const text = Array.from(
+      new Set(
+        tasks
+          .filter(filterTasksByDateRange(selectedDateRange))
+          .filter((task) => task.comment)
+          .map((task) => task.comment as string),
+      ),
+    )
       .sort((a, b) => a.localeCompare(b))
       .join("\n");
     navigator.clipboard.writeText(text).catch((err) => {
