@@ -107,6 +107,7 @@ export function Summary() {
         onChange={(value) => setSelectedDateRange(value || [null, null])}
         size="xs"
         renderDay={dayRenderer}
+        data-testid="summary-date-picker"
       />
       <SimpleGrid cols={3} spacing="xs" verticalSpacing="xs" mt={5}>
         {data.map((task, idx) => (
@@ -119,6 +120,7 @@ export function Summary() {
                 aria-label="Copy comments of project"
                 size={20}
                 onClick={() => copyTasksOfProjectToClipboard(task.project)}
+                data-testid={`button-copy-comments-${task.project}`}
               >
                 <IconClipboardList size={16} />
               </ActionIcon>
