@@ -1,4 +1,4 @@
-import { Box, Flex, Indicator, SimpleGrid } from "@mantine/core";
+import { Box, Button, Flex, Indicator, SimpleGrid } from "@mantine/core";
 import { DatePicker, DatePickerProps } from "@mantine/dates";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -47,6 +47,23 @@ export function Summary() {
     ),
   ).sort((a, b) => a.project.localeCompare(b.project));
 
+  const copyTasksToClipboard = () => {
+    const text = Array.from(
+      new Set(
+        tasks
+          .filter(filterTasksByDateRange(selectedDateRange))
+          .filter((task) => task.comment)
+          .map((task) => task.comment as string),
+      ),
+    )
+      .sort((a, b) => a.localeCompare(b))
+      .join("\n");
+    navigator.clipboard.writeText(text).catch((err) => {
+      // FIXME add notification #39
+      console.error("Could not copy text: ", err);
+    });
+  };
+
   const dayRenderer: DatePickerProps["renderDay"] = (date) => {
     const day = dayjs(date).date();
     return (
@@ -86,6 +103,13 @@ export function Summary() {
           </Fragment>
         ))}
       </SimpleGrid>
+      <Button
+        size="compact-xs"
+        onClick={copyTasksToClipboard}
+        data-testid="copy-comments-button"
+      >
+        Copy to clipboard
+      </Button>
     </Flex>
   );
 }
