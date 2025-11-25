@@ -1,4 +1,4 @@
-import { Box, Flex, Indicator, SimpleGrid } from "@mantine/core";
+import { Box, Button, Flex, Indicator, SimpleGrid } from "@mantine/core";
 import { DatePicker, DatePickerProps } from "@mantine/dates";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -47,6 +47,15 @@ export function Summary() {
     ),
   ).sort((a, b) => a.project.localeCompare(b.project));
 
+  const copyTasksToClipboard = () => {
+    const text = tasks
+      .filter(filterTasksByDateRange(selectedDateRange))
+      .map((task) => `${task.comment}`)
+      .sort((a, b) => a.localeCompare(b))
+      .join("\n");
+    navigator.clipboard.writeText(text);
+  };
+
   const dayRenderer: DatePickerProps["renderDay"] = (date) => {
     const day = dayjs(date).date();
     return (
@@ -86,6 +95,9 @@ export function Summary() {
           </Fragment>
         ))}
       </SimpleGrid>
+      <Button size="compact-xs" onClick={copyTasksToClipboard}>
+        Copy to clipboard
+      </Button>
     </Flex>
   );
 }
