@@ -50,7 +50,8 @@ export function Summary() {
   const copyTasksToClipboard = () => {
     const text = tasks
       .filter(filterTasksByDateRange(selectedDateRange))
-      .map((task) => `${task.comment}`)
+      .filter((task) => task.comment) // Only include tasks with a comment
+      .map((task) => task.comment as string)
       .sort((a, b) => a.localeCompare(b))
       .join("\n");
     navigator.clipboard.writeText(text);
