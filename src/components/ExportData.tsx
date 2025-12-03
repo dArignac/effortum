@@ -28,6 +28,7 @@ export function ExportData() {
       size="compact-xs"
       color="grey"
       onClick={backupDatabase}
+      data-testid="button-export-data"
     >
       Export Data
     </Button>
