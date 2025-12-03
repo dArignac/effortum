@@ -1,7 +1,8 @@
+import { ExportData } from "@/components/ExportData";
 import { Summary } from "@/components/Summary";
 import { TaskList } from "@/components/TaskList";
 import { VERSION } from "@/version";
-import { Center, Container, Grid, Text, Button } from "@mantine/core";
+import { Center, Container, Grid, Text } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({ ssr: false, component: App });
@@ -22,9 +23,7 @@ function App() {
           <Text size="xs">Version: {VERSION} </Text>
         </Center>
         <Center mt={10}>
-          <Button component="a" size="compact-xs">
-            Export Data
-          </Button>
+          <ExportData />
         </Center>
       </Container>
     </>
