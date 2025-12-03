@@ -24,7 +24,6 @@ export function ExportData() {
 
   return (
     <Button
-      component="a"
       size="compact-xs"
       color="grey"
       onClick={backupDatabase}

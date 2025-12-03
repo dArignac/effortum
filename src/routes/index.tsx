@@ -20,7 +20,7 @@ function App() {
       </Grid>
       <Container size="xs" mt={40}>
         <Center>
-          <Text size="xs">Version: {VERSION} </Text>
+          <Text size="xs">Version: {VERSION}</Text>
         </Center>
         <Center mt={10}>
           <ExportData />
