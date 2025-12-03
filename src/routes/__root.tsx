@@ -4,14 +4,7 @@ import "@mantine/notifications/styles.css";
 import "@mantine/charts/styles.css";
 
 import { useEffortumStore } from "@/store";
-import { VERSION } from "@/version";
-import {
-  Center,
-  Container,
-  createTheme,
-  MantineProvider,
-  Text,
-} from "@mantine/core";
+import { createTheme, MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -67,11 +60,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <MantineProvider theme={theme}>
           {children}
-          <Container size="xs" mt={40}>
-            <Center>
-              <Text size="xs">Version: {VERSION}</Text>
-            </Center>
-          </Container>
           <Notifications />
           <Scripts />
         </MantineProvider>

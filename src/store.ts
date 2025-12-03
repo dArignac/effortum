@@ -5,7 +5,7 @@ import { Comment } from "./models/Comment";
 import { Project } from "./models/Project";
 import { Task } from "./models/Task";
 
-const db = new EffortumDB();
+export const db = new EffortumDB();
 
 interface EffortumStore {
   tasks: Task[];
