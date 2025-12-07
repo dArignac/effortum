@@ -67,11 +67,16 @@ export function ImportData() {
       setImportProgress(100);
 
       notifications.show({
-        message: "Database imported successfully!",
+        message: "Database imported successfully! Reloading page...",
         color: "green",
       });
 
       setConfirmModalOpened(false);
+
+      // Reload the page to refresh the Zustand store with imported data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error("Import failed:", error);
       notifications.show({
