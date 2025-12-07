@@ -29,7 +29,19 @@ interface EffortumStore {
   setEndTimeOfLastStoppedTask: (time: string | null) => void;
 }
 
-export const storeCreator = (set, get) => ({
+interface StoreSet {
+  (
+    partial:
+      | Partial<EffortumStore>
+      | ((state: EffortumStore) => Partial<EffortumStore>),
+  ): void;
+}
+
+interface StoreGet {
+  (): EffortumStore;
+}
+
+export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   projects: [],
   tasks: [],
   comments: [],
@@ -62,10 +74,10 @@ export const storeCreator = (set, get) => ({
   updateTask: async (id: string, updates: Partial<Task>) => {
     const task = get().tasks.find((t) => t.id === id);
     let projectInstance: Project | undefined = get().projects.find(
-      (p) => p.name === task.project,
+      (p) => p.name === task!.project,
     );
     if (!projectInstance) {
-      projectInstance = { id: crypto.randomUUID(), name: task.project };
+      projectInstance = { id: crypto.randomUUID(), name: task!.project };
       await db.projects.add(projectInstance);
       set({ projects: [...get().projects, projectInstance] });
     }

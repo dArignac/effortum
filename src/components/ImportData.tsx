@@ -1,13 +1,10 @@
-import { db, useEffortumStore } from "@/store";
+import { db } from "@/store";
 import { Button, Group, Modal, Progress, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { importDB } from "dexie-export-import";
 import { useRef, useState } from "react";
 
 export function ImportData() {
-  const loadFromIndexedDb = useEffortumStore(
-    (state) => state.loadFromIndexedDb,
-  );
   const [confirmModalOpened, setConfirmModalOpened] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
@@ -73,8 +70,6 @@ export function ImportData() {
         message: "Database imported successfully!",
         color: "green",
       });
-
-      // TODO reload Zustand state
 
       setConfirmModalOpened(false);
     } catch (error) {
