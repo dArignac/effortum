@@ -1,13 +1,12 @@
 import { db } from "@/store";
-import { Button, Group, Modal, Progress, Text } from "@mantine/core";
+import { Button, Group, Loader, Modal, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { importDB } from "dexie-export-import";
+import { importInto } from "dexie-export-import";
 import { useRef, useState } from "react";
 
 export function ImportData() {
   const [confirmModalOpened, setConfirmModalOpened] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [importProgress, setImportProgress] = useState(0);
   const selectedFileRef = useRef<File | null>(null);
 
   function handleFileSelect() {
@@ -32,7 +31,6 @@ export function ImportData() {
     if (!file) return;
 
     setIsImporting(true);
-    setImportProgress(0);
 
     try {
       // Read the file
@@ -44,27 +42,13 @@ export function ImportData() {
         throw new Error("Invalid backup file format");
       }
 
-      setImportProgress(25);
-
-      // Clear existing database
-      await db.delete();
-      setImportProgress(50);
-
+      // Clear all tables instead of deleting the database
+      await db.tasks.clear();
+      await db.projects.clear();
+      await db.comments.clear();
       // Import the data with progress tracking
       const blob = new Blob([fileContent], { type: "application/json" });
-      await importDB(blob, {
-        progressCallback: (progress) => {
-          // Map progress from 0-1 to 60-90%
-          if (progress.totalRows && progress.totalRows > 0) {
-            setImportProgress(
-              60 + (progress.completedRows / progress.totalRows) * 30,
-            );
-          }
-          return true; // Continue import
-        },
-      });
-
-      setImportProgress(100);
+      await importInto(db, blob);
 
       notifications.show({
         message: "Database imported successfully! Reloading page...",
@@ -85,7 +69,6 @@ export function ImportData() {
       });
     } finally {
       setIsImporting(false);
-      setImportProgress(0);
       selectedFileRef.current = null;
     }
   }
@@ -142,15 +125,7 @@ export function ImportData() {
             <Text size="sm" mb="md">
               Importing database, please wait...
             </Text>
-            <Progress
-              value={importProgress}
-              striped
-              animated
-              data-testid="import-progress"
-            />
-            <Text size="xs" c="dimmed" mt="xs" ta="center">
-              {Math.round(importProgress)}%
-            </Text>
+            <Loader color="purple" />
           </>
         )}
       </Modal>
