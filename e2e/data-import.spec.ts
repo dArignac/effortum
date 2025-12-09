@@ -213,4 +213,81 @@ test.describe("Data Import Functionality", () => {
       tableBody.locator('input[value="Second imported task"]').first(),
     ).toBeVisible();
   });
+
+  test("should show error for invalid JSON file", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    const invalidJSON = "{ this is not valid JSON }";
+
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.getByTestId("button-import-data").click();
+
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({
+      name: "invalid.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(invalidJSON),
+    });
+
+    await expect(
+      page.getByText(
+        "Warning: This will completely replace your current database",
+      ),
+    ).toBeVisible();
+
+    await page.getByTestId("button-import-confirm").click();
+
+    // Wait for error notification
+    await expect(page.getByText(/Import failed/)).toBeVisible({
+      timeout: 10000,
+    });
+
+    // Modal should still be open with error
+    await expect(
+      page.getByText(
+        "Warning: This will completely replace your current database",
+      ),
+    ).toBeVisible();
+  });
+
+  test("should show error for non-Dexie format file", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    const nonDexieJSON = JSON.stringify({
+      formatName: "other",
+      data: { some: "data" },
+    });
+
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.getByTestId("button-import-data").click();
+
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({
+      name: "wrong-format.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(nonDexieJSON),
+    });
+
+    await expect(
+      page.getByText(
+        "Warning: This will completely replace your current database",
+      ),
+    ).toBeVisible();
+
+    await page.getByTestId("button-import-confirm").click();
+
+    // Wait for error notification with specific message
+    await expect(
+      page.getByText(/Import failed.*Invalid backup file format/),
+    ).toBeVisible({ timeout: 10000 });
+
+    // Modal should still be open
+    await expect(
+      page.getByText(
+        "Warning: This will completely replace your current database",
+      ),
+    ).toBeVisible();
+  });
 });
