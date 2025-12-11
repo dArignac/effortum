@@ -20,7 +20,7 @@
     "@mantine/notifications": "^8.3.8",
     "@netlify/vite-plugin-tanstack-start": "^1.0.2",
     "@tabler/icons-react": "^3.34.0",
-    "@tanstack/react-devtools": "^0.7.0",
+    "@tanstack/react-devtools": "^0.8.0",
     "@tanstack/react-router": "^1.132.0",
     "@tanstack/react-router-devtools": "^1.132.0",
     "@tanstack/react-router-ssr-query": "^1.131.7",
@@ -38,7 +38,7 @@
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "@tanstack/devtools-vite": "^0.3.11",
-    "@types/node": "^22.10.2",
+    "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
