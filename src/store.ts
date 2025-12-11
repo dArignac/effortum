@@ -73,9 +73,14 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
 
   updateTask: async (id: string, updates: Partial<Task>) => {
     const task = get().tasks.find((t) => t.id === id);
+    if (!task) {
+      console.error(`Task with id ${id} not found`);
+      return;
+    }
     let projectInstance: Project | undefined = get().projects.find(
-      (p) => p.name === task!.project,
+      (p) => p.name === task.project,
     );
+
     if (!projectInstance) {
       projectInstance = { id: crypto.randomUUID(), name: task!.project };
       await db.projects.add(projectInstance);

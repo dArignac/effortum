@@ -9,7 +9,7 @@ test.describe("Data Import Functionality", () => {
       formatName: "dexie",
       formatVersion: 1,
       data: {
-        databaseName: "effortum",
+        databaseName: "EffortumDatabase",
         databaseVersion: 2,
         tables: [
           {
@@ -50,7 +50,7 @@ test.describe("Data Import Functionality", () => {
       formatName: "dexie",
       formatVersion: 1,
       data: {
-        databaseName: "effortum",
+        databaseName: "EffortumDatabase",
         databaseVersion: 2,
         tables: [
           {

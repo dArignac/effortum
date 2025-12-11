@@ -38,7 +38,12 @@ export function ImportData() {
       const importData = JSON.parse(fileContent);
 
       // Validate it's a Dexie export
-      if (importData.formatName !== "dexie") {
+      if (
+        importData.formatName !== "dexie" ||
+        !importData.data?.databaseName ||
+        !Array.isArray(importData.data?.tables) ||
+        importData.data.databaseName !== "EffortumDatabase"
+      ) {
         throw new Error("Invalid backup file format");
       }
 
