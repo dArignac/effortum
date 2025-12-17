@@ -20,9 +20,6 @@ const config = defineConfig({
   nitro: {
     preset: "netlify",
   },
-  test: {
-    exclude: ["e2e/**", "node_modules/**"],
-  },
 });
 
 export default config;
