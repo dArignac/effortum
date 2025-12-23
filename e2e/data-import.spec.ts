@@ -5,6 +5,16 @@ test.describe("Data Import Functionality", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await expect(page.getByTestId("nav-import-export")).toBeVisible();
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await expect(page.getByTestId("button-import-data")).toBeVisible();
+
     const validDexieExport = JSON.stringify({
       formatName: "dexie",
       formatVersion: 1,
@@ -45,6 +55,16 @@ test.describe("Data Import Functionality", () => {
   test("should close modal when cancel button is clicked", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
 
     const validDexieExport = JSON.stringify({
       formatName: "dexie",
@@ -129,6 +149,16 @@ test.describe("Data Import Functionality", () => {
       .fill("Second imported task");
     await page.getByTestId("button-add-task").click();
     await expect(addButton).toBeVisible({ timeout: 5000 });
+
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section to export the data
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
 
     // Export the data to get valid format
     const downloadPromise = page.waitForEvent("download");
@@ -218,6 +248,16 @@ test.describe("Data Import Functionality", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
+
     const invalidJSON = "{ this is not valid JSON }";
 
     const fileChooserPromise = page.waitForEvent("filechooser");
@@ -254,6 +294,16 @@ test.describe("Data Import Functionality", () => {
   test("should show error for non-Dexie format file", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
 
     const nonDexieJSON = JSON.stringify({
       formatName: "other",

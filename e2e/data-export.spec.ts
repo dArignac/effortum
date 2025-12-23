@@ -23,6 +23,16 @@ test.describe("Data Export Functionality", () => {
   });
 
   test("should display export data button", async ({ page }) => {
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await expect(page.getByTestId("nav-import-export")).toBeVisible();
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await expect(page.getByTestId("button-export-data")).toBeVisible();
+
     const exportButton = page.getByTestId("button-export-data");
     await expect(exportButton).toBeVisible();
     await expect(exportButton).toHaveText("Export Data");
@@ -31,6 +41,16 @@ test.describe("Data Export Functionality", () => {
   test("should trigger download when export button is clicked", async ({
     page,
   }) => {
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
+
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
 
@@ -67,6 +87,16 @@ test.describe("Data Export Functionality", () => {
     await expect(page.getByTestId("button-add-task")).toBeVisible({
       timeout: 5000,
     });
+
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
 
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
@@ -153,6 +183,16 @@ test.describe("Data Export Functionality", () => {
       });
     }
 
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
+
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
 
@@ -213,6 +253,16 @@ test.describe("Data Export Functionality", () => {
     // Wait for incomplete task to appear
     await page.waitForTimeout(500);
 
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
+
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
 
@@ -254,6 +304,16 @@ test.describe("Data Export Functionality", () => {
 
   test("should export empty database when no data exists", async ({ page }) => {
     // No tasks added - export should still work
+
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
 
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
@@ -322,6 +382,16 @@ test.describe("Data Export Functionality", () => {
 
     await page.waitForTimeout(500);
 
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
+
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
 
@@ -361,6 +431,16 @@ test.describe("Data Export Functionality", () => {
   });
 
   test("should include schema information in export", async ({ page }) => {
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
+
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
 
@@ -409,6 +489,16 @@ test.describe("Data Export Functionality", () => {
     await expect(page.getByTestId("button-add-task")).toBeVisible({
       timeout: 5000,
     });
+
+    // Open the navigation by clicking the burger menu
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    // Navigate to Import/Export section
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
 
     // Export multiple times in succession
     const exportButton = page.getByTestId("button-export-data");
