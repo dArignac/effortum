@@ -26,12 +26,12 @@ test.describe("Data Export Functionality", () => {
     // Open the navigation by clicking the burger menu
     const burgerMenu = page.getByTestId("navigation-burger");
     await burgerMenu.click();
-    await page.waitForTimeout(200);
+    await expect(page.getByTestId("nav-import-export")).toBeVisible();
 
     // Navigate to Import/Export section
     const importExportNav = page.getByTestId("nav-import-export");
     await importExportNav.click();
-    await page.waitForTimeout(200);
+    await expect(page.getByTestId("button-export-data")).toBeVisible();
 
     const exportButton = page.getByTestId("button-export-data");
     await expect(exportButton).toBeVisible();
