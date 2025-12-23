@@ -81,8 +81,7 @@ export function ImportData() {
   return (
     <>
       <Button
-        size="compact-xs"
-        color="grey"
+        size="sm"
         onClick={handleFileSelect}
         data-testid="button-import-data"
         disabled={isImporting}

@@ -23,12 +23,7 @@ export function ExportData() {
   }
 
   return (
-    <Button
-      size="compact-xs"
-      color="grey"
-      onClick={backupDatabase}
-      data-testid="button-export-data"
-    >
+    <Button size="sm" onClick={backupDatabase} data-testid="button-export-data">
       Export Data
     </Button>
   );
