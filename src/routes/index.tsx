@@ -1,9 +1,14 @@
 import { ImportExport } from "@/pages/ImportExport";
+import { Overtime } from "@/pages/Overtime";
 import { TimeCollector } from "@/pages/TimeCollector";
 import { VERSION } from "@/version";
 import { AppShell, Burger, Group, NavLink, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCalendarStats, IconDatabaseExport } from "@tabler/icons-react";
+import {
+  IconAlarmAverage,
+  IconCalendarStats,
+  IconDatabaseExport,
+} from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -50,10 +55,18 @@ function App() {
           label="Import & Export Data"
           leftSection={<IconDatabaseExport size={20} stroke={1.5} />}
         />
+        <NavLink
+          data-testid="nav-overtime"
+          active={activeNavIndex === 2}
+          onClick={() => setActiveNavIndex(2)}
+          label="Overtime Settings"
+          leftSection={<IconAlarmAverage size={20} stroke={1.5} />}
+        />
       </AppShell.Navbar>
       <AppShell.Main>
         {activeNavIndex === 0 && <TimeCollector />}
         {activeNavIndex === 1 && <ImportExport />}
+        {activeNavIndex === 2 && <Overtime />}
       </AppShell.Main>
     </AppShell>
   );
