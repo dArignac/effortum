@@ -17,5 +17,8 @@ export class EffortumDB extends Dexie {
     this.version(2).stores({
       comments: "++id, project, comment",
     });
+    this.version(3).stores({
+      overtime: "++id, currentBalance, workingHoursPerDay",
+    });
   }
 }

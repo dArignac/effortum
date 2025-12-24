@@ -1,3 +1,9 @@
+import { OvertimeForm } from "@/components/OvertimeForm";
+
 export function Overtime() {
-  return <div>Overtime Page</div>;
+  return (
+    <>
+      <OvertimeForm />
+    </>
+  );
 }
