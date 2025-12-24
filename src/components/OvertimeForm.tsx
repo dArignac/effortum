@@ -1,12 +1,16 @@
+import { useEffortumStore } from "@/store";
 import { Button, Group, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 
 export function OvertimeForm() {
+  const overtime = useEffortumStore((state) => state.overtime.at(0));
+  const updateOvertime = useEffortumStore((state) => state.updateOvertime);
+
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
-      currentBalance: 0,
-      workingHoursPerDay: 8,
+      currentBalance: overtime ? overtime.currentBalance : 0,
+      workingHoursPerDay: overtime ? overtime.workingHoursPerDay : 8,
     },
     validate: {
       currentBalance: (value) => (isNaN(value) ? "Must be a number" : null),
@@ -18,8 +22,13 @@ export function OvertimeForm() {
             : null,
     },
   });
+
   return (
-    <form onSubmit={form.onSubmit((values) => console.log(values))}>
+    <form
+      onSubmit={form.onSubmit((values) =>
+        updateOvertime(values.currentBalance, values.workingHoursPerDay),
+      )}
+    >
       <Group>
         <TextInput
           label="Current Overtime Balance (hours)"

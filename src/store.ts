@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { EffortumDB } from "./db";
 import { Comment } from "./models/Comment";
+import { Overtime } from "./models/Overtime";
 import { Project } from "./models/Project";
 import { Task } from "./models/Task";
 
@@ -11,6 +12,7 @@ interface EffortumStore {
   tasks: Task[];
   projects: Project[];
   comments: Comment[];
+  overtime: Overtime[];
   selectedDateRange: [string | null, string | null];
   endTimeOfLastStoppedTask: string | null;
 
@@ -27,6 +29,8 @@ interface EffortumStore {
   setSelectedDateRange: (range: [string | null, string | null]) => void;
 
   setEndTimeOfLastStoppedTask: (time: string | null) => void;
+
+  updateOvertime: (currentBalance: number, workingHoursPerDay: number) => void;
 }
 
 interface StoreSet {
@@ -45,6 +49,7 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   projects: [],
   tasks: [],
   comments: [],
+  overtime: [],
   selectedDateRange: [null, null] as [string | null, string | null],
   endTimeOfLastStoppedTask: null,
 
@@ -53,7 +58,8 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
     const tasks = await db.tasks.orderBy("date").toArray();
     const projects = await db.projects.orderBy("name").toArray();
     const comments = await db.comments.orderBy("comment").toArray();
-    set({ tasks, projects, comments });
+    const overtime = await db.overtime.toArray();
+    set({ tasks, projects, comments, overtime });
   },
 
   addTask: async (task: Task) => {
@@ -129,6 +135,25 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
 
   setEndTimeOfLastStoppedTask: (time: string | null) => {
     set({ endTimeOfLastStoppedTask: time });
+  },
+
+  updateOvertime: async (
+    currentBalance: number,
+    workingHoursPerDay: number,
+  ) => {
+    const overtimeValue = {
+      id: "overtime-default",
+      currentBalance,
+      workingHoursPerDay,
+    };
+
+    get().overtime.at(0)
+      ? await db.overtime.update(overtimeValue.id, overtimeValue)
+      : await db.overtime.add(overtimeValue);
+
+    set({
+      overtime: [overtimeValue],
+    });
   },
 });
 
