@@ -1,5 +1,5 @@
-import { ImportExport } from "@/components/ImportExport";
-import { TimeCollector } from "@/components/TimeCollector";
+import { ImportExport } from "@/pages/ImportExport";
+import { TimeCollector } from "@/pages/TimeCollector";
 import { VERSION } from "@/version";
 import { AppShell, Burger, Group, NavLink, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
