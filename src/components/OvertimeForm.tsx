@@ -35,6 +35,7 @@ export function OvertimeForm() {
           {...form.getInputProps("currentBalance")}
           key={form.key("currentBalance")}
           w={250}
+          data-testid="overtime-input-current-balance"
         />
       </Group>
       <Group mt="md">
@@ -43,10 +44,13 @@ export function OvertimeForm() {
           {...form.getInputProps("workingHoursPerDay")}
           key={form.key("workingHoursPerDay")}
           w={250}
+          data-testid="overtime-input-working-hours"
         />
       </Group>
       <Group mt="md">
-        <Button type="submit">Submit</Button>
+        <Button type="submit" data-testid="overtime-submit-button">
+          Submit
+        </Button>
       </Group>
     </form>
   );
