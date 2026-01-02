@@ -1,4 +1,4 @@
-import { ActionIcon, Box, SimpleGrid } from "@mantine/core";
+import { ActionIcon, Box, Divider, Grid } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconClipboardList } from "@tabler/icons-react";
 import { Fragment } from "react";
@@ -55,25 +55,34 @@ export function Summary() {
 
   return (
     <>
-      <SimpleGrid cols={3} spacing="xs" verticalSpacing="xs" mt={5}>
+      <Grid>
         {data.map((task, idx) => (
           <Fragment key={idx}>
-            <Box component="strong">{task.project}:</Box>
-            <Box>{formatDuration(task.time)}</Box>
-            <Box>
-              <ActionIcon
-                variant="filled"
-                aria-label="Copy comments of project"
-                size={20}
-                onClick={() => copyTasksOfProjectToClipboard(task.project)}
-                data-testid={`button-copy-comments-${task.project}`}
-              >
-                <IconClipboardList size={16} />
-              </ActionIcon>
-            </Box>
+            <Grid.Col span={4}>
+              <Box component="strong">{task.project}:</Box>
+            </Grid.Col>
+            <Grid.Col span={4}>
+              <Box>{formatDuration(task.time)}</Box>
+            </Grid.Col>
+            <Grid.Col span={4}>
+              <Box>
+                <ActionIcon
+                  variant="filled"
+                  aria-label="Copy comments of project"
+                  size={20}
+                  onClick={() => copyTasksOfProjectToClipboard(task.project)}
+                  data-testid={`button-copy-comments-${task.project}`}
+                >
+                  <IconClipboardList size={16} />
+                </ActionIcon>
+              </Box>
+            </Grid.Col>
           </Fragment>
         ))}
-      </SimpleGrid>
+        <Grid.Col span={12}>
+          <Divider />
+        </Grid.Col>
+      </Grid>
     </>
   );
 }
