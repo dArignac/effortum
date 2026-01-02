@@ -1,6 +1,7 @@
+import { Calendar } from "@/components/Calendar";
 import { Summary } from "@/components/Summary";
 import { TaskList } from "@/components/TaskList";
-import { Grid } from "@mantine/core";
+import { Flex, Grid } from "@mantine/core";
 
 export function TimeCollector() {
   return (
@@ -9,7 +10,17 @@ export function TimeCollector() {
         <TaskList />
       </Grid.Col>
       <Grid.Col span={4}>
-        <Summary />
+        <Flex
+          mih={50}
+          gap="sm"
+          justify="flex-start"
+          align="flex-start"
+          direction="column"
+          wrap="wrap"
+        >
+          <Calendar />
+          <Summary />
+        </Flex>
       </Grid.Col>
     </Grid>
   );
