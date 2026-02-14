@@ -1,13 +1,14 @@
 import { useEffortumStore } from "@/store";
 import { Button, Group, NumberInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useEffect } from "react";
 
 export function OvertimeForm() {
   const overtime = useEffortumStore((state) => state.overtime.at(0));
   const updateOvertime = useEffortumStore((state) => state.updateOvertime);
 
   const form = useForm({
-    mode: "uncontrolled",
+    mode: "controlled",
     initialValues: {
       currentBalance: overtime ? overtime.currentBalance : 0,
       workingHoursPerDay: overtime ? overtime.workingHoursPerDay : 8,
@@ -23,6 +24,15 @@ export function OvertimeForm() {
     },
   });
 
+  useEffect(() => {
+    if (overtime) {
+      form.setValues({
+        currentBalance: overtime.currentBalance,
+        workingHoursPerDay: overtime.workingHoursPerDay,
+      });
+    }
+  }, [overtime?.currentBalance, overtime?.workingHoursPerDay]);
+
   return (
     <form
       onSubmit={form.onSubmit((values) =>
@@ -33,7 +43,6 @@ export function OvertimeForm() {
         <NumberInput
           label="Current Overtime Balance (hours)"
           {...form.getInputProps("currentBalance")}
-          key={form.key("currentBalance")}
           w={250}
           data-testid="overtime-input-current-balance"
         />
@@ -42,7 +51,6 @@ export function OvertimeForm() {
         <NumberInput
           label="Working Hours Per Day"
           {...form.getInputProps("workingHoursPerDay")}
-          key={form.key("workingHoursPerDay")}
           w={250}
           data-testid="overtime-input-working-hours"
         />
