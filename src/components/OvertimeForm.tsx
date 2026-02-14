@@ -1,5 +1,5 @@
 import { useEffortumStore } from "@/store";
-import { Button, Group, TextInput } from "@mantine/core";
+import { Button, Group, NumberInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 
 export function OvertimeForm() {
@@ -30,7 +30,7 @@ export function OvertimeForm() {
       )}
     >
       <Group>
-        <TextInput
+        <NumberInput
           label="Current Overtime Balance (hours)"
           {...form.getInputProps("currentBalance")}
           key={form.key("currentBalance")}
@@ -39,7 +39,7 @@ export function OvertimeForm() {
         />
       </Group>
       <Group mt="md">
-        <TextInput
+        <NumberInput
           label="Working Hours Per Day"
           {...form.getInputProps("workingHoursPerDay")}
           key={form.key("workingHoursPerDay")}
