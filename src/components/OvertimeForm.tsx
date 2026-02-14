@@ -1,6 +1,7 @@
 import { useEffortumStore } from "@/store";
-import { Button, Group, NumberInput } from "@mantine/core";
+import { Alert, Button, Group, NumberInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { IconInfoCircle } from "@tabler/icons-react";
 import { useEffect } from "react";
 
 export function OvertimeForm() {
@@ -39,6 +40,16 @@ export function OvertimeForm() {
         updateOvertime(values.currentBalance, values.workingHoursPerDay),
       )}
     >
+      <Alert
+        variant="filled"
+        color="yellow"
+        title="Important Note"
+        icon={<IconInfoCircle />}
+        mb={"xl"}
+      >
+        Overtime values are currently only stored, but not yet handled. This
+        will be added in a future version.
+      </Alert>
       <Group>
         <NumberInput
           label="Current Overtime Balance (hours)"
