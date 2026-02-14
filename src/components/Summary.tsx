@@ -56,8 +56,8 @@ export function Summary() {
   return (
     <>
       <Grid>
-        {data.map((task, idx) => (
-          <Fragment key={idx}>
+        {data.map((task) => (
+          <Fragment key={task.project}>
             <Grid.Col span={4}>
               <Box component="strong">{task.project}:</Box>
             </Grid.Col>
