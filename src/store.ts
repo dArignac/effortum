@@ -147,9 +147,7 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
       workingHoursPerDay,
     };
 
-    get().overtime.at(0)
-      ? await db.overtime.update(overtimeValue.id, overtimeValue)
-      : await db.overtime.add(overtimeValue);
+    db.overtime.put(overtimeValue);
 
     set({
       overtime: [overtimeValue],
