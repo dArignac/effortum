@@ -84,7 +84,7 @@ export function Summary() {
         </Table.Tbody>
         <Table.Tfoot h={60}>
           <Table.Tr>
-            <Table.Td w={15}></Table.Td>
+            <Table.Td w={20}></Table.Td>
             <Table.Td w={50}>{formatDuration(timeSum)}</Table.Td>
             <Table.Td>
               <strong>Sum</strong>
