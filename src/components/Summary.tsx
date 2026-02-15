@@ -55,16 +55,11 @@ export function Summary() {
 
   return (
     <>
+      {/* use a table here instead of a grid to make it more accessible and easier to read */}
       <Grid>
         {data.map((task) => (
           <Fragment key={task.project}>
-            <Grid.Col span={4}>
-              <Box component="strong">{task.project}:</Box>
-            </Grid.Col>
-            <Grid.Col span={4}>
-              <Box>{formatDuration(task.time)}</Box>
-            </Grid.Col>
-            <Grid.Col span={4}>
+            <Grid.Col span={1}>
               <Box>
                 <ActionIcon
                   variant="filled"
@@ -76,6 +71,12 @@ export function Summary() {
                   <IconClipboardList size={16} />
                 </ActionIcon>
               </Box>
+            </Grid.Col>
+            <Grid.Col span={1}>
+              <Box>{formatDuration(task.time)}</Box>
+            </Grid.Col>
+            <Grid.Col span={10}>
+              <Box>{task.project}</Box>
             </Grid.Col>
           </Fragment>
         ))}
