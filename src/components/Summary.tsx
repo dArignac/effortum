@@ -31,6 +31,8 @@ export function Summary() {
     ),
   ).sort((a, b) => a.project.localeCompare(b.project));
 
+  const timeSum = data.reduce((sum, item) => sum + item.time, 0);
+
   const copyTasksOfProjectToClipboard = (project: string) => {
     const text = Array.from(
       new Set(
@@ -54,7 +56,7 @@ export function Summary() {
 
   return (
     <>
-      <Table verticalSpacing={4} horizontalSpacing={4}>
+      <Table verticalSpacing={4} horizontalSpacing={4} withRowBorders={false}>
         <Table.Tbody>
           {data.map((task) => (
             <Table.Tr key={task.project}>
@@ -80,6 +82,15 @@ export function Summary() {
             </Table.Tr>
           ))}
         </Table.Tbody>
+        <Table.Tfoot h={60}>
+          <Table.Tr>
+            <Table.Td w={15}></Table.Td>
+            <Table.Td w={50}>{formatDuration(timeSum)}</Table.Td>
+            <Table.Td>
+              <strong>Sum</strong>
+            </Table.Td>
+          </Table.Tr>
+        </Table.Tfoot>
       </Table>
     </>
   );
