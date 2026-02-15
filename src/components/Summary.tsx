@@ -1,7 +1,6 @@
-import { ActionIcon, Box, Divider, Grid } from "@mantine/core";
+import { ActionIcon, Box, Table } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconClipboardList } from "@tabler/icons-react";
-import { Fragment } from "react";
 import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
 import { formatDuration, getDuration } from "../utils/time";
@@ -55,35 +54,33 @@ export function Summary() {
 
   return (
     <>
-      {/* use a table here instead of a grid to make it more accessible and easier to read */}
-      <Grid>
-        {data.map((task) => (
-          <Fragment key={task.project}>
-            <Grid.Col span={1}>
-              <Box>
-                <ActionIcon
-                  variant="filled"
-                  aria-label="Copy comments of project"
-                  size={20}
-                  onClick={() => copyTasksOfProjectToClipboard(task.project)}
-                  data-testid={`button-copy-comments-${task.project}`}
-                >
-                  <IconClipboardList size={16} />
-                </ActionIcon>
-              </Box>
-            </Grid.Col>
-            <Grid.Col span={1}>
-              <Box>{formatDuration(task.time)}</Box>
-            </Grid.Col>
-            <Grid.Col span={10}>
-              <Box>{task.project}</Box>
-            </Grid.Col>
-          </Fragment>
-        ))}
-        <Grid.Col span={12}>
-          <Divider />
-        </Grid.Col>
-      </Grid>
+      <Table verticalSpacing={4} horizontalSpacing={4}>
+        <Table.Tbody>
+          {data.map((task) => (
+            <Table.Tr key={task.project}>
+              <Table.Td w={15}>
+                <Box>
+                  <ActionIcon
+                    variant="filled"
+                    aria-label="Copy comments of project"
+                    size={20}
+                    onClick={() => copyTasksOfProjectToClipboard(task.project)}
+                    data-testid={`button-copy-comments-${task.project}`}
+                  >
+                    <IconClipboardList size={16} />
+                  </ActionIcon>
+                </Box>
+              </Table.Td>
+              <Table.Td w={50}>
+                <Box>{formatDuration(task.time)}</Box>
+              </Table.Td>
+              <Table.Td>
+                <Box>{task.project}</Box>
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
     </>
   );
 }
