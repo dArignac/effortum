@@ -33,13 +33,13 @@ export function TaskList() {
     <Table stickyHeader stickyHeaderOffset={0} data-testid="task-list-table">
       <Table.Thead>
         <Table.Tr>
-          <Table.Th>Date</Table.Th>
+          <Table.Th w={110}>Date</Table.Th>
           <Table.Th w={80}>Start</Table.Th>
           <Table.Th w={80}>End</Table.Th>
           <Table.Th>Project</Table.Th>
           <Table.Th>Comment</Table.Th>
-          <Table.Th>Duration</Table.Th>
-          <Table.Th>Actions</Table.Th>
+          <Table.Th w={50}>Duration</Table.Th>
+          <Table.Th w={90}>Actions</Table.Th>
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>

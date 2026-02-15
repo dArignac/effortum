@@ -1,7 +1,6 @@
-import { ActionIcon, Box, Divider, Grid } from "@mantine/core";
+import { ActionIcon, Box, Table } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconClipboardList } from "@tabler/icons-react";
-import { Fragment } from "react";
 import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
 import { formatDuration, getDuration } from "../utils/time";
@@ -32,6 +31,8 @@ export function Summary() {
     ),
   ).sort((a, b) => a.project.localeCompare(b.project));
 
+  const timeSum = data.reduce((sum, item) => sum + item.time, 0);
+
   const copyTasksOfProjectToClipboard = (project: string) => {
     const text = Array.from(
       new Set(
@@ -55,34 +56,42 @@ export function Summary() {
 
   return (
     <>
-      <Grid>
-        {data.map((task) => (
-          <Fragment key={task.project}>
-            <Grid.Col span={4}>
-              <Box component="strong">{task.project}:</Box>
-            </Grid.Col>
-            <Grid.Col span={4}>
-              <Box>{formatDuration(task.time)}</Box>
-            </Grid.Col>
-            <Grid.Col span={4}>
-              <Box>
-                <ActionIcon
-                  variant="filled"
-                  aria-label="Copy comments of project"
-                  size={20}
-                  onClick={() => copyTasksOfProjectToClipboard(task.project)}
-                  data-testid={`button-copy-comments-${task.project}`}
-                >
-                  <IconClipboardList size={16} />
-                </ActionIcon>
-              </Box>
-            </Grid.Col>
-          </Fragment>
-        ))}
-        <Grid.Col span={12}>
-          <Divider />
-        </Grid.Col>
-      </Grid>
+      <Table verticalSpacing={4} horizontalSpacing={4} withRowBorders={false}>
+        <Table.Tbody>
+          {data.map((task) => (
+            <Table.Tr key={task.project}>
+              <Table.Td w={15}>
+                <Box>
+                  <ActionIcon
+                    variant="filled"
+                    aria-label="Copy comments of project"
+                    size={20}
+                    onClick={() => copyTasksOfProjectToClipboard(task.project)}
+                    data-testid={`button-copy-comments-${task.project}`}
+                  >
+                    <IconClipboardList size={16} />
+                  </ActionIcon>
+                </Box>
+              </Table.Td>
+              <Table.Td w={50}>
+                <Box>{formatDuration(task.time)}</Box>
+              </Table.Td>
+              <Table.Td>
+                <Box>{task.project}</Box>
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+        <Table.Tfoot h={60}>
+          <Table.Tr>
+            <Table.Td w={20}></Table.Td>
+            <Table.Td w={50}>{formatDuration(timeSum)}</Table.Td>
+            <Table.Td>
+              <strong>Sum</strong>
+            </Table.Td>
+          </Table.Tr>
+        </Table.Tfoot>
+      </Table>
     </>
   );
 }
