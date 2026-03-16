@@ -2,6 +2,7 @@
 export const VERSION = "0.8.1";
 
 /**
+ * 0.9.0 Adds grouping of tasks by comment for spent hours summary
  * 0.8.1 Improves the layout for longer project and task names and adds a per-project total row in the Summary view
  * 0.8.0 Adds overtime storage
  * 0.7.1 Updates dependencies to latest versions
