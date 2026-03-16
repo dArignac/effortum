@@ -86,7 +86,7 @@ export function Summary() {
                 label="List by task"
                 mb={20}
                 checked={listByTasks}
-                onChange={() => setListByTasks(!listByTasks)}
+                onChange={() => setListByTasks((prev) => !prev)}
               />
             </Table.Td>
           </Table.Tr>
