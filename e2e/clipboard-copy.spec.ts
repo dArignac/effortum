@@ -308,7 +308,7 @@ test.describe("Clipboard Copy Functionality", () => {
     expect(clipboardText).toBe("Today's Task\nYesterday's Task");
   });
 
-  test("should group summary rows by comment when list-by-task is checked", async ({
+  test("should prepend project when same comment exists in multiple projects", async ({
     page,
   }) => {
     // Shared comment in two different projects
@@ -344,15 +344,17 @@ test.describe("Clipboard Copy Functionality", () => {
     // Toggle grouping mode to group by comment
     await page.getByLabel("List by task").click();
 
-    // Comment buckets should be shown, project buckets should not
+    // Shared comment should be split by project with prefixed labels
     await expect(
-      page.locator("tr", { hasText: "Shared Comment" }),
-    ).toContainText("02:00");
+      page.locator("tr", { hasText: "ProjectI: Shared Comment" }),
+    ).toContainText("01:00");
+    await expect(
+      page.locator("tr", { hasText: "ProjectJ: Shared Comment" }),
+    ).toContainText("01:00");
+    // Unique comment remains unprefixed when only one project uses it
     await expect(
       page.locator("tr", { hasText: "Unique Comment" }),
     ).toContainText("01:00");
-    await expect(page.locator("tr", { hasText: "ProjectI" })).toHaveCount(0);
-    await expect(page.locator("tr", { hasText: "ProjectJ" })).toHaveCount(0);
 
     // Copy buttons are only available in project grouping mode
     await expect(
@@ -360,7 +362,7 @@ test.describe("Clipboard Copy Functionality", () => {
     ).toHaveCount(0);
   });
 
-  test("should group tasks without comments under (No comment) when list-by-task is checked", async ({
+  test("should prepend project for (No comment) when multiple projects share it", async ({
     page,
   }) => {
     // Two tasks without comments in different projects
@@ -382,10 +384,17 @@ test.describe("Clipboard Copy Functionality", () => {
 
     await page.getByLabel("List by task").click();
 
-    // Both tasks should be combined in the (No comment) bucket
-    await expect(page.locator("tr", { hasText: "(No comment)" })).toContainText(
-      "02:00",
-    );
+    // Each project gets its own prefixed no-comment row
+    await expect(
+      page.locator("tr", { hasText: "ProjectK: (No comment)" }),
+    ).toContainText("01:00");
+    await expect(
+      page.locator("tr", { hasText: "ProjectL: (No comment)" }),
+    ).toContainText("01:00");
+    await expect(
+      page.locator("td").filter({ hasText: /^\(No comment\)$/ }),
+    ).toHaveCount(0);
+    await expect(page.locator("tfoot tr")).toContainText("02:00");
   });
 
   test("should handle mixed tasks (some with comments, some without)", async ({

@@ -15,11 +15,27 @@ export function Summary() {
 
   const filteredTasks = tasks.filter(filterTasksByDateRange(selectedDateRange));
 
+  const commentProjectCount = filteredTasks.reduce(
+    (acc, task) => {
+      const comment = (task.comment?.trim() ?? "") || "(No comment)";
+      if (!acc[comment]) {
+        acc[comment] = new Set();
+      }
+      acc[comment].add(task.project);
+      return acc;
+    },
+    {} as Record<string, Set<string>>,
+  );
+
   const data = Object.values(
     filteredTasks.reduce(
       (acc, task) => {
+        const comment = (task.comment?.trim() ?? "") || "(No comment)";
+
         const key = listByTasks
-          ? (task.comment?.trim() ?? "") || "(No comment)"
+          ? (commentProjectCount[comment]?.size ?? 0) > 1
+            ? `${task.project}: ${comment}`
+            : comment
           : task.project;
 
         acc[key] = acc[key]
