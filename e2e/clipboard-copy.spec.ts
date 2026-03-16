@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Clipboard Copy Functionality", () => {
   test.beforeEach(async ({ page, context }) => {
@@ -306,6 +306,86 @@ test.describe("Clipboard Copy Functionality", () => {
     // Read clipboard content - should now have both tasks, sorted
     clipboardText = await page.evaluate(() => navigator.clipboard.readText());
     expect(clipboardText).toBe("Today's Task\nYesterday's Task");
+  });
+
+  test("should group summary rows by comment when list-by-task is checked", async ({
+    page,
+  }) => {
+    // Shared comment in two different projects
+    await page.getByTestId("add-entry-input-start-time").fill("09:00");
+    await page.getByTestId("add-entry-input-end-time").fill("10:00");
+    await page.getByTestId("add-entry-input-project").fill("ProjectI");
+    await page.getByTestId("add-entry-input-comment").fill("Shared Comment");
+    await page.getByTestId("button-add-task").click();
+
+    await expect(page.getByTestId("button-add-task")).toBeVisible({
+      timeout: 5000,
+    });
+
+    await page.getByTestId("add-entry-input-start-time").fill("10:00");
+    await page.getByTestId("add-entry-input-end-time").fill("11:00");
+    await page.getByTestId("add-entry-input-project").fill("ProjectJ");
+    await page.getByTestId("add-entry-input-comment").fill("Shared Comment");
+    await page.getByTestId("button-add-task").click();
+
+    await expect(page.getByTestId("button-add-task")).toBeVisible({
+      timeout: 5000,
+    });
+
+    // Different comment
+    await page.getByTestId("add-entry-input-start-time").fill("11:00");
+    await page.getByTestId("add-entry-input-end-time").fill("12:00");
+    await page.getByTestId("add-entry-input-project").fill("ProjectI");
+    await page.getByTestId("add-entry-input-comment").fill("Unique Comment");
+    await page.getByTestId("button-add-task").click();
+
+    await page.waitForTimeout(500);
+
+    // Toggle grouping mode to group by comment
+    await page.getByLabel("List by task").click();
+
+    // Comment buckets should be shown, project buckets should not
+    await expect(
+      page.locator("tr", { hasText: "Shared Comment" }),
+    ).toContainText("02:00");
+    await expect(
+      page.locator("tr", { hasText: "Unique Comment" }),
+    ).toContainText("01:00");
+    await expect(page.locator("tr", { hasText: "ProjectI" })).toHaveCount(0);
+    await expect(page.locator("tr", { hasText: "ProjectJ" })).toHaveCount(0);
+
+    // Copy buttons are only available in project grouping mode
+    await expect(
+      page.locator('[data-testid^="button-copy-comments-"]'),
+    ).toHaveCount(0);
+  });
+
+  test("should group tasks without comments under (No comment) when list-by-task is checked", async ({
+    page,
+  }) => {
+    // Two tasks without comments in different projects
+    await page.getByTestId("add-entry-input-start-time").fill("09:00");
+    await page.getByTestId("add-entry-input-end-time").fill("10:00");
+    await page.getByTestId("add-entry-input-project").fill("ProjectK");
+    await page.getByTestId("button-add-task").click();
+
+    await expect(page.getByTestId("button-add-task")).toBeVisible({
+      timeout: 5000,
+    });
+
+    await page.getByTestId("add-entry-input-start-time").fill("10:00");
+    await page.getByTestId("add-entry-input-end-time").fill("11:00");
+    await page.getByTestId("add-entry-input-project").fill("ProjectL");
+    await page.getByTestId("button-add-task").click();
+
+    await page.waitForTimeout(500);
+
+    await page.getByLabel("List by task").click();
+
+    // Both tasks should be combined in the (No comment) bucket
+    await expect(page.locator("tr", { hasText: "(No comment)" })).toContainText(
+      "02:00",
+    );
   });
 
   test("should handle mixed tasks (some with comments, some without)", async ({
