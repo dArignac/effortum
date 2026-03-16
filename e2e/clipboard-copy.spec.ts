@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Clipboard Copy Functionality", () => {
   test.beforeEach(async ({ page, context }) => {
@@ -306,6 +306,95 @@ test.describe("Clipboard Copy Functionality", () => {
     // Read clipboard content - should now have both tasks, sorted
     clipboardText = await page.evaluate(() => navigator.clipboard.readText());
     expect(clipboardText).toBe("Today's Task\nYesterday's Task");
+  });
+
+  test("should prepend project when same comment exists in multiple projects", async ({
+    page,
+  }) => {
+    // Shared comment in two different projects
+    await page.getByTestId("add-entry-input-start-time").fill("09:00");
+    await page.getByTestId("add-entry-input-end-time").fill("10:00");
+    await page.getByTestId("add-entry-input-project").fill("ProjectI");
+    await page.getByTestId("add-entry-input-comment").fill("Shared Comment");
+    await page.getByTestId("button-add-task").click();
+
+    await expect(page.getByTestId("button-add-task")).toBeVisible({
+      timeout: 5000,
+    });
+
+    await page.getByTestId("add-entry-input-start-time").fill("10:00");
+    await page.getByTestId("add-entry-input-end-time").fill("11:00");
+    await page.getByTestId("add-entry-input-project").fill("ProjectJ");
+    await page.getByTestId("add-entry-input-comment").fill("Shared Comment");
+    await page.getByTestId("button-add-task").click();
+
+    await expect(page.getByTestId("button-add-task")).toBeVisible({
+      timeout: 5000,
+    });
+
+    // Different comment
+    await page.getByTestId("add-entry-input-start-time").fill("11:00");
+    await page.getByTestId("add-entry-input-end-time").fill("12:00");
+    await page.getByTestId("add-entry-input-project").fill("ProjectI");
+    await page.getByTestId("add-entry-input-comment").fill("Unique Comment");
+    await page.getByTestId("button-add-task").click();
+
+    await page.waitForTimeout(500);
+
+    // Toggle grouping mode to group by comment
+    await page.getByLabel("List by task").click();
+
+    // Shared comment should be split by project with prefixed labels
+    await expect(
+      page.locator("tr", { hasText: "ProjectI: Shared Comment" }),
+    ).toContainText("01:00");
+    await expect(
+      page.locator("tr", { hasText: "ProjectJ: Shared Comment" }),
+    ).toContainText("01:00");
+    // Unique comment remains unprefixed when only one project uses it
+    await expect(
+      page.locator("tr", { hasText: "Unique Comment" }),
+    ).toContainText("01:00");
+
+    // Copy buttons are only available in project grouping mode
+    await expect(
+      page.locator('[data-testid^="button-copy-comments-"]'),
+    ).toHaveCount(0);
+  });
+
+  test("should prepend project for (No comment) when multiple projects share it", async ({
+    page,
+  }) => {
+    // Two tasks without comments in different projects
+    await page.getByTestId("add-entry-input-start-time").fill("09:00");
+    await page.getByTestId("add-entry-input-end-time").fill("10:00");
+    await page.getByTestId("add-entry-input-project").fill("ProjectK");
+    await page.getByTestId("button-add-task").click();
+
+    await expect(page.getByTestId("button-add-task")).toBeVisible({
+      timeout: 5000,
+    });
+
+    await page.getByTestId("add-entry-input-start-time").fill("10:00");
+    await page.getByTestId("add-entry-input-end-time").fill("11:00");
+    await page.getByTestId("add-entry-input-project").fill("ProjectL");
+    await page.getByTestId("button-add-task").click();
+
+    await page.waitForTimeout(500);
+
+    await page.getByTestId("checkbox-list-by-task").click();
+
+    // Each project gets its own prefixed no-comment row
+    await expect(
+      page.locator("tr", { hasText: "ProjectK: (No comment)" }),
+    ).toContainText("01:00");
+    await expect(
+      page.locator("tr", { hasText: "ProjectL: (No comment)" }),
+    ).toContainText("01:00");
+    await expect(
+      page.locator("td").filter({ hasText: /^\(No comment\)$/ }),
+    ).toHaveCount(0);
+    await expect(page.locator("tfoot tr")).toContainText("02:00");
   });
 
   test("should handle mixed tasks (some with comments, some without)", async ({

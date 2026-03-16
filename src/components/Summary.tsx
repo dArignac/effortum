@@ -1,43 +1,64 @@
-import { ActionIcon, Box, Table } from "@mantine/core";
+import { ActionIcon, Box, Checkbox, Table } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconClipboardList } from "@tabler/icons-react";
+import { useState } from "react";
 import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
 import { formatDuration, getDuration } from "../utils/time";
 
 export function Summary() {
+  const [listByTasks, setListByTasks] = useState(false);
   const tasks = useEffortumStore((state) => state.tasks);
   const selectedDateRange = useEffortumStore(
     (state) => state.selectedDateRange,
   );
 
+  const filteredTasks = tasks.filter(filterTasksByDateRange(selectedDateRange));
+
+  const commentProjectCount = filteredTasks.reduce<Record<string, Set<string>>>(
+    (acc, task) => {
+      const comment = (task.comment?.trim() ?? "") || "(No comment)";
+      if (!acc[comment]) {
+        acc[comment] = new Set();
+      }
+      acc[comment].add(task.project);
+      return acc;
+    },
+    Object.create(null) as Record<string, Set<string>>,
+  );
+
   const data = Object.values(
-    tasks.filter(filterTasksByDateRange(selectedDateRange)).reduce(
+    filteredTasks.reduce<Record<string, { label: string; time: number }>>(
       (acc, task) => {
-        acc[task.project] = acc[task.project]
+        const comment = (task.comment?.trim() ?? "") || "(No comment)";
+
+        const key = listByTasks
+          ? (commentProjectCount[comment]?.size ?? 0) > 1
+            ? `${task.project}: ${comment}`
+            : comment
+          : task.project;
+
+        acc[key] = acc[key]
           ? {
-              project: task.project,
-              time:
-                acc[task.project].time +
-                getDuration(task.timeStart, task.timeEnd),
+              label: key,
+              time: acc[key].time + getDuration(task.timeStart, task.timeEnd),
             }
           : {
-              project: task.project,
+              label: key,
               time: getDuration(task.timeStart, task.timeEnd),
             };
         return acc;
       },
-      {} as Record<string, { project: string; time: number }>,
+      Object.create(null) as Record<string, { label: string; time: number }>,
     ),
-  ).sort((a, b) => a.project.localeCompare(b.project));
+  ).sort((a, b) => a.label.localeCompare(b.label));
 
   const timeSum = data.reduce((sum, item) => sum + item.time, 0);
 
   const copyTasksOfProjectToClipboard = (project: string) => {
     const text = Array.from(
       new Set(
-        tasks
-          .filter(filterTasksByDateRange(selectedDateRange))
+        filteredTasks
           .filter((task) => task.project === project)
           .filter((task) => task.comment)
           .map((task) => task.comment as string),
@@ -58,26 +79,39 @@ export function Summary() {
     <>
       <Table verticalSpacing={4} horizontalSpacing={4} withRowBorders={false}>
         <Table.Tbody>
-          {data.map((task) => (
-            <Table.Tr key={task.project}>
+          <Table.Tr>
+            <Table.Td colSpan={3}>
+              <Checkbox
+                data-testid="checkbox-list-by-task"
+                label="List by task"
+                mb={20}
+                checked={listByTasks}
+                onChange={() => setListByTasks((prev) => !prev)}
+              />
+            </Table.Td>
+          </Table.Tr>
+          {data.map((item) => (
+            <Table.Tr key={item.label}>
               <Table.Td w={15}>
-                <Box>
-                  <ActionIcon
-                    variant="filled"
-                    aria-label="Copy comments of project"
-                    size={20}
-                    onClick={() => copyTasksOfProjectToClipboard(task.project)}
-                    data-testid={`button-copy-comments-${task.project}`}
-                  >
-                    <IconClipboardList size={16} />
-                  </ActionIcon>
-                </Box>
+                {!listByTasks ? (
+                  <Box>
+                    <ActionIcon
+                      variant="filled"
+                      aria-label="Copy comments of project"
+                      size={20}
+                      onClick={() => copyTasksOfProjectToClipboard(item.label)}
+                      data-testid={`button-copy-comments-${item.label}`}
+                    >
+                      <IconClipboardList size={16} />
+                    </ActionIcon>
+                  </Box>
+                ) : null}
               </Table.Td>
               <Table.Td w={50}>
-                <Box>{formatDuration(task.time)}</Box>
+                <Box>{formatDuration(item.time)}</Box>
               </Table.Td>
               <Table.Td>
-                <Box>{task.project}</Box>
+                <Box>{item.label}</Box>
               </Table.Td>
             </Table.Tr>
           ))}
