@@ -15,7 +15,7 @@ export function Summary() {
 
   const filteredTasks = tasks.filter(filterTasksByDateRange(selectedDateRange));
 
-  const commentProjectCount = filteredTasks.reduce(
+  const commentProjectCount = filteredTasks.reduce<Record<string, Set<string>>>(
     (acc, task) => {
       const comment = (task.comment?.trim() ?? "") || "(No comment)";
       if (!acc[comment]) {
@@ -24,11 +24,11 @@ export function Summary() {
       acc[comment].add(task.project);
       return acc;
     },
-    {} as Record<string, Set<string>>,
+    Object.create(null) as Record<string, Set<string>>,
   );
 
   const data = Object.values(
-    filteredTasks.reduce(
+    filteredTasks.reduce<Record<string, { label: string; time: number }>>(
       (acc, task) => {
         const comment = (task.comment?.trim() ?? "") || "(No comment)";
 
@@ -49,7 +49,7 @@ export function Summary() {
             };
         return acc;
       },
-      {} as Record<string, { label: string; time: number }>,
+      Object.create(null) as Record<string, { label: string; time: number }>,
     ),
   ).sort((a, b) => a.label.localeCompare(b.label));
 
