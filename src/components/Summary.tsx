@@ -82,7 +82,7 @@ export function Summary() {
           <Table.Tr>
             <Table.Td colSpan={3}>
               <Checkbox
-                data-test-id="checkbox-list-by-task"
+                data-testid="checkbox-list-by-task"
                 label="List by task"
                 mb={20}
                 checked={listByTasks}

@@ -382,7 +382,7 @@ test.describe("Clipboard Copy Functionality", () => {
 
     await page.waitForTimeout(500);
 
-    await page.getByLabel("List by task").click();
+    await page.getByTestId("checkbox-list-by-task").click();
 
     // Each project gets its own prefixed no-comment row
     await expect(
