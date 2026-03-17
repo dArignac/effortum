@@ -1,5 +1,5 @@
 // manual poor mans approach to versioning :D
-export const VERSION = "0.8.1";
+export const VERSION = "0.9.0";
 
 /**
  * 0.9.0 Adds grouping of tasks by comment for spent hours summary
