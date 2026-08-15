@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getDurationAsTime } from "./time";
+import { getDurationAsTime, roundTimeToNearest5Minutes } from "./time";
 
 describe("Task duration calculation", () => {
   it("returns ... if end time is missing", () => {
@@ -20,5 +20,21 @@ describe("Task duration calculation", () => {
 
   it("calculates zero duration", () => {
     expect(getDurationAsTime("08:00", "08:00")).toBe("00:00");
+  });
+});
+
+describe("Round time to nearest 5 minutes", () => {
+  it.each([
+    ["10:01", "10:00"],
+    ["10:02", "10:00"],
+    ["10:04", "10:05"],
+    ["10:06", "10:05"],
+    ["10:07", "10:10"],
+    ["10:09", "10:10"],
+    ["10:15", "10:15"],
+    ["10:58", "11:00"],
+    ["23:58", "00:00"],
+  ])("Round %s to %s", (input, expected) => {
+    expect(roundTimeToNearest5Minutes(input)).toBe(expected);
   });
 });

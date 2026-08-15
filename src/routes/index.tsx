@@ -1,12 +1,13 @@
-import { ImportExport } from "@/pages/ImportExport";
-import { Overtime } from "@/pages/Overtime";
-import { TimeCollector } from "@/pages/TimeCollector";
-import { VERSION } from "@/version";
-import { AppShell, Burger, Group, NavLink, Text } from "@mantine/core";
+import { Changelog, VERSION } from "@/components/Changelog";
+import { ImportExportPage } from "@/pages/ImportExportPage";
+import { SettingsPage } from "@/pages/SettingsPage";
+import { TimeCollectorPage } from "@/pages/TimeCollectorPage";
+import { Anchor, AppShell, Burger, Group, NavLink, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconAlarmAverage,
   IconCalendarStats,
+  IconConfetti,
   IconDatabaseExport,
 } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -36,8 +37,12 @@ function App() {
             onClick={toggleNavigation}
             size="sm"
           />
-          <Text fw={700}>Effortum</Text>
-          <Text c="dimmed">v{VERSION}</Text>
+          <Text fw={700} pt={2}>
+            Effortum
+          </Text>
+          <Anchor c="dimmed" pt={2} onClick={() => setActiveNavIndex(3)}>
+            v{VERSION}
+          </Anchor>
         </Group>
       </AppShell.Header>
       <AppShell.Navbar>
@@ -56,17 +61,25 @@ function App() {
           leftSection={<IconDatabaseExport size={20} stroke={1.5} />}
         />
         <NavLink
-          data-testid="nav-overtime"
+          data-testid="nav-settings"
           active={activeNavIndex === 2}
           onClick={() => setActiveNavIndex(2)}
-          label="Overtime Settings"
+          label="Settings"
           leftSection={<IconAlarmAverage size={20} stroke={1.5} />}
+        />
+        <NavLink
+          data-testid="nav-changelog"
+          active={activeNavIndex === 3}
+          onClick={() => setActiveNavIndex(3)}
+          label="Changelog"
+          leftSection={<IconConfetti size={20} stroke={1.5} />}
         />
       </AppShell.Navbar>
       <AppShell.Main>
-        {activeNavIndex === 0 && <TimeCollector />}
-        {activeNavIndex === 1 && <ImportExport />}
-        {activeNavIndex === 2 && <Overtime />}
+        {activeNavIndex === 0 && <TimeCollectorPage />}
+        {activeNavIndex === 1 && <ImportExportPage />}
+        {activeNavIndex === 2 && <SettingsPage />}
+        {activeNavIndex === 3 && <Changelog />}
       </AppShell.Main>
     </AppShell>
   );

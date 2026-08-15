@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { filterTasksByDateRange } from "./filters";
 import { Task } from "../models/Task";
+import { filterTasksByDateRange } from "./filters";
 
 describe("filterTasksByDateRange", () => {
   // Mock task data for testing
@@ -125,10 +125,9 @@ describe("filterTasksByDateRange", () => {
     const filter = filterTasksByDateRange(["2024-01-15", null]);
     const filteredTasks = tasksWithDifferentFormat.filter(filter);
 
-    // dayjs may not match ISO datetime format with simple date string in isSame comparison
-    // This test verifies the actual behavior - only the simple date format matches
-    expect(filteredTasks).toHaveLength(1);
-    expect(filteredTasks.map((t) => t.id)).toEqual(["1"]);
+    // ISO datetime and YYYY-MM-DD should both match the same calendar day filter.
+    expect(filteredTasks).toHaveLength(2);
+    expect(filteredTasks.map((t) => t.id)).toEqual(["1", "5"]);
   });
 
   it("returns correct filter function type", () => {

@@ -7,6 +7,5 @@
   "addOnOptions": {},
   "git": true,
   "version": 1,
-  "framework": "react-cra",
-  "chosenAddOns": ["netlify", "start"]
+  "framework": "react-cra"
 }

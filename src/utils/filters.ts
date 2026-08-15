@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { Task } from "../models/Task";
+import { normalizeDate } from "./date";
 
 dayjs.extend(isBetween);
 
@@ -15,13 +16,22 @@ export function filterTasksByDateRange(
       selectedDateRange[1] === null ||
       selectedDateRange[0] === selectedDateRange[1]
     ) {
-      return dayjs(task.date).isSame(dayjs(selectedDateRange[0]));
+      const taskDate = normalizeDate(task.date);
+      const selectedDate = normalizeDate(selectedDateRange[0]);
+      return (
+        taskDate !== null &&
+        selectedDate !== null &&
+        taskDate.isSame(selectedDate, "day")
+      );
     }
-    return dayjs(task.date).isBetween(
-      dayjs(selectedDateRange[0]),
-      dayjs(selectedDateRange[1]),
-      "day",
-      "[]",
+    const taskDate = normalizeDate(task.date);
+    const startDate = normalizeDate(selectedDateRange[0]);
+    const endDate = normalizeDate(selectedDateRange[1]);
+    return (
+      taskDate !== null &&
+      startDate !== null &&
+      endDate !== null &&
+      taskDate.isBetween(startDate, endDate, "day", "[]")
     );
   };
 }

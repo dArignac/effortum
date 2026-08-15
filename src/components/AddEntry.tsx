@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { Comment } from "../models/Comment";
 import { useEffortumStore } from "../store";
+import { roundTimeToNearest5Minutes } from "../utils/time";
 import {
   validateDate,
   validateEnd,
@@ -23,6 +24,9 @@ export function AddEntryRow() {
   );
   const endTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.endTimeOfLastStoppedTask,
+  );
+  const roundToNearest5Minutes = useEffortumStore(
+    (state) => state.settings.at(0)?.roundToNearest5Minutes ?? false,
   );
 
   const [dateValue, setDateValue] = useState<string | null>(null);
@@ -94,11 +98,20 @@ export function AddEntryRow() {
       return;
     }
 
+    const roundedStartValue = roundToNearest5Minutes
+      ? roundTimeToNearest5Minutes(startValue)
+      : startValue;
+    const roundedEndValue = endValue
+      ? roundToNearest5Minutes
+        ? roundTimeToNearest5Minutes(endValue)
+        : endValue
+      : "";
+
     addTask({
       id: crypto.randomUUID(),
       date: dateValue || dayjs().format("YYYY-MM-DD"),
-      timeStart: startValue,
-      timeEnd: endValue || "",
+      timeStart: roundedStartValue,
+      timeEnd: roundedEndValue,
       project: projectValue,
       comment: commentValue || "",
     });

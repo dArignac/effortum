@@ -14,5 +14,3 @@ todos.json
 
 playwright-report
 test-results
-# Local Netlify folder
-.netlify

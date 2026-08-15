@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Overtime Settings", () => {
   test("should store overtime settings and persist them after page reload", async ({
@@ -12,10 +12,10 @@ test.describe("Overtime Settings", () => {
     // Open the navigation by clicking the burger menu
     const burgerMenu = page.getByTestId("navigation-burger");
     await burgerMenu.click();
-    await expect(page.getByTestId("nav-overtime")).toBeVisible();
+    await expect(page.getByTestId("nav-settings")).toBeVisible();
 
     // Navigate to Overtime Settings
-    await page.getByTestId("nav-overtime").click();
+    await page.getByTestId("nav-settings").click();
 
     // Wait for the overtime form to be visible
     await expect(
@@ -51,10 +51,10 @@ test.describe("Overtime Settings", () => {
 
     // Open the navigation menu again
     await page.getByTestId("navigation-burger").click();
-    await expect(page.getByTestId("nav-overtime")).toBeVisible();
+    await expect(page.getByTestId("nav-settings")).toBeVisible();
 
     // Navigate back to Overtime Settings
-    await page.getByTestId("nav-overtime").click();
+    await page.getByTestId("nav-settings").click();
 
     // Wait for the overtime form to be visible again
     await expect(
@@ -81,10 +81,10 @@ test.describe("Overtime Settings", () => {
     // Open the navigation by clicking the burger menu
     const burgerMenu = page.getByTestId("navigation-burger");
     await burgerMenu.click();
-    await expect(page.getByTestId("nav-overtime")).toBeVisible();
+    await expect(page.getByTestId("nav-settings")).toBeVisible();
 
     // Navigate to Overtime Settings
-    await page.getByTestId("nav-overtime").click();
+    await page.getByTestId("nav-settings").click();
 
     // Wait for the overtime form to be visible
     await expect(
@@ -121,8 +121,8 @@ test.describe("Overtime Settings", () => {
 
     // Open the navigation menu again
     await page.getByTestId("navigation-burger").click();
-    await expect(page.getByTestId("nav-overtime")).toBeVisible();
-    await page.getByTestId("nav-overtime").click();
+    await expect(page.getByTestId("nav-settings")).toBeVisible();
+    await page.getByTestId("nav-settings").click();
     await expect(
       page.getByTestId("overtime-input-current-balance"),
     ).toBeVisible();
@@ -145,10 +145,10 @@ test.describe("Overtime Settings", () => {
     // Open the navigation by clicking the burger menu
     const burgerMenu = page.getByTestId("navigation-burger");
     await burgerMenu.click();
-    await expect(page.getByTestId("nav-overtime")).toBeVisible();
+    await expect(page.getByTestId("nav-settings")).toBeVisible();
 
     // Navigate to Overtime Settings
-    await page.getByTestId("nav-overtime").click();
+    await page.getByTestId("nav-settings").click();
 
     // Wait for the overtime form to be visible
     await expect(

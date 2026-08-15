@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Clipboard Copy Functionality", () => {
-  test.beforeEach(async ({ page, context }) => {
-    // Grant clipboard permissions
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  test.beforeEach(async ({ page }) => {
     await page.goto("/");
 
     // Wait for the page to load
@@ -284,14 +282,14 @@ test.describe("Clipboard Copy Functionality", () => {
 
     // For a range picker, click yesterday first, then today
     const yesterdayButton = summaryDatePicker
-      .locator(`.mantine-DatePicker-day`)
+      .locator(`.mantine-DatePicker-day:not([data-outside])`)
       .filter({ hasText: new RegExp(`^${yesterdayDay}$`) })
       .first();
     await yesterdayButton.click();
 
     // Then click today to complete the range
     const todayButton = summaryDatePicker
-      .locator(`.mantine-DatePicker-day`)
+      .locator(`.mantine-DatePicker-day:not([data-outside])`)
       .filter({ hasText: new RegExp(`^${todayDay}$`) })
       .first();
     await todayButton.click();

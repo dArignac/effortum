@@ -3,7 +3,7 @@ import { Summary } from "@/components/Summary";
 import { TaskList } from "@/components/TaskList";
 import { Flex, Grid } from "@mantine/core";
 
-export function TimeCollector() {
+export function TimeCollectorPage() {
   return (
     <Grid overflow="hidden">
       <Grid.Col span={8}>

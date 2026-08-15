@@ -1,4 +1,11 @@
-import { test, expect } from "@playwright/test";
+import { roundTimeToNearest5Minutes } from "@/utils/time";
+import { expect, test } from "@playwright/test";
+
+function toHHMM(date: Date): string {
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
 
 // felder einzeln testen, dann task creation, dann rest. KI ist überfordert. Muss es manuell tun.
 
@@ -281,5 +288,84 @@ test.describe("Task Creation", () => {
     expect(secondUpdateId).toMatch(/^button-update-task-/);
     expect(secondStopId).toMatch(/^button-stop-task-/);
     expect(firstUpdateId).not.toBe(secondUpdateId); // Should be different
+  });
+
+  test("should round entered and auto stop times when round-to-nearest-5 setting is enabled", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    await page.getByTestId("navigation-burger").click();
+    await page.getByTestId("nav-settings").click();
+
+    const roundToNearest5MinutesSwitch = page.getByRole("switch", {
+      name: "Round times to the nearest 5 minutes",
+    });
+    await roundToNearest5MinutesSwitch.check();
+    await page.getByTestId("settings-submit-button").click();
+
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    const addButton = page.getByTestId("button-add-task");
+    const isAddButtonVisible = await addButton.isVisible();
+    if (!isAddButtonVisible) {
+      const emptyEndTimeInput = page.getByTestId("add-entry-input-end-time");
+      if (await emptyEndTimeInput.isVisible()) {
+        await emptyEndTimeInput.fill("17:00");
+        await emptyEndTimeInput.blur();
+        await expect(addButton).toBeVisible({ timeout: 5000 });
+      }
+    }
+
+    const uniqueProject = `Rounded Project ${Date.now()}`;
+
+    await page.getByTestId("add-entry-input-start-time").fill("10:01");
+    await page.getByTestId("add-entry-input-end-time").fill("10:04");
+    await page.getByTestId("add-entry-input-project").fill(uniqueProject);
+    await addButton.click();
+
+    const projectInput = page.locator(
+      `tr[data-testid^="task-row-"] td:nth-child(4) input[value="${uniqueProject}"]`,
+    );
+    await expect(projectInput).toBeVisible();
+    const taskRow = projectInput.locator("xpath=ancestor::tr[1]");
+    await expect(taskRow).toBeVisible();
+    await expect(taskRow.locator("td").nth(1).locator("input")).toHaveValue(
+      "10:00",
+    );
+    await expect(taskRow.locator("td").nth(2).locator("input")).toHaveValue(
+      "10:05",
+    );
+
+    await taskRow.locator("td").nth(1).locator("input").fill("10:01");
+    await taskRow.locator("td").nth(2).locator("input").fill("10:06");
+    await taskRow.locator('[data-testid^="button-update-task-"]').click();
+
+    await expect(taskRow.locator("td").nth(1).locator("input")).toHaveValue(
+      "10:00",
+    );
+    await expect(taskRow.locator("td").nth(2).locator("input")).toHaveValue(
+      "10:05",
+    );
+
+    await taskRow.locator("td").nth(2).locator("input").clear();
+    await taskRow.locator('[data-testid^="button-update-task-"]').click();
+    await expect(
+      taskRow.locator('[data-testid^="button-stop-task-"]'),
+    ).toBeVisible();
+
+    const beforeStopTime = toHHMM(new Date());
+    await taskRow.locator('[data-testid^="button-stop-task-"]').click();
+    const afterStopTime = toHHMM(new Date());
+
+    const expectedBeforeStop = roundTimeToNearest5Minutes(beforeStopTime);
+    const expectedAfterStop = roundTimeToNearest5Minutes(afterStopTime);
+    const expectedStopTimes = [expectedBeforeStop, expectedAfterStop];
+
+    await expect(taskRow.locator("td").nth(2).locator("input")).toHaveValue(
+      new RegExp(`^(${expectedStopTimes.join("|")})$`),
+    );
   });
 });

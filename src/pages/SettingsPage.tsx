@@ -1,8 +1,10 @@
 import { OvertimeForm } from "@/components/OvertimeForm";
+import { SettingsForm } from "@/components/SettingsForm";
 
-export function Overtime() {
+export function SettingsPage() {
   return (
     <>
+      <SettingsForm />
       <OvertimeForm />
     </>
   );

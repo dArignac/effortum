@@ -4,6 +4,7 @@ import { EffortumDB } from "./db";
 import { Comment } from "./models/Comment";
 import { Overtime } from "./models/Overtime";
 import { Project } from "./models/Project";
+import { Settings } from "./models/Settings";
 import { Task } from "./models/Task";
 
 export const db = new EffortumDB();
@@ -13,6 +14,7 @@ interface EffortumStore {
   projects: Project[];
   comments: Comment[];
   overtime: Overtime[];
+  settings: Settings[];
   selectedDateRange: [string | null, string | null];
   endTimeOfLastStoppedTask: string | null;
 
@@ -31,6 +33,8 @@ interface EffortumStore {
   setEndTimeOfLastStoppedTask: (time: string | null) => void;
 
   updateOvertime: (currentBalance: number, workingHoursPerDay: number) => void;
+
+  updateSettings: (roundToNearest5Minutes: boolean) => void;
 }
 
 interface StoreSet {
@@ -50,6 +54,7 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   tasks: [],
   comments: [],
   overtime: [],
+  settings: [],
   selectedDateRange: [null, null] as [string | null, string | null],
   endTimeOfLastStoppedTask: null,
 
@@ -59,7 +64,8 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
     const projects = await db.projects.orderBy("name").toArray();
     const comments = await db.comments.orderBy("comment").toArray();
     const overtime = await db.overtime.toArray();
-    set({ tasks, projects, comments, overtime });
+    const settings = await db.settings.toArray();
+    set({ tasks, projects, comments, overtime, settings });
   },
 
   addTask: async (task: Task) => {
@@ -151,6 +157,19 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
 
     set({
       overtime: [overtimeValue],
+    });
+  },
+
+  updateSettings: async (roundToNearest5Minutes: boolean) => {
+    const settingsValue = {
+      id: "settings-default",
+      roundToNearest5Minutes,
+    };
+
+    db.settings.put(settingsValue);
+
+    set({
+      settings: [settingsValue],
     });
   },
 });

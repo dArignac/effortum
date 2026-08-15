@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { Comment } from "../models/Comment";
 import { useEffortumStore } from "../store";
-import { getDurationAsTime } from "../utils/time";
+import { getDurationAsTime, roundTimeToNearest5Minutes } from "../utils/time";
 import {
   validateDate,
   validateEnd,
@@ -18,7 +18,6 @@ import { DateSelectionField } from "./DateField";
 
 export function TaskListRow(props: { taskId: string | null }) {
   const tasks = useEffortumStore((state) => state.tasks);
-  const comments = useEffortumStore((state) => state.comments);
   const updateTask = useEffortumStore((state) => state.updateTask);
   const getCommentsForProject = useEffortumStore(
     (state) => state.getCommentsForProject,
@@ -26,6 +25,9 @@ export function TaskListRow(props: { taskId: string | null }) {
   const projects = useEffortumStore((state) => state.projects);
   const setEndTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.setEndTimeOfLastStoppedTask,
+  );
+  const roundToNearest5Minutes = useEffortumStore(
+    (state) => state.settings.at(0)?.roundToNearest5Minutes ?? false,
   );
 
   const [hasChanges, setHasChanges] = useState(false);
@@ -114,13 +116,25 @@ export function TaskListRow(props: { taskId: string | null }) {
       return;
     }
 
+    const startTime = roundToNearest5Minutes
+      ? roundTimeToNearest5Minutes(fieldStart.getValue())
+      : fieldStart.getValue();
+    const endTime = fieldEnd.getValue()
+      ? roundToNearest5Minutes
+        ? roundTimeToNearest5Minutes(fieldEnd.getValue())
+        : fieldEnd.getValue()
+      : "";
+
     updateTask(task.id, {
       date: dateValue || dayjs().format("YYYY-MM-DD"),
-      timeStart: fieldStart.getValue(),
-      timeEnd: fieldEnd.getValue() || "",
+      timeStart: startTime,
+      timeEnd: endTime,
       project: fieldProject.getValue(),
       comment: fieldComment.getValue() || "",
     });
+
+    fieldStart.setValue(startTime);
+    fieldEnd.setValue(endTime);
 
     notifications.show({ message: "Task updated successfully!" });
 
@@ -128,7 +142,11 @@ export function TaskListRow(props: { taskId: string | null }) {
   };
 
   const stopTask = () => {
-    const endTime = dayjs().format("HH:mm");
+    const nowAsTime = dayjs().format("HH:mm");
+    const endTime = roundToNearest5Minutes
+      ? roundTimeToNearest5Minutes(nowAsTime)
+      : nowAsTime;
+
     updateTask(task.id, {
       timeEnd: endTime,
       project: fieldProject.getValue(),

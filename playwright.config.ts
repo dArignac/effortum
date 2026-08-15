@@ -13,8 +13,11 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: "firefox",
+      use: {
+        ...devices["Desktop Firefox"],
+        // permissions: ["clipboard-read", "clipboard-write"], only needed for Chromium, which does not work under Ubuntu 25
+      },
     },
   ],
 });

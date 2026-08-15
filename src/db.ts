@@ -2,6 +2,7 @@ import Dexie, { Table } from "dexie";
 import { Comment } from "./models/Comment";
 import { Overtime } from "./models/Overtime";
 import { Project } from "./models/Project";
+import { Settings } from "./models/Settings";
 import { Task } from "./models/Task";
 
 export class EffortumDB extends Dexie {
@@ -9,6 +10,7 @@ export class EffortumDB extends Dexie {
   projects!: Table<Project>;
   comments!: Table<Comment>;
   overtime!: Table<Overtime>;
+  settings!: Table<Settings>;
 
   constructor() {
     super("EffortumDatabase");
@@ -21,6 +23,9 @@ export class EffortumDB extends Dexie {
     });
     this.version(3).stores({
       overtime: "&id, currentBalance, workingHoursPerDay",
+    });
+    this.version(4).stores({
+      settings: "&id, roundToNearest5Minutes",
     });
   }
 }
