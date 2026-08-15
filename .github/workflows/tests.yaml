@@ -1,0 +1,25 @@
+name: Tests CI
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        run: |
+          npm install --global corepack@latest
+          corepack enable pnpm
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+
+      - name: Run tests
+        run: |
+          pnpm test
