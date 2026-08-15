@@ -11,7 +11,27 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        run: |
+          npm install --global corepack@latest
+          corepack enable pnpm
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+
+      - name: Run tests
+        run: |
+          pnpm test
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
