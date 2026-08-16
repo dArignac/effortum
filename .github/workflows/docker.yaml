@@ -16,7 +16,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
+        with:
+          runtime: node@26
+          cache: true
 
       - name: Install pnpm
         run: |
@@ -30,6 +36,28 @@ jobs:
       - name: Run tests
         run: |
           pnpm test
+
+      - name: Install Playwright
+        run: |
+          pnpm exec playwright install
+
+      - uses: JarvusInnovations/background-action@v2
+        name: Bootstrap application
+        with:
+          run: |
+            pnpm dev
+          wait-on: |
+            http://localhost:3000
+            http-get://localhost:3000
+          tail: true
+          log-output-resume: stderr
+          wait-for: 1m
+          log-output: stderr,stdout
+          log-output-if: true
+
+      - name: Tests that require the resources defined above to run
+        run: |
+          pnpm test:e2e
 
   build:
     needs: test
