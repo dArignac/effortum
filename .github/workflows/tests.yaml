@@ -24,3 +24,21 @@ jobs:
       - name: Run tests
         run: |
           pnpm test
+
+      - uses: JarvusInnovations/background-action@v2
+        name: Bootstrap application
+        with:
+          run: |
+            pnpm dev
+          wait-on: |
+            http://localhost:3000
+            http-get://localhost:3000
+          tail: true
+          log-output-resume: stderr
+          wait-for: 1m
+          log-output: stderr,stdout
+          log-output-if: true
+
+      - name: Tests that require the resources defined above to run
+        run: |
+          pnpm test:e2e
