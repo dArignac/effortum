@@ -55,10 +55,10 @@ importers:
         version: 1.11.21
       dexie:
         specifier: ^4.4.4
-        version: 4.4.4
+        version: 4.4.5
       dexie-export-import:
         specifier: ^4.4.0
-        version: 4.4.0(dexie@4.4.4)
+        version: 4.4.0(dexie@4.4.5)
       nitro:
         specifier: 3.0.260610-beta
         version: 3.0.260610-beta(@electric-sql/pglite@0.3.16)(@netlify/blobs@10.7.13)(@netlify/runtime@4.1.29)(chokidar@5.0.0)(dotenv@16.6.1)(jiti@2.7.0)(lru-cache@11.5.1)(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(sugarss@5.0.1(postcss@8.5.26))(yaml@2.9.0))
@@ -2588,8 +2588,8 @@ packages:
     peerDependencies:
       dexie: ^4.4.0
 
-  dexie@4.4.4:
-    resolution: {integrity: sha512-jIwsYI8Os2hgnqc6O49YwFDKGc5v5QjGx0wPVp543ip1F53VFAKMLthV2pQosQcVTv3eAskTWYspOx195PM0FQ==}
+  dexie@4.4.5:
+    resolution: {integrity: sha512-wWCHdihT3dmlUSuNhn5mMZDWSpG0suxjAni7YjjiZdzabZcKmy3uNZGZ7AeYYXBoLbpSXX35fikPLkPC44Osiw==}
 
   diff@8.0.4:
     resolution: {integrity: sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==}
@@ -7474,11 +7474,11 @@ snapshots:
 
   dettle@1.0.5: {}
 
-  dexie-export-import@4.4.0(dexie@4.4.4):
+  dexie-export-import@4.4.0(dexie@4.4.5):
     dependencies:
-      dexie: 4.4.4
+      dexie: 4.4.5
 
-  dexie@4.4.4: {}
+  dexie@4.4.5: {}
 
   diff@8.0.4: {}
 
