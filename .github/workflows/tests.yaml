@@ -25,6 +25,10 @@ jobs:
         run: |
           pnpm test
 
+      - name: Install Playwright
+        run: |
+          pnpm exec playwright install
+
       - uses: JarvusInnovations/background-action@v2
         name: Bootstrap application
         with:
