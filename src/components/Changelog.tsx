@@ -3,6 +3,10 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.11.2",
+    description: ["Software library dependencies updated."],
+  },
+  {
     version: "0.11.1",
     description: ["Software library dependencies updated."],
   },
