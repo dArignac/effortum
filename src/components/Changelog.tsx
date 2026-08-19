@@ -3,6 +3,10 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.11.3",
+    description: ["Improved database structure (Issue #49)."],
+  },
+  {
     version: "0.11.2",
     description: ["Software library dependencies updated."],
   },
@@ -81,7 +85,7 @@ export function renderDescription(description: string) {
     parts.push(
       <Anchor
         key={`issue-${issueId}-${startIndex}`}
-        href={`https://codeberg.org/darignac/effortum/issues/${issueId}`}
+        href={`https://github.com/dArignac/effortum/issues/${issueId}`}
         target="_blank"
         rel="noreferrer noopener"
         size="sm"
