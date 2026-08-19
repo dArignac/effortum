@@ -25,7 +25,7 @@ function expectIssueAnchor(node: unknown, issueId: string) {
   }
 
   expect(node.props.href).toBe(
-    `https://codeberg.org/darignac/effortum/issues/${issueId}`,
+    `https://github.com/darignac/effortum/issues/${issueId}`,
   );
   expect(node.props.target).toBe("_blank");
   expect(node.props.rel).toBe("noreferrer noopener");
