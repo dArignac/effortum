@@ -40,6 +40,11 @@ export function TaskListRow(props: { taskId: string | null }) {
     return null;
   }
 
+  const currentProjectName =
+    projects.find((project) => project.id === task.projectId)?.name ||
+    task.project ||
+    "";
+
   useEffect(() => {
     setDateValue(task.date);
   }, [task.date]);
@@ -75,10 +80,10 @@ export function TaskListRow(props: { taskId: string | null }) {
   });
 
   const fieldProject = useField({
-    initialValue: task.project,
+    initialValue: currentProjectName,
     validate: (value) => validateProject(value),
     onValueChange: (value) => {
-      setHasChanges(value !== task.project);
+      setHasChanges(value !== currentProjectName);
     },
   });
 
@@ -93,12 +98,20 @@ export function TaskListRow(props: { taskId: string | null }) {
     const loadComments = async () => {
       // only fill comments if a project is selected
       if (fieldProject.getValue().length > 0) {
-        const comments = await getCommentsForProject(fieldProject.getValue());
+        const project = projects.find(
+          (p) => p.name === fieldProject.getValue(),
+        );
+        if (!project) {
+          setAvailableComments([]);
+          return;
+        }
+
+        const comments = await getCommentsForProject(project.id);
         setAvailableComments(comments);
       }
     };
     loadComments();
-  }, [fieldProject.getValue()]);
+  }, [fieldProject.getValue(), projects]);
 
   const updateEntry = async () => {
     // Validate all fields
@@ -129,7 +142,7 @@ export function TaskListRow(props: { taskId: string | null }) {
       date: dateValue || dayjs().format("YYYY-MM-DD"),
       timeStart: startTime,
       timeEnd: endTime,
-      project: fieldProject.getValue(),
+      projectName: fieldProject.getValue(),
       comment: fieldComment.getValue() || "",
     });
 
@@ -149,7 +162,7 @@ export function TaskListRow(props: { taskId: string | null }) {
 
     updateTask(task.id, {
       timeEnd: endTime,
-      project: fieldProject.getValue(),
+      projectName: fieldProject.getValue(),
       comment: fieldComment.getValue() || "",
     });
     fieldEnd.setValue(endTime);

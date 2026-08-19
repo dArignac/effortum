@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Data Import Functionality", () => {
   test("should display modal when file is selected", async ({ page }) => {
@@ -338,6 +338,100 @@ test.describe("Data Import Functionality", () => {
       page.getByText(
         "Warning: This will completely replace your current database",
       ),
+    ).toBeVisible();
+  });
+
+  test("should import legacy project-name relations and render tasks", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    const addButton = page.getByTestId("button-add-task");
+    const isAddButtonVisible = await addButton.isVisible();
+    if (!isAddButtonVisible) {
+      const emptyEndTimeInput = page.getByTestId("add-entry-input-end-time");
+      if (await emptyEndTimeInput.isVisible()) {
+        await emptyEndTimeInput.fill("17:00");
+        await emptyEndTimeInput.blur();
+        await expect(addButton).toBeVisible({ timeout: 5000 });
+      }
+    }
+
+    await page.getByTestId("add-entry-input-start-time").fill("09:00");
+    await page.getByTestId("add-entry-input-end-time").fill("10:00");
+    await page.getByTestId("add-entry-input-project").fill("Legacy Project");
+    await page.getByTestId("add-entry-input-comment").fill("Legacy Comment");
+    await page.getByTestId("button-add-task").click();
+    await expect(page.getByTestId("button-add-task")).toBeVisible({
+      timeout: 5000,
+    });
+
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByTestId("button-export-data").click();
+    const download = await downloadPromise;
+    const downloadPath = await download.path();
+    const fs = await import("fs");
+    const exportedContent = fs.readFileSync(downloadPath!, "utf-8");
+    const legacyExport = JSON.parse(exportedContent);
+
+    const tasksTable = legacyExport.data.tables.find(
+      (table: any) => table.name === "tasks",
+    );
+    const commentsTable = legacyExport.data.tables.find(
+      (table: any) => table.name === "comments",
+    );
+
+    if (tasksTable?.rows) {
+      tasksTable.rows = tasksTable.rows.map((row: any) => {
+        const task = { ...row[1] };
+        delete task.projectId;
+        return [row[0], task];
+      });
+    }
+
+    if (commentsTable?.rows) {
+      commentsTable.rows = commentsTable.rows.map((row: any) => {
+        const comment = { ...row[1] };
+        delete comment.projectId;
+        return [row[0], comment];
+      });
+    }
+
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.getByTestId("button-import-data").click();
+
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({
+      name: "legacy-backup.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(legacyExport)),
+    });
+
+    await expect(page.getByTestId("button-import-confirm")).toBeVisible();
+    await page.getByTestId("button-import-confirm").click();
+
+    await expect(
+      page.getByText("Database imported successfully! Reloading page..."),
+    ).toBeVisible({ timeout: 10000 });
+
+    await page.waitForLoadState("load", { timeout: 5000 });
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    const tableBody = page.locator("tbody");
+    await expect(
+      tableBody.locator('input[value="Legacy Project"]').first(),
+    ).toBeVisible();
+    await expect(
+      tableBody.locator('input[value="Legacy Comment"]').first(),
     ).toBeVisible();
   });
 });

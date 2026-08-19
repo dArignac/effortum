@@ -46,12 +46,18 @@ export function AddEntryRow() {
     const loadComments = async () => {
       // only fill comments if a project is selected
       if (projectValue.length > 0) {
-        const comments = await getCommentsForProject(projectValue);
+        const project = projects.find((p) => p.name === projectValue);
+        if (!project) {
+          setAvailableComments([]);
+          return;
+        }
+
+        const comments = await getCommentsForProject(project.id);
         setAvailableComments(comments);
       }
     };
     loadComments();
-  }, [projectValue]);
+  }, [projectValue, projects]);
 
   const fieldDate = useField({
     initialValue: dayjs().format("YYYY-MM-DD"),
@@ -98,28 +104,34 @@ export function AddEntryRow() {
       return;
     }
 
+    const selectedDate = fieldDate.getValue() || dayjs().format("YYYY-MM-DD");
+    const selectedStart = fieldStart.getValue();
+    const selectedEnd = fieldEnd.getValue();
+    const selectedProject = fieldProject.getValue().trim();
+    const selectedComment = fieldComment.getValue();
+
     const roundedStartValue = roundToNearest5Minutes
-      ? roundTimeToNearest5Minutes(startValue)
-      : startValue;
-    const roundedEndValue = endValue
+      ? roundTimeToNearest5Minutes(selectedStart)
+      : selectedStart;
+    const roundedEndValue = selectedEnd
       ? roundToNearest5Minutes
-        ? roundTimeToNearest5Minutes(endValue)
-        : endValue
+        ? roundTimeToNearest5Minutes(selectedEnd)
+        : selectedEnd
       : "";
 
     addTask({
       id: crypto.randomUUID(),
-      date: dateValue || dayjs().format("YYYY-MM-DD"),
+      date: selectedDate,
       timeStart: roundedStartValue,
       timeEnd: roundedEndValue,
-      project: projectValue,
-      comment: commentValue || "",
+      projectName: selectedProject,
+      comment: selectedComment || "",
     });
 
-    if (commentValue.length > 0) {
+    if (selectedComment.length > 0) {
       addComment({
-        comment: commentValue,
-        project: projectValue,
+        comment: selectedComment,
+        projectName: selectedProject,
       });
     }
   };
