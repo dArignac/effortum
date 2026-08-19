@@ -53,6 +53,8 @@
 - Do not break current local storage/indexeddb data assumptions.
 - Avoid broad dependency changes unless necessary for the requested task.
 - Keep public behavior stable unless the user asks for a behavior change.
+- Always document functions, components, and utilities with JSDoc comments when adding new code or changing existing logic.
+- Always ensure that there are no TypeScript errors in the codebase after making changes.
 
 ## Collaboration Preferences
 

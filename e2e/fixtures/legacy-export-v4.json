@@ -1,0 +1,68 @@
+{
+  "formatName": "dexie",
+  "formatVersion": 1,
+  "data": {
+    "databaseName": "EffortumDatabase",
+    "databaseVersion": 4,
+    "tables": [
+      {
+        "name": "tasks",
+        "schema": "++id,date,timeStart,timeEnd,project",
+        "rowCount": 1,
+        "rows": [
+          [
+            1,
+            {
+              "id": 1,
+              "date": "2026-08-10",
+              "timeStart": "09:00",
+              "timeEnd": "10:00",
+              "project": "Legacy Project",
+              "comment": "Legacy Comment A"
+            }
+          ]
+        ]
+      },
+      {
+        "name": "projects",
+        "schema": "++id,&name",
+        "rowCount": 1,
+        "rows": [
+          [
+            1,
+            {
+              "id": 1,
+              "name": "Legacy Project"
+            }
+          ]
+        ]
+      },
+      {
+        "name": "comments",
+        "schema": "++id,project,comment",
+        "rowCount": 1,
+        "rows": [
+          [
+            1,
+            {
+              "project": "Legacy Project",
+              "comment": "Legacy Comment A"
+            }
+          ]
+        ]
+      },
+      {
+        "name": "overtime",
+        "schema": "&id,currentBalance,workingHoursPerDay",
+        "rowCount": 0,
+        "rows": []
+      },
+      {
+        "name": "settings",
+        "schema": "&id,roundToNearest5Minutes",
+        "rowCount": 0,
+        "rows": []
+      }
+    ]
+  }
+}
