@@ -46,6 +46,7 @@
 - Validate behavior with existing scripts:
   - `pnpm test`
   - `pnpm test:e2e`
+- Always validate all tests after a change to avoid regressions.
 
 ## Editing Guardrails
 

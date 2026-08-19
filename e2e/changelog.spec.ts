@@ -78,7 +78,7 @@ test.describe("Changelog", () => {
     await expect(issueLink).toBeVisible();
     await expect(issueLink).toHaveAttribute(
       "href",
-      "https://codeberg.org/darignac/effortum/issues/3",
+      "https://github.com/darignac/effortum/issues/3",
     );
     await expect(issueLink).toHaveAttribute("target", "_blank");
     await expect(issueLink).toHaveAttribute("rel", "noreferrer noopener");

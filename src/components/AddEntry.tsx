@@ -119,7 +119,7 @@ export function AddEntryRow() {
         : selectedEnd
       : "";
 
-    addTask({
+    await addTask({
       id: crypto.randomUUID(),
       date: selectedDate,
       timeStart: roundedStartValue,
@@ -129,7 +129,7 @@ export function AddEntryRow() {
     });
 
     if (selectedComment.length > 0) {
-      addComment({
+      await addComment({
         comment: selectedComment,
         projectName: selectedProject,
       });

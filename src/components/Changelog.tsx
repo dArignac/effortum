@@ -4,7 +4,9 @@ import type { ReactNode } from "react";
 const changelogEntries = [
   {
     version: "0.11.3",
-    description: ["Improved database structure (Issue #49)."],
+    description: [
+      "Improved database structure (Issue #49). Note that data imports of previous versions will not work anymore due to changed structure.",
+    ],
   },
   {
     version: "0.11.2",
@@ -85,7 +87,7 @@ export function renderDescription(description: string) {
     parts.push(
       <Anchor
         key={`issue-${issueId}-${startIndex}`}
-        href={`https://github.com/dArignac/effortum/issues/${issueId}`}
+        href={`https://github.com/darignac/effortum/issues/${issueId}`}
         target="_blank"
         rel="noreferrer noopener"
         size="sm"

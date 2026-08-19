@@ -249,7 +249,7 @@ test.describe("Data Export Functionality", () => {
 
       // Verify comments table has all comments
       const commentsTable = tables.find((t: any) => t.name === "comments");
-      expect(commentsTable.rowCount).toBeGreaterThanOrEqual(1);
+      expect(commentsTable.rowCount).toBeGreaterThanOrEqual(3);
     }
   });
 
