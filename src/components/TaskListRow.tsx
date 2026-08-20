@@ -83,7 +83,7 @@ export function TaskListRow(props: { taskId: string | null }) {
     initialValue: currentProjectName,
     validate: (value) => validateProject(value),
     onValueChange: (value) => {
-      setHasChanges(value !== currentProjectName);
+      setHasChanges(value.trim() !== currentProjectName);
     },
   });
 

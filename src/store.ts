@@ -133,7 +133,9 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
         continue;
       }
 
-      const project = await resolveProject(task.project);
+      const project =
+        (await resolveProject(task.project)) ??
+        (await resolveProject("Migrated Project"));
       if (!project) {
         continue;
       }
@@ -150,7 +152,9 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
         continue;
       }
 
-      const project = await resolveProject(comment.project);
+      const project =
+        (await resolveProject(comment.project)) ??
+        (await resolveProject("Migrated Project"));
       if (!project) {
         continue;
       }

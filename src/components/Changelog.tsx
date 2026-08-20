@@ -5,7 +5,7 @@ const changelogEntries = [
   {
     version: "0.11.3",
     description: [
-      "Improved database structure (Issue #49). Note that data imports of previous versions will not work anymore due to changed structure.",
+      "Improved database structure (Issue #49). Older backups are migrated automatically during import.",
     ],
   },
   {

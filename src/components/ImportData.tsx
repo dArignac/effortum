@@ -87,7 +87,12 @@ function normalizeLegacyBackup(importData: any) {
   tasksTable.rows = (tasksTable.rows || []).map((row) => {
     const task = row[1] || {};
     const projectName = (task.project || "").trim();
-    const projectId = task.projectId || ensureProjectId(projectName);
+    const projectId =
+      typeof task.projectId === "string"
+        ? task.projectId
+        : task.projectId != null
+          ? String(task.projectId)
+          : ensureProjectId(projectName);
     const taskId =
       typeof task.id === "string"
         ? task.id
@@ -107,7 +112,12 @@ function normalizeLegacyBackup(importData: any) {
   commentsTable.rows = (commentsTable.rows || []).map((row) => {
     const comment = row[1] || {};
     const projectName = (comment.project || "").trim();
-    const projectId = comment.projectId || ensureProjectId(projectName);
+    const projectId =
+      typeof comment.projectId === "string"
+        ? comment.projectId
+        : comment.projectId != null
+          ? String(comment.projectId)
+          : ensureProjectId(projectName);
     if (comment.id != null && typeof comment.id !== "string") {
       comment.id = String(comment.id);
     }

@@ -29,11 +29,11 @@ export function AddEntryRow() {
     (state) => state.settings.at(0)?.roundToNearest5Minutes ?? false,
   );
 
-  const [dateValue, setDateValue] = useState<string | null>(null);
+  const [, setDateValue] = useState<string | null>(null);
   const [startValue, setStartValue] = useState<string>("");
-  const [endValue, setEndValue] = useState<string>("");
+  const [, setEndValue] = useState<string>("");
   const [projectValue, setProjectValue] = useState<string>("");
-  const [commentValue, setCommentValue] = useState<string>("");
+  const [, setCommentValue] = useState<string>("");
   const [availableComments, setAvailableComments] = useState<Comment[]>([]);
 
   useEffect(() => {
@@ -108,6 +108,10 @@ export function AddEntryRow() {
     const selectedStart = fieldStart.getValue();
     const selectedEnd = fieldEnd.getValue();
     const selectedProject = fieldProject.getValue().trim();
+    if (!selectedProject) {
+      notifications.show({ message: "Project is required", color: "red" });
+      return;
+    }
     const selectedComment = fieldComment.getValue();
 
     const roundedStartValue = roundToNearest5Minutes
