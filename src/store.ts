@@ -9,6 +9,21 @@ import { Task } from "./models/Task";
 
 export const db = new EffortumDB();
 
+type TaskInput = Omit<Task, "projectId"> & {
+  projectId?: string;
+  projectName?: string;
+};
+
+type TaskUpdateInput = Partial<Omit<Task, "projectId">> & {
+  projectId?: string;
+  projectName?: string;
+};
+
+type CommentInput = Omit<Comment, "projectId"> & {
+  projectId?: string;
+  projectName?: string;
+};
+
 interface EffortumStore {
   tasks: Task[];
   projects: Project[];
@@ -18,23 +33,27 @@ interface EffortumStore {
   selectedDateRange: [string | null, string | null];
   endTimeOfLastStoppedTask: string | null;
 
-  loadFromIndexedDb: () => void;
+  loadFromIndexedDb: () => Promise<void>;
+  backfillProjectRelationsIfMissing: () => Promise<void>;
 
-  addTask: (task: Task) => void;
-  updateTask: (id: string, updates: Partial<Task>) => void;
+  addTask: (task: TaskInput) => Promise<void>;
+  updateTask: (id: string, updates: TaskUpdateInput) => Promise<void>;
 
-  addComment: (comment: Comment) => void;
-  getCommentsForProject: (project: string) => Comment[];
+  addComment: (comment: CommentInput) => Promise<void>;
+  getCommentsForProject: (projectId: string) => Comment[];
 
-  addProject: (project: Project) => void;
+  addProject: (project: Project) => Promise<void>;
 
   setSelectedDateRange: (range: [string | null, string | null]) => void;
 
   setEndTimeOfLastStoppedTask: (time: string | null) => void;
 
-  updateOvertime: (currentBalance: number, workingHoursPerDay: number) => void;
+  updateOvertime: (
+    currentBalance: number,
+    workingHoursPerDay: number,
+  ) => Promise<void>;
 
-  updateSettings: (roundToNearest5Minutes: boolean) => void;
+  updateSettings: (roundToNearest5Minutes: boolean) => Promise<void>;
 }
 
 interface StoreSet {
@@ -58,8 +77,98 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   selectedDateRange: [null, null] as [string | null, string | null],
   endTimeOfLastStoppedTask: null,
 
+  backfillProjectRelationsIfMissing: async () => {
+    const projects = await db.projects.toArray();
+    const nameToId = new Map(
+      projects.map((project) => [project.name, project.id]),
+    );
+
+    const resolveProject = async (
+      projectName?: string,
+      projectId?: string,
+    ): Promise<Project | null> => {
+      const projectsInState = get().projects;
+
+      if (projectId) {
+        const projectFromState = projectsInState.find(
+          (p) => p.id === projectId,
+        );
+        if (projectFromState) {
+          return projectFromState;
+        }
+
+        const projectFromDb = await db.projects.get(projectId);
+        if (projectFromDb) {
+          return projectFromDb;
+        }
+      }
+
+      const normalizedName = (projectName ?? "").trim();
+      if (!normalizedName) {
+        return null;
+      }
+
+      const existingFromState = projectsInState.find(
+        (p) => p.name === normalizedName,
+      );
+      if (existingFromState) {
+        return existingFromState;
+      }
+
+      const existingId = nameToId.get(normalizedName);
+      if (existingId) {
+        return { id: existingId, name: normalizedName };
+      }
+
+      const createdProject = { id: crypto.randomUUID(), name: normalizedName };
+      await db.projects.add(createdProject);
+      nameToId.set(createdProject.name, createdProject.id);
+      set({ projects: [...get().projects, createdProject] });
+      return createdProject;
+    };
+
+    const tasks = await db.tasks.toArray();
+    for (const task of tasks) {
+      if (task.projectId) {
+        continue;
+      }
+
+      const project =
+        (await resolveProject(task.project)) ??
+        (await resolveProject("Migrated Project"));
+      if (!project) {
+        continue;
+      }
+
+      await db.tasks.update(task.id, {
+        projectId: project.id,
+        project: task.project || project.name,
+      });
+    }
+
+    const comments = await db.comments.toArray();
+    for (const comment of comments) {
+      if (comment.projectId) {
+        continue;
+      }
+
+      const project =
+        (await resolveProject(comment.project)) ??
+        (await resolveProject("Migrated Project"));
+      if (!project) {
+        continue;
+      }
+
+      await db.comments.update(comment.id, {
+        projectId: project.id,
+        project: comment.project || project.name,
+      });
+    }
+  },
+
   // adjust this whenever a new entity is added to the db
   loadFromIndexedDb: async () => {
+    await get().backfillProjectRelationsIfMissing();
     const tasks = await db.tasks.orderBy("date").toArray();
     const projects = await db.projects.orderBy("name").toArray();
     const comments = await db.comments.orderBy("comment").toArray();
@@ -68,33 +177,75 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
     set({ tasks, projects, comments, overtime, settings });
   },
 
-  addTask: async (task: Task) => {
-    // create project if not already existing
-    let projectInstance = get().projects.find((p) => p.name === task.project);
+  addTask: async (task: TaskInput) => {
+    const normalizedProjectName = (
+      task.projectName ??
+      task.project ??
+      ""
+    ).trim();
+    if (!normalizedProjectName) {
+      return;
+    }
+
+    let projectInstance = get().projects.find(
+      (project) => project.id === task.projectId,
+    );
     if (!projectInstance) {
-      projectInstance = { id: crypto.randomUUID(), name: task.project };
+      projectInstance = get().projects.find(
+        (project) => project.name === normalizedProjectName,
+      );
+    }
+
+    if (!projectInstance) {
+      projectInstance = {
+        id: task.projectId || crypto.randomUUID(),
+        name: normalizedProjectName,
+      };
       await db.projects.add(projectInstance);
       set({ projects: [...get().projects, projectInstance] });
     }
 
-    // add task to db
-    await db.tasks.add(task);
+    await db.tasks.add({
+      id: task.id,
+      date: task.date,
+      timeStart: task.timeStart,
+      timeEnd: task.timeEnd,
+      projectId: projectInstance.id,
+      project: projectInstance.name,
+      comment: task.comment,
+    });
+
     const tasks = await db.tasks.toArray();
     set({ tasks });
   },
 
-  updateTask: async (id: string, updates: Partial<Task>) => {
+  updateTask: async (id: string, updates: TaskUpdateInput) => {
     const task = get().tasks.find((t) => t.id === id);
     if (!task) {
       console.error(`Task with id ${id} not found`);
       return;
     }
-    let projectInstance: Project | undefined = get().projects.find(
-      (p) => p.name === task.project,
-    );
 
+    const normalizedProjectName = (
+      updates.projectName ??
+      updates.project ??
+      task.project ??
+      ""
+    ).trim();
+
+    let projectInstance: Project | undefined = get().projects.find(
+      (project) => project.id === updates.projectId,
+    );
+    if (!projectInstance && normalizedProjectName) {
+      projectInstance = get().projects.find(
+        (project) => project.name === normalizedProjectName,
+      );
+    }
     if (!projectInstance) {
-      projectInstance = { id: crypto.randomUUID(), name: task!.project };
+      projectInstance = {
+        id: updates.projectId || crypto.randomUUID(),
+        name: normalizedProjectName,
+      };
       await db.projects.add(projectInstance);
       set({ projects: [...get().projects, projectInstance] });
     }
@@ -102,12 +253,31 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
     // If there's a comment in the updates, add it to comments
     if (updates.comment) {
       await get().addComment({
+        projectId: projectInstance.id,
         project: projectInstance.name,
         comment: updates.comment,
       });
     }
 
-    await db.tasks.update(id, updates);
+    const taskUpdates: Partial<Task> = {
+      projectId: projectInstance.id,
+      project: projectInstance.name,
+    };
+
+    if (updates.date !== undefined) {
+      taskUpdates.date = updates.date;
+    }
+    if (updates.timeStart !== undefined) {
+      taskUpdates.timeStart = updates.timeStart;
+    }
+    if (updates.timeEnd !== undefined) {
+      taskUpdates.timeEnd = updates.timeEnd;
+    }
+    if (updates.comment !== undefined) {
+      taskUpdates.comment = updates.comment;
+    }
+
+    await db.tasks.update(id, taskUpdates);
     const tasks = await db.tasks.toArray();
     set({ tasks });
   },
@@ -118,21 +288,54 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
     set({ projects });
   },
 
-  addComment: async (comment: Comment) => {
+  addComment: async (comment: CommentInput) => {
+    const normalizedProjectName = (
+      comment.projectName ??
+      comment.project ??
+      ""
+    ).trim();
+
+    let projectInstance: Project | undefined = get().projects.find(
+      (project) => project.id === comment.projectId,
+    );
+    if (!projectInstance && normalizedProjectName) {
+      projectInstance = get().projects.find(
+        (project) => project.name === normalizedProjectName,
+      );
+    }
+
+    if (!projectInstance) {
+      if (!normalizedProjectName) {
+        return;
+      }
+
+      projectInstance = {
+        id: comment.projectId || crypto.randomUUID(),
+        name: normalizedProjectName,
+      };
+      await db.projects.add(projectInstance);
+      set({ projects: [...get().projects, projectInstance] });
+    }
+
     const isExisting = get().comments.some(
       (c: Comment) =>
-        c.project === comment.project && c.comment === comment.comment,
+        c.projectId === projectInstance.id && c.comment === comment.comment,
     );
 
     if (!isExisting) {
-      await db.comments.add(comment);
+      await db.comments.add({
+        id: comment.id,
+        projectId: projectInstance.id,
+        project: projectInstance.name,
+        comment: comment.comment,
+      });
       const comments = await db.comments.toArray();
       set({ comments });
     }
   },
 
-  getCommentsForProject: (project: string) => {
-    return get().comments.filter((comment) => comment.project === project);
+  getCommentsForProject: (projectId: string) => {
+    return get().comments.filter((comment) => comment.projectId === projectId);
   },
 
   setSelectedDateRange: (range: [string | null, string | null]) => {

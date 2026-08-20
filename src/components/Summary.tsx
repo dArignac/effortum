@@ -9,57 +9,76 @@ import { formatDuration, getDuration } from "../utils/time";
 export function Summary() {
   const [listByTasks, setListByTasks] = useState(false);
   const tasks = useEffortumStore((state) => state.tasks);
+  const projects = useEffortumStore((state) => state.projects);
   const selectedDateRange = useEffortumStore(
     (state) => state.selectedDateRange,
   );
 
   const filteredTasks = tasks.filter(filterTasksByDateRange(selectedDateRange));
+  const projectNameById = new Map(
+    projects.map((project) => [project.id, project.name]),
+  );
+
+  const getProjectName = (projectId: string, legacyName?: string): string => {
+    return projectNameById.get(projectId) || legacyName || "(Unknown project)";
+  };
 
   const commentProjectCount = filteredTasks.reduce<Record<string, Set<string>>>(
     (acc, task) => {
       const comment = (task.comment?.trim() ?? "") || "(No comment)";
+      const projectName = getProjectName(task.projectId, task.project);
       if (!acc[comment]) {
         acc[comment] = new Set();
       }
-      acc[comment].add(task.project);
+      acc[comment].add(projectName);
       return acc;
     },
     Object.create(null) as Record<string, Set<string>>,
   );
 
   const data = Object.values(
-    filteredTasks.reduce<Record<string, { label: string; time: number }>>(
+    filteredTasks.reduce<
+      Record<string, { label: string; time: number; projectId?: string }>
+    >(
       (acc, task) => {
         const comment = (task.comment?.trim() ?? "") || "(No comment)";
+        const projectName = getProjectName(task.projectId, task.project);
 
         const key = listByTasks
           ? (commentProjectCount[comment]?.size ?? 0) > 1
-            ? `${task.project}: ${comment}`
+            ? `${projectName}: ${comment}`
             : comment
-          : task.project;
+          : projectName;
 
-        acc[key] = acc[key]
-          ? {
-              label: key,
-              time: acc[key].time + getDuration(task.timeStart, task.timeEnd),
-            }
-          : {
-              label: key,
-              time: getDuration(task.timeStart, task.timeEnd),
-            };
+        if (acc[key]) {
+          acc[key] = {
+            ...acc[key],
+            time: acc[key].time + getDuration(task.timeStart, task.timeEnd),
+          };
+        } else {
+          acc[key] = {
+            label: key,
+            time: getDuration(task.timeStart, task.timeEnd),
+            projectId: listByTasks ? undefined : task.projectId,
+          };
+        }
+
         return acc;
       },
-      Object.create(null) as Record<string, { label: string; time: number }>,
+      Object.create(null) as Record<
+        string,
+        { label: string; time: number; projectId?: string }
+      >,
     ),
   ).sort((a, b) => a.label.localeCompare(b.label));
 
   const timeSum = data.reduce((sum, item) => sum + item.time, 0);
 
-  const copyTasksOfProjectToClipboard = (project: string) => {
+  const copyTasksOfProjectToClipboard = (projectId: string) => {
     const text = Array.from(
       new Set(
         filteredTasks
-          .filter((task) => task.project === project)
+          .filter((task) => task.projectId === projectId)
           .filter((task) => task.comment)
           .map((task) => task.comment as string),
       ),
@@ -99,7 +118,10 @@ export function Summary() {
                       variant="filled"
                       aria-label="Copy comments of project"
                       size={20}
-                      onClick={() => copyTasksOfProjectToClipboard(item.label)}
+                      onClick={() =>
+                        item.projectId &&
+                        copyTasksOfProjectToClipboard(item.projectId)
+                      }
                       data-testid={`button-copy-comments-${item.label}`}
                     >
                       <IconClipboardList size={16} />

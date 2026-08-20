@@ -29,11 +29,11 @@ export function AddEntryRow() {
     (state) => state.settings.at(0)?.roundToNearest5Minutes ?? false,
   );
 
-  const [dateValue, setDateValue] = useState<string | null>(null);
+  const [, setDateValue] = useState<string | null>(null);
   const [startValue, setStartValue] = useState<string>("");
-  const [endValue, setEndValue] = useState<string>("");
+  const [, setEndValue] = useState<string>("");
   const [projectValue, setProjectValue] = useState<string>("");
-  const [commentValue, setCommentValue] = useState<string>("");
+  const [, setCommentValue] = useState<string>("");
   const [availableComments, setAvailableComments] = useState<Comment[]>([]);
 
   useEffect(() => {
@@ -46,12 +46,18 @@ export function AddEntryRow() {
     const loadComments = async () => {
       // only fill comments if a project is selected
       if (projectValue.length > 0) {
-        const comments = await getCommentsForProject(projectValue);
+        const project = projects.find((p) => p.name === projectValue);
+        if (!project) {
+          setAvailableComments([]);
+          return;
+        }
+
+        const comments = await getCommentsForProject(project.id);
         setAvailableComments(comments);
       }
     };
     loadComments();
-  }, [projectValue]);
+  }, [projectValue, projects]);
 
   const fieldDate = useField({
     initialValue: dayjs().format("YYYY-MM-DD"),
@@ -98,28 +104,38 @@ export function AddEntryRow() {
       return;
     }
 
+    const selectedDate = fieldDate.getValue() || dayjs().format("YYYY-MM-DD");
+    const selectedStart = fieldStart.getValue();
+    const selectedEnd = fieldEnd.getValue();
+    const selectedProject = fieldProject.getValue().trim();
+    if (!selectedProject) {
+      notifications.show({ message: "Project is required", color: "red" });
+      return;
+    }
+    const selectedComment = fieldComment.getValue();
+
     const roundedStartValue = roundToNearest5Minutes
-      ? roundTimeToNearest5Minutes(startValue)
-      : startValue;
-    const roundedEndValue = endValue
+      ? roundTimeToNearest5Minutes(selectedStart)
+      : selectedStart;
+    const roundedEndValue = selectedEnd
       ? roundToNearest5Minutes
-        ? roundTimeToNearest5Minutes(endValue)
-        : endValue
+        ? roundTimeToNearest5Minutes(selectedEnd)
+        : selectedEnd
       : "";
 
-    addTask({
+    await addTask({
       id: crypto.randomUUID(),
-      date: dateValue || dayjs().format("YYYY-MM-DD"),
+      date: selectedDate,
       timeStart: roundedStartValue,
       timeEnd: roundedEndValue,
-      project: projectValue,
-      comment: commentValue || "",
+      projectName: selectedProject,
+      comment: selectedComment || "",
     });
 
-    if (commentValue.length > 0) {
-      addComment({
-        comment: commentValue,
-        project: projectValue,
+    if (selectedComment.length > 0) {
+      await addComment({
+        comment: selectedComment,
+        projectName: selectedProject,
       });
     }
   };

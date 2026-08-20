@@ -10,6 +10,7 @@ describe("filterTasksByDateRange", () => {
       date: "2024-01-15",
       timeStart: "09:00",
       timeEnd: "17:00",
+      projectId: "project-a",
       project: "Project A",
       comment: "Task 1",
     },
@@ -18,6 +19,7 @@ describe("filterTasksByDateRange", () => {
       date: "2024-01-16",
       timeStart: "10:00",
       timeEnd: "18:00",
+      projectId: "project-b",
       project: "Project B",
       comment: "Task 2",
     },
@@ -26,6 +28,7 @@ describe("filterTasksByDateRange", () => {
       date: "2024-01-20",
       timeStart: "08:00",
       timeEnd: "16:00",
+      projectId: "project-c",
       project: "Project C",
       comment: "Task 3",
     },
@@ -33,6 +36,7 @@ describe("filterTasksByDateRange", () => {
       id: "4",
       date: "2024-02-01",
       timeStart: "11:00",
+      projectId: "project-d",
       project: "Project D",
       comment: "Task 4",
     },
@@ -118,6 +122,7 @@ describe("filterTasksByDateRange", () => {
       id: "5",
       date: "2024-01-15T00:00:00.000Z", // ISO datetime format
       timeStart: "09:00",
+      projectId: "project-e",
       project: "Project E",
     };
 

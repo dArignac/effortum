@@ -326,12 +326,16 @@ test.describe("Task Creation", () => {
     await page.getByTestId("add-entry-input-project").fill(uniqueProject);
     await addButton.click();
 
-    const projectInput = page.locator(
-      `tr[data-testid^="task-row-"] td:nth-child(4) input[value="${uniqueProject}"]`,
+    const createdRow = page.locator('tr[data-testid^="task-row-"]').first();
+    await expect(createdRow).toBeVisible();
+    const rowTestId = await createdRow.getAttribute("data-testid");
+    expect(rowTestId).toBeTruthy();
+
+    const taskRow = page.locator(`tr[data-testid="${rowTestId}"]`);
+
+    await expect(taskRow.locator("td").nth(3).locator("input")).toHaveValue(
+      uniqueProject,
     );
-    await expect(projectInput).toBeVisible();
-    const taskRow = projectInput.locator("xpath=ancestor::tr[1]");
-    await expect(taskRow).toBeVisible();
     await expect(taskRow.locator("td").nth(1).locator("input")).toHaveValue(
       "10:00",
     );

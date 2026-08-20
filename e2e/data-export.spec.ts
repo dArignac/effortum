@@ -1,6 +1,14 @@
 import { expect, test } from "@playwright/test";
 import fs from "fs";
 
+function getProjectIdByName(tables: any[], name: string): string | undefined {
+  const projectsTable = tables.find((table: any) => table.name === "projects");
+  const projectRow = projectsTable?.rows?.find(
+    (row: any) => row[1]?.name === name,
+  );
+  return projectRow?.[1]?.id;
+}
+
 test.describe("Data Export Functionality", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -136,12 +144,14 @@ test.describe("Data Export Functionality", () => {
 
       // Verify our test task is in the export
       if (tasksTable.rows && tasksTable.rows.length > 0) {
+        const testProjectId = getProjectIdByName(tables, "Test Project");
         const testTask = tasksTable.rows.find(
           (row: any) =>
-            row[1]?.project === "Test Project" &&
+            row[1]?.projectId === testProjectId &&
             row[1]?.comment === "Test Comment",
         );
         expect(testTask).toBeDefined();
+        expect(testTask[1]?.projectId).toBeTruthy();
       }
     }
   });
@@ -221,6 +231,18 @@ test.describe("Data Export Functionality", () => {
       const tasksTable = tables.find((t: any) => t.name === "tasks");
       expect(tasksTable.rowCount).toBeGreaterThanOrEqual(3);
 
+      const projectIds = new Set(
+        (tables
+          .find((t: any) => t.name === "projects")
+          ?.rows?.map((row: any) => row[1]?.id) || []) as string[],
+      );
+
+      const taskRows = (tasksTable.rows || []).map((row: any) => row[1]);
+      taskRows.forEach((task: any) => {
+        expect(task.projectId).toBeTruthy();
+        expect(projectIds.has(task.projectId)).toBe(true);
+      });
+
       // Verify projects table has both projects
       const projectsTable = tables.find((t: any) => t.name === "projects");
       expect(projectsTable.rowCount).toBeGreaterThanOrEqual(2);
@@ -286,11 +308,20 @@ test.describe("Data Export Functionality", () => {
 
       // Verify both tasks are in the export
       if (tasksTable.rows && tasksTable.rows.length >= 2) {
+        const completeProjectId = getProjectIdByName(
+          tables,
+          "Complete Project",
+        );
+        const incompleteProjectId = getProjectIdByName(
+          tables,
+          "Incomplete Project",
+        );
+
         const completeTask = tasksTable.rows.find(
-          (row: any) => row[1]?.project === "Complete Project",
+          (row: any) => row[1]?.projectId === completeProjectId,
         );
         const incompleteTask = tasksTable.rows.find(
-          (row: any) => row[1]?.project === "Incomplete Project",
+          (row: any) => row[1]?.projectId === incompleteProjectId,
         );
 
         expect(completeTask).toBeDefined();
@@ -414,11 +445,17 @@ test.describe("Data Export Functionality", () => {
       expect(tasksTable.rowCount).toBeGreaterThanOrEqual(2);
 
       if (tasksTable.rows && tasksTable.rows.length >= 2) {
+        const todayProjectId = getProjectIdByName(tables, "Today's Project");
+        const yesterdayProjectId = getProjectIdByName(
+          tables,
+          "Yesterday's Project",
+        );
+
         const todayTask = tasksTable.rows.find(
-          (row: any) => row[1]?.project === "Today's Project",
+          (row: any) => row[1]?.projectId === todayProjectId,
         );
         const yesterdayTask = tasksTable.rows.find(
-          (row: any) => row[1]?.project === "Yesterday's Project",
+          (row: any) => row[1]?.projectId === yesterdayProjectId,
         );
 
         expect(todayTask).toBeDefined();
@@ -475,6 +512,7 @@ test.describe("Data Export Functionality", () => {
         const schema = tasksTable.schema;
         expect(schema).toContain("++id");
         expect(schema).toContain("date");
+        expect(schema).toContain("projectId");
       }
     }
   });

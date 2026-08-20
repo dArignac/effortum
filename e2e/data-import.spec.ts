@@ -1,4 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import fs from "fs";
+import path from "path";
 
 test.describe("Data Import Functionality", () => {
   test("should display modal when file is selected", async ({ page }) => {
@@ -164,9 +166,8 @@ test.describe("Data Import Functionality", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("button-export-data").click();
     const download = await downloadPromise;
-    const path = await download.path();
-    const fs = await import("fs");
-    const exportContent = fs.readFileSync(path!, "utf-8");
+    const downloadPath = await download.path();
+    const exportContent = fs.readFileSync(downloadPath!, "utf-8");
 
     // Now import it back
     const fileChooserPromise = page.waitForEvent("filechooser");
@@ -339,5 +340,115 @@ test.describe("Data Import Functionality", () => {
         "Warning: This will completely replace your current database",
       ),
     ).toBeVisible();
+  });
+
+  test("should import legacy project-name relations and render tasks", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    const burgerMenu = page.getByTestId("navigation-burger");
+    await burgerMenu.click();
+    await page.waitForTimeout(200);
+
+    const importExportNav = page.getByTestId("nav-import-export");
+    await importExportNav.click();
+    await page.waitForTimeout(200);
+
+    const fixturePath = path.resolve(
+      process.cwd(),
+      "e2e/fixtures/legacy-export-v4.json",
+    );
+
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.getByTestId("button-import-data").click();
+
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(fixturePath);
+
+    await expect(page.getByTestId("button-import-confirm")).toBeVisible();
+    await page.getByTestId("button-import-confirm").click();
+
+    const successNotification = page.getByText(
+      "Database imported successfully! Reloading page...",
+    );
+    const failureNotification = page.getByText(/Import failed:/);
+
+    const outcome = await Promise.race([
+      successNotification
+        .waitFor({ state: "visible", timeout: 10000 })
+        .then(() => "success"),
+      failureNotification
+        .waitFor({ state: "visible", timeout: 10000 })
+        .then(
+          async () =>
+            `failed: ${await failureNotification.first().innerText()}`,
+        ),
+    ]);
+
+    expect(outcome).toBe("success");
+
+    await page.waitForLoadState("load", { timeout: 5000 });
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    const importedDbData = await page.evaluate(async () => {
+      return await new Promise<{
+        tasks: Array<Record<string, any>>;
+        projects: Array<Record<string, any>>;
+        comments: Array<Record<string, any>>;
+      }>((resolve, reject) => {
+        const openRequest = indexedDB.open("EffortumDatabase");
+
+        openRequest.onerror = () => {
+          reject(openRequest.error?.message || "Failed to open IndexedDB");
+        };
+
+        openRequest.onsuccess = () => {
+          const database = openRequest.result;
+          const transaction = database.transaction(
+            ["tasks", "projects", "comments"],
+            "readonly",
+          );
+
+          const tasksRequest = transaction.objectStore("tasks").getAll();
+          const projectsRequest = transaction.objectStore("projects").getAll();
+          const commentsRequest = transaction.objectStore("comments").getAll();
+
+          transaction.onerror = () => {
+            reject(transaction.error?.message || "Failed reading IndexedDB");
+          };
+
+          transaction.oncomplete = () => {
+            resolve({
+              tasks: tasksRequest.result || [],
+              projects: projectsRequest.result || [],
+              comments: commentsRequest.result || [],
+            });
+          };
+        };
+      });
+    });
+
+    const legacyProject = importedDbData.projects.find(
+      (project: any) => project.name === "Legacy Project",
+    );
+    expect(legacyProject).toBeDefined();
+
+    const hasLegacyTaskWithProjectId = importedDbData.tasks.some(
+      (task: any) =>
+        task.project === "Legacy Project" &&
+        task.comment === "Legacy Comment A" &&
+        Boolean(task.projectId),
+    );
+    expect(hasLegacyTaskWithProjectId).toBe(true);
+
+    const hasLegacyCommentWithProjectId = importedDbData.comments.some(
+      (comment: any) =>
+        comment.project === "Legacy Project" &&
+        comment.comment === "Legacy Comment A" &&
+        Boolean(comment.projectId),
+    );
+    expect(hasLegacyCommentWithProjectId).toBe(true);
   });
 });

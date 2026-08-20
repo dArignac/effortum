@@ -3,6 +3,7 @@ export type Task = {
   date: string; // ISO date string
   timeStart: string; // ISO time string
   timeEnd?: string; // ISO time string
-  project: string;
+  projectId: string;
+  project?: string; // legacy compatibility during migration rollout
   comment?: string;
 };

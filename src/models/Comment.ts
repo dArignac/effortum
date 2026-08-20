@@ -1,5 +1,6 @@
 export type Comment = {
   id?: string;
-  project: string;
+  projectId: string;
+  project?: string; // legacy compatibility during migration rollout
   comment: string;
 };

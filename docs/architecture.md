@@ -17,8 +17,8 @@ Effortum is a local-first time tracker. User data is persisted in IndexedDB via 
 
 ```mermaid
 erDiagram
-  PROJECT ||--o{ TASK : "project name"
-  PROJECT ||--o{ COMMENT : "project name"
+  PROJECT ||--o{ TASK : "project id"
+  PROJECT ||--o{ COMMENT : "project id"
 
   PROJECT {
     string id PK
@@ -30,13 +30,15 @@ erDiagram
     string date
     string timeStart
     string timeEnd
-    string project FK
+    string projectId FK
+    string project
     string comment
   }
 
   COMMENT {
     string id PK
-    string project FK
+    string projectId FK
+    string project
     string comment
   }
 
@@ -69,7 +71,8 @@ erDiagram
 
 ## Key Constraints
 
-- Task-to-project and comment-to-project relations are logical (string-based) via project name.
+- Task-to-project and comment-to-project relations are canonical by project ID.
+- Legacy project-name fields are kept during rollout for import/export compatibility and recovery.
 - Overtime and settings are single-record entities identified by fixed IDs.
 - Date filtering must normalize date-only and ISO datetime values for day-level comparisons.
 
