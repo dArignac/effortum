@@ -113,6 +113,9 @@ export function TaskListRow(props: { taskId: string | null }) {
     loadComments();
   }, [fieldProject.getValue(), projects]);
 
+  /**
+   * Validates and persists row edits for the current task.
+   */
   const updateEntry = async () => {
     // Validate all fields
     const dateError = await fieldDate.validate();
@@ -138,38 +141,55 @@ export function TaskListRow(props: { taskId: string | null }) {
         : fieldEnd.getValue()
       : "";
 
-    updateTask(task.id, {
-      date: dateValue || dayjs().format("YYYY-MM-DD"),
-      timeStart: startTime,
-      timeEnd: endTime,
-      projectName: fieldProject.getValue(),
-      comment: fieldComment.getValue() || "",
-    });
+    try {
+      await updateTask(task.id, {
+        date: dateValue || dayjs().format("YYYY-MM-DD"),
+        timeStart: startTime,
+        timeEnd: endTime,
+        projectName: fieldProject.getValue(),
+        comment: fieldComment.getValue() || "",
+      });
 
-    fieldStart.setValue(startTime);
-    fieldEnd.setValue(endTime);
+      fieldStart.setValue(startTime);
+      fieldEnd.setValue(endTime);
 
-    notifications.show({ message: "Task updated successfully!" });
-
-    setHasChanges(false);
+      notifications.show({ message: "Task updated successfully!" });
+      setHasChanges(false);
+    } catch {
+      notifications.show({
+        message: "Failed to update task. Please try again.",
+        color: "red",
+      });
+    }
   };
 
-  const stopTask = () => {
+  /**
+   * Stops an in-progress task by setting its end time to now.
+   */
+  const stopTask = async () => {
     const nowAsTime = dayjs().format("HH:mm");
     const endTime = roundToNearest5Minutes
       ? roundTimeToNearest5Minutes(nowAsTime)
       : nowAsTime;
 
-    updateTask(task.id, {
-      timeEnd: endTime,
-      projectName: fieldProject.getValue(),
-      comment: fieldComment.getValue() || "",
-    });
-    fieldEnd.setValue(endTime);
-    setHasChanges(false);
+    try {
+      await updateTask(task.id, {
+        timeEnd: endTime,
+        projectName: fieldProject.getValue(),
+        comment: fieldComment.getValue() || "",
+      });
 
-    // store the end time to be able to set it as new start time
-    setEndTimeOfLastStoppedTask(endTime);
+      fieldEnd.setValue(endTime);
+      setHasChanges(false);
+
+      // Store the end time to be able to set it as new start time.
+      setEndTimeOfLastStoppedTask(endTime);
+    } catch {
+      notifications.show({
+        message: "Failed to stop task. Please try again.",
+        color: "red",
+      });
+    }
   };
 
   return (
