@@ -1,12 +1,5 @@
+import { formatDuration } from "@/utils/time";
 import { expect, test } from "@playwright/test";
-
-function formatDuration(totalMinutes: number): string {
-  const hours = Math.floor(totalMinutes / 60)
-    .toString()
-    .padStart(2, "0");
-  const minutes = (totalMinutes % 60).toString().padStart(2, "0");
-  return `${hours}:${minutes}`;
-}
 
 function getMinutesSinceMidnight(date: Date): number {
   return date.getHours() * 60 + date.getMinutes();
@@ -51,11 +44,12 @@ test.describe("Summary sum including running task", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
+    const todayIso = new Date().toISOString().split("T")[0];
+    await page.getByTestId(`summary-date-day-${todayIso}`).click();
+    await page.getByTestId(`summary-date-day-${todayIso}`).click();
+
     await page.getByTestId("add-entry-input-date").click();
-    await page
-      .locator(".mantine-DatePickerInput-presetButton")
-      .filter({ hasText: "Yesterday" })
-      .click();
+    await page.getByRole("button", { name: "Yesterday" }).click();
 
     await page.getByTestId("add-entry-input-start-time").fill("09:00");
     await page.getByTestId("add-entry-input-end-time").fill("");

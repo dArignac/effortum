@@ -2,7 +2,7 @@ import { ActionIcon, Box, Checkbox, Table } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconClipboardList } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
@@ -18,7 +18,7 @@ function isRunningTask(task: Task): boolean {
 /**
  * Computes elapsed running minutes for an active task from its start datetime to now.
  */
-function getRunningDuration(task: Task): number {
+function getRunningDuration(task: Task, currentTimestamp: number): number {
   const startDateTime = dayjs(
     `${task.date} ${task.timeStart}`,
     "YYYY-MM-DD HH:mm",
@@ -28,12 +28,17 @@ function getRunningDuration(task: Task): number {
     return 0;
   }
 
-  const duration = dayjs().diff(startDateTime, "minute");
+  const duration = dayjs(currentTimestamp).diff(startDateTime, "minute");
   return duration > 0 ? duration : 0;
 }
 
+/**
+ * Renders grouped task totals and summary rows for the selected date range,
+ * including an optional running-task-inclusive total.
+ */
 export function Summary() {
   const [listByTasks, setListByTasks] = useState(false);
+  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
   const tasks = useEffortumStore((state) => state.tasks);
   const projects = useEffortumStore((state) => state.projects);
   const selectedDateRange = useEffortumStore(
@@ -100,11 +105,29 @@ export function Summary() {
 
   const timeSum = data.reduce((sum, item) => sum + item.time, 0);
   const runningTask = tasks.find(isRunningTask);
+  const isTaskInSelectedDateRange = filterTasksByDateRange(selectedDateRange);
   const shouldShowRunningSum = runningTask
-    ? filterTasksByDateRange(selectedDateRange)(runningTask, 0, tasks)
+    ? [runningTask].filter(isTaskInSelectedDateRange).length > 0
     : false;
+
+  useEffect(() => {
+    if (!shouldShowRunningSum) {
+      return;
+    }
+
+    setCurrentTimestamp(Date.now());
+
+    const intervalId = setInterval(() => {
+      setCurrentTimestamp(Date.now());
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, [shouldShowRunningSum]);
+
   const runningDuration =
-    runningTask && shouldShowRunningSum ? getRunningDuration(runningTask) : 0;
+    runningTask && shouldShowRunningSum
+      ? getRunningDuration(runningTask, currentTimestamp)
+      : 0;
   const timeSumIncludingRunning = timeSum + runningDuration;
 
   const copyTasksOfProjectToClipboard = (projectId: string) => {

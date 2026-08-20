@@ -45,6 +45,9 @@ export function Calendar() {
         onChange={(value) => setSelectedDateRange(value || [null, null])}
         size="xs"
         renderDay={dayRenderer}
+        getDayProps={(date) => ({
+          "data-testid": `summary-date-day-${dayjs(date).format("YYYY-MM-DD")}`,
+        })}
         data-testid="summary-date-picker"
       />
     </>
