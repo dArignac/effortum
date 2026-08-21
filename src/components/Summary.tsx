@@ -211,7 +211,7 @@ export function Summary() {
                 {formatDuration(timeSumIncludingRunning)}
               </Table.Td>
               <Table.Td>
-                <strong>Sum (incl. running)</strong>
+                <em>Sum (w/ running tasks)</em>
               </Table.Td>
             </Table.Tr>
           )}
