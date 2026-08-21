@@ -3,9 +3,15 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.12.0",
+    description: [
+      "Adds sum of tasks including the currently running task (Issue #117).",
+    ],
+  },
+  {
     version: "0.11.3",
     description: [
-      "Improved database structure (Issue #49). Older backups are migrated automatically during import.",
+      "Improved database structure (Issue #49). Existing data is migrated automatically. Older backups are migrated automatically during import.",
     ],
   },
   {
