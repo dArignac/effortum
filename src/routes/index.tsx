@@ -1,5 +1,6 @@
 import { Changelog, VERSION } from "@/components/Changelog";
 import { ImportExportPage } from "@/pages/ImportExportPage";
+import { ProjectsPage } from "@/pages/ProjectsPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { TimeCollectorPage } from "@/pages/TimeCollectorPage";
 import { Anchor, AppShell, Burger, Group, NavLink, Text } from "@mantine/core";
@@ -9,6 +10,7 @@ import {
   IconCalendarStats,
   IconConfetti,
   IconDatabaseExport,
+  IconFolders,
 } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -40,7 +42,7 @@ function App() {
           <Text fw={700} pt={2}>
             Effortum
           </Text>
-          <Anchor c="dimmed" pt={2} onClick={() => setActiveNavIndex(3)}>
+          <Anchor c="dimmed" pt={2} onClick={() => setActiveNavIndex(4)}>
             v{VERSION}
           </Anchor>
         </Group>
@@ -68,9 +70,16 @@ function App() {
           leftSection={<IconAlarmAverage size={20} stroke={1.5} />}
         />
         <NavLink
-          data-testid="nav-changelog"
+          data-testid="nav-projects"
           active={activeNavIndex === 3}
           onClick={() => setActiveNavIndex(3)}
+          label="Projects"
+          leftSection={<IconFolders size={20} stroke={1.5} />}
+        />
+        <NavLink
+          data-testid="nav-changelog"
+          active={activeNavIndex === 4}
+          onClick={() => setActiveNavIndex(4)}
           label="Changelog"
           leftSection={<IconConfetti size={20} stroke={1.5} />}
         />
@@ -79,7 +88,8 @@ function App() {
         {activeNavIndex === 0 && <TimeCollectorPage />}
         {activeNavIndex === 1 && <ImportExportPage />}
         {activeNavIndex === 2 && <SettingsPage />}
-        {activeNavIndex === 3 && <Changelog />}
+        {activeNavIndex === 3 && <ProjectsPage />}
+        {activeNavIndex === 4 && <Changelog />}
       </AppShell.Main>
     </AppShell>
   );

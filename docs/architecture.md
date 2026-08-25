@@ -56,7 +56,7 @@ erDiagram
 
 ## Runtime Structure
 
-- UI layer: routes (`src/routes`) render pages (`src/pages`) composed from reusable components (`src/components`).
+- UI layer: routes (`src/routes`) render pages (`src/pages`) composed from reusable components (`src/components`), including the Projects page for project-name listing and future rename workflows.
 - State layer: `src/store.ts` exposes actions and selectors for all user interactions.
 - Persistence layer: `src/db.ts` defines Dexie schema versions and object stores.
 - Domain layer: `src/models` contains strongly typed entities used across store and UI.
