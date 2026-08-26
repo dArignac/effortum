@@ -142,10 +142,12 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   // adjust this whenever a new entity is added to the db
   loadFromIndexedDb: async () => {
     await get().backfillProjectRelationsIfMissing();
-    const tasks = await db.tasks.orderBy("date").toArray();
-    const projects = await db.projects.orderBy("name").toArray();
-    const overtime = await db.overtime.toArray();
-    const settings = await db.settings.toArray();
+    const [tasks, projects, overtime, settings] = await Promise.all([
+      db.tasks.orderBy("date").toArray(),
+      db.projects.orderBy("name").toArray(),
+      db.overtime.toArray(),
+      db.settings.toArray(),
+    ]);
     set({ tasks, projects, overtime, settings });
   },
 
