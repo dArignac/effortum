@@ -70,7 +70,10 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   endTimeOfLastStoppedTask: null,
 
   backfillProjectRelationsIfMissing: async () => {
+    // This is called by loadFromIndexedDb only when there are tasks without project IDs
+    // Optimization: Check if we need to do any backfill at all
     const projects = await db.projects.toArray();
+
     const nameToId = new Map(
       projects.map((project) => [project.name, project.id]),
     );
@@ -141,7 +144,20 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
 
   // adjust this whenever a new entity is added to the db
   loadFromIndexedDb: async () => {
-    await get().backfillProjectRelationsIfMissing();
+    // Only run backfill if needed (optimization)
+    const hasProjectIds = await db.tasks
+      .limit(1)
+      .toArray()
+      .then((tasks) =>
+        tasks.some(
+          (task) => task.projectId !== undefined && task.projectId !== null,
+        ),
+      );
+
+    if (!hasProjectIds) {
+      await get().backfillProjectRelationsIfMissing();
+    }
+
     const [tasks, projects, overtime, settings] = await Promise.all([
       db.tasks.orderBy("date").toArray(),
       db.projects.orderBy("name").toArray(),
