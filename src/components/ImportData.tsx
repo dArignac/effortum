@@ -3,7 +3,6 @@ import { Button, Group, Loader, Modal, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { importInto } from "dexie-export-import";
 import { useRef, useState } from "react";
-import { Comment } from "../models/Comment";
 import { Overtime } from "../models/Overtime";
 import { Project } from "../models/Project";
 import { Settings } from "../models/Settings";
@@ -16,6 +15,129 @@ type DexieExportTable = {
   rows?: Array<[unknown, Record<string, any>]>;
 };
 
+type DexieExportDataBlock = {
+  tableName: string;
+  inbound?: boolean;
+  rows?: Array<Record<string, any>>;
+};
+
+type ImportTableSummary = {
+  name: string;
+  schema?: string;
+  rowCount: number;
+  sample?: Record<string, unknown>;
+};
+
+/**
+ * Builds a compact table summary for import diagnostics.
+ */
+function summarizeTables(tables: DexieExportTable[]): ImportTableSummary[] {
+  return tables.map((table) => {
+    const rows = table.rows || [];
+    return {
+      name: table.name,
+      schema: table.schema,
+      rowCount:
+        typeof table.rowCount === "number" ? table.rowCount : rows.length,
+      sample: rows[0]?.[1],
+    };
+  });
+}
+
+/**
+ * Returns all row payload objects for a table across known Dexie export shapes.
+ */
+function getTableRowObjects(
+  importData: any,
+  tableName: string,
+): Record<string, any>[] {
+  const tables = importData?.data?.tables as DexieExportTable[] | undefined;
+  const tableRows = tables?.find((t) => t.name === tableName)?.rows;
+
+  if (Array.isArray(tableRows) && tableRows.length > 0) {
+    const firstRow = tableRows[0];
+    if (Array.isArray(firstRow)) {
+      return tableRows
+        .map((row) => row?.[1])
+        .filter(
+          (row): row is Record<string, any> => !!row && typeof row === "object",
+        );
+    }
+  }
+
+  const dataBlocks = importData?.data?.data as
+    DexieExportDataBlock[] | undefined;
+  const rowsFromDataBlock = dataBlocks?.find(
+    (block) => block.tableName === tableName,
+  )?.rows;
+
+  if (!Array.isArray(rowsFromDataBlock)) {
+    return [];
+  }
+
+  return rowsFromDataBlock.filter(
+    (row): row is Record<string, any> => !!row && typeof row === "object",
+  );
+}
+
+/**
+ * Writes normalized rows back to both Dexie export shapes to maximize importer compatibility.
+ */
+function setTableRows(
+  importData: any,
+  tableName: string,
+  rows: Record<string, any>[],
+) {
+  const tables = (importData?.data?.tables || []) as DexieExportTable[];
+  const table = tables.find((entry) => entry.name === tableName);
+  if (table) {
+    table.rows = rows.map((row) => [row.id ?? crypto.randomUUID(), row]);
+    table.rowCount = rows.length;
+  }
+
+  const dataBlocks = (importData?.data?.data || []) as DexieExportDataBlock[];
+  const block = dataBlocks.find((entry) => entry.tableName === tableName);
+  if (block) {
+    block.rows = rows;
+  } else {
+    dataBlocks.push({ tableName, inbound: true, rows });
+  }
+
+  importData.data.data = dataBlocks;
+}
+
+/**
+ * Logs current persisted row counts for quick import diagnostics.
+ */
+async function logDbCounts(stage: string) {
+  const [tasks, projects, overtime, settings] = await Promise.all([
+    db.tasks.count(),
+    db.projects.count(),
+    db.overtime.count(),
+    db.settings.count(),
+  ]);
+
+  console.info(`[ImportData] ${stage} DB counts`, {
+    tasks,
+    projects,
+    overtime,
+    settings,
+  });
+}
+
+/**
+ * Converts unknown ID values into stable string IDs used by current entities.
+ */
+function toStableId(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (typeof value === "number") {
+    return String(value);
+  }
+  return crypto.randomUUID();
+}
+
 /**
  * Returns a table entry by name from a parsed Dexie export payload.
  */
@@ -24,49 +146,70 @@ function getTable(tables: DexieExportTable[], name: string) {
 }
 
 /**
- * Normalizes legacy backups that still store task/comment relations by project name.
+ * Normalizes legacy backups that still store task relations by project name.
  *
- * The function backfills `projectId` for tasks/comments, ensures projects have stable
- * IDs, and aligns table schemas with the current app format so newer import paths can
- * consume old exports.
+ * The function backfills `projectId` for tasks, ensures projects have stable IDs, and
+ * aligns table schemas with the current app format so newer import paths can consume
+ * old exports. Legacy comments tables are ignored intentionally.
  */
 function normalizeLegacyBackup(importData: any) {
+  console.info("[ImportData] Normalizing backup payload", {
+    sourceVersion: importData?.data?.databaseVersion,
+    sourceTables: summarizeTables(importData?.data?.tables || []),
+  });
+
   const normalized = JSON.parse(JSON.stringify(importData));
   const tables = normalized?.data?.tables as DexieExportTable[] | undefined;
 
   if (!Array.isArray(tables)) {
+    console.warn("[ImportData] Normalization skipped: no tables array found");
     return normalized;
   }
 
   const tasksTable = getTable(tables, "tasks");
-  const commentsTable = getTable(tables, "comments");
-  const projectsTable = getTable(tables, "projects");
+  let projectsTable = getTable(tables, "projects");
 
-  if (!tasksTable || !commentsTable || !projectsTable) {
+  if (!tasksTable) {
+    console.warn("[ImportData] Normalization skipped: no tasks table found");
+    return normalized;
+  }
+
+  if (!projectsTable) {
+    console.warn(
+      "[ImportData] Projects table missing in backup. Creating one from task project names.",
+    );
+    projectsTable = {
+      name: "projects",
+      schema: "++id, &name",
+      rowCount: 0,
+      rows: [],
+    };
+    tables.push(projectsTable);
+  }
+
+  const taskRows = getTableRowObjects(normalized, "tasks");
+  const projectRows = getTableRowObjects(normalized, "projects");
+
+  if (taskRows.length === 0 && projectRows.length === 0) {
+    console.warn("[ImportData] Normalization skipped: no rows found in backup");
     return normalized;
   }
 
   const projectNameToId = new Map<string, string>();
 
-  projectsTable.rows = (projectsTable.rows || []).map((row) => {
-    const project = row[1] || {};
+  const normalizedProjects = projectRows.map((project) => {
     const name = (project.name || "").trim();
-    const id =
-      typeof project.id === "string"
-        ? project.id
-        : project.id != null
-          ? String(project.id)
-          : crypto.randomUUID();
-
+    const id = toStableId(project.id);
     project.id = id;
-    row[1] = project;
-    row[0] = id;
 
     if (name) {
       projectNameToId.set(name, id);
     }
 
-    return row;
+    return {
+      id,
+      name: name || "Migrated Project",
+    } as Project;
   });
 
   const ensureProjectId = (projectName?: string): string => {
@@ -78,14 +221,11 @@ function normalizeLegacyBackup(importData: any) {
 
     const id = crypto.randomUUID();
     projectNameToId.set(normalizedName, id);
-    projectsTable.rows = projectsTable.rows || [];
-    projectsTable.rows.push([id, { id, name: normalizedName }]);
-    projectsTable.rowCount = projectsTable.rows.length;
+    normalizedProjects.push({ id, name: normalizedName });
     return id;
   };
 
-  tasksTable.rows = (tasksTable.rows || []).map((row) => {
-    const task = row[1] || {};
+  const normalizedTasks = taskRows.map((task) => {
     const projectName = (task.project || "").trim();
     const projectId =
       typeof task.projectId === "string"
@@ -93,44 +233,34 @@ function normalizeLegacyBackup(importData: any) {
         : task.projectId != null
           ? String(task.projectId)
           : ensureProjectId(projectName);
-    const taskId =
-      typeof task.id === "string"
-        ? task.id
-        : task.id != null
-          ? String(task.id)
-          : crypto.randomUUID();
+    const taskId = toStableId(task.id);
 
-    task.id = taskId;
-    task.projectId = projectId;
-    task.project = projectName || "Migrated Project";
-
-    row[0] = taskId;
-    row[1] = task;
-    return row;
-  });
-
-  commentsTable.rows = (commentsTable.rows || []).map((row) => {
-    const comment = row[1] || {};
-    const projectName = (comment.project || "").trim();
-    const projectId =
-      typeof comment.projectId === "string"
-        ? comment.projectId
-        : comment.projectId != null
-          ? String(comment.projectId)
-          : ensureProjectId(projectName);
-    if (comment.id != null && typeof comment.id !== "string") {
-      comment.id = String(comment.id);
-    }
-
-    comment.projectId = projectId;
-    comment.project = projectName || "Migrated Project";
-    row[1] = comment;
-    return row;
+    return {
+      ...task,
+      id: taskId,
+      projectId,
+      project: projectName || "Migrated Project",
+    };
   });
 
   projectsTable.schema = "++id, &name";
   tasksTable.schema = "++id, date, timeStart, timeEnd, projectId, project";
-  commentsTable.schema = "++id, projectId, project, comment";
+  setTableRows(normalized, "projects", normalizedProjects);
+  setTableRows(normalized, "tasks", normalizedTasks);
+
+  tasksTable.rowCount = normalizedTasks.length;
+  projectsTable.rowCount = normalizedProjects.length;
+
+  // Drop legacy comments tables because comment suggestions are now derived from tasks.
+  normalized.data.tables = tables.filter((table) => table.name !== "comments");
+  normalized.data.data = (normalized.data.data || []).filter(
+    (table: DexieExportDataBlock) => table.tableName !== "comments",
+  );
+
+  console.info("[ImportData] Normalization completed", {
+    normalizedVersion: normalized?.data?.databaseVersion,
+    normalizedTables: summarizeTables(normalized.data.tables || []),
+  });
 
   return normalized;
 }
@@ -142,27 +272,24 @@ function normalizeLegacyBackup(importData: any) {
  * bulk-inserts typed entities directly into Dexie tables.
  */
 async function importTablesFallback(importData: any) {
+  console.info("[ImportData] Running fallback import");
   const tables = importData?.data?.tables as DexieExportTable[] | undefined;
   if (!Array.isArray(tables)) {
     throw new Error("Invalid backup table structure");
   }
 
-  /**
-   * Returns raw row payload objects (`row[1]`) for a given exported table.
-   */
-  const getRows = (tableName: string) => {
-    const table = getTable(tables, tableName);
-    return (table?.rows || []).map((row) => row[1]).filter(Boolean);
-  };
+  console.info("[ImportData] Fallback source tables", {
+    tables: summarizeTables(tables),
+  });
 
   /**
    * Validates and converts a raw object into a Project entity.
    */
   const asProject = (value: Record<string, any>): Project | null => {
-    if (typeof value.id !== "string" || typeof value.name !== "string") {
+    if (typeof value.name !== "string") {
       return null;
     }
-    return { id: value.id, name: value.name };
+    return { id: toStableId(value.id), name: value.name };
   };
 
   /**
@@ -170,41 +297,21 @@ async function importTablesFallback(importData: any) {
    */
   const asTask = (value: Record<string, any>): Task | null => {
     if (
-      typeof value.id !== "string" ||
       typeof value.date !== "string" ||
       typeof value.timeStart !== "string" ||
-      typeof value.projectId !== "string"
+      !["string", "number"].includes(typeof value.projectId)
     ) {
       return null;
     }
 
     return {
-      id: value.id,
+      id: toStableId(value.id),
       date: value.date,
       timeStart: value.timeStart,
       timeEnd: typeof value.timeEnd === "string" ? value.timeEnd : undefined,
-      projectId: value.projectId,
+      projectId: String(value.projectId),
       project: typeof value.project === "string" ? value.project : undefined,
       comment: typeof value.comment === "string" ? value.comment : undefined,
-    };
-  };
-
-  /**
-   * Validates and converts a raw object into a Comment entity.
-   */
-  const asComment = (value: Record<string, any>): Comment | null => {
-    if (
-      typeof value.projectId !== "string" ||
-      typeof value.comment !== "string"
-    ) {
-      return null;
-    }
-
-    return {
-      id: typeof value.id === "string" ? value.id : undefined,
-      projectId: value.projectId,
-      project: typeof value.project === "string" ? value.project : undefined,
-      comment: value.comment,
     };
   };
 
@@ -244,21 +351,25 @@ async function importTablesFallback(importData: any) {
     };
   };
 
-  const tasks = getRows("tasks")
+  const tasks = getTableRowObjects(importData, "tasks")
     .map((row) => asTask(row))
     .filter((row): row is Task => row !== null);
-  const projects = getRows("projects")
+  const projects = getTableRowObjects(importData, "projects")
     .map((row) => asProject(row))
     .filter((row): row is Project => row !== null);
-  const comments = getRows("comments")
-    .map((row) => asComment(row))
-    .filter((row): row is Comment => row !== null);
-  const overtime = getRows("overtime")
+  const overtime = getTableRowObjects(importData, "overtime")
     .map((row) => asOvertime(row))
     .filter((row): row is Overtime => row !== null);
-  const settings = getRows("settings")
+  const settings = getTableRowObjects(importData, "settings")
     .map((row) => asSettings(row))
     .filter((row): row is Settings => row !== null);
+
+  console.info("[ImportData] Fallback parsed entity counts", {
+    tasks: tasks.length,
+    projects: projects.length,
+    overtime: overtime.length,
+    settings: settings.length,
+  });
 
   if (projects.length > 0) {
     await db.projects.bulkPut(projects);
@@ -266,15 +377,14 @@ async function importTablesFallback(importData: any) {
   if (tasks.length > 0) {
     await db.tasks.bulkPut(tasks);
   }
-  if (comments.length > 0) {
-    await db.comments.bulkPut(comments);
-  }
   if (overtime.length > 0) {
     await db.overtime.bulkPut(overtime);
   }
   if (settings.length > 0) {
     await db.settings.bulkPut(settings);
   }
+
+  await logDbCounts("After fallback import");
 }
 
 export function ImportData() {
@@ -306,9 +416,26 @@ export function ImportData() {
     setIsImporting(true);
 
     try {
+      console.groupCollapsed("[ImportData] Import flow started");
+      console.info("[ImportData] Selected file", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+
       // Read the file
       const fileContent = await file.text();
+      console.info("[ImportData] File read complete", {
+        contentLength: fileContent.length,
+      });
+
       const importData = JSON.parse(fileContent);
+      console.info("[ImportData] Parsed backup metadata", {
+        formatName: importData?.formatName,
+        formatVersion: importData?.formatVersion,
+        databaseName: importData?.data?.databaseName,
+        databaseVersion: importData?.data?.databaseVersion,
+      });
 
       // Validate it's a Dexie export
       if (
@@ -323,22 +450,75 @@ export function ImportData() {
       const normalizedImportData = normalizeLegacyBackup(importData);
       normalizedImportData.data.databaseVersion = db.verno;
       const normalizedFileContent = JSON.stringify(normalizedImportData);
+      const expectedTaskCount = getTableRowObjects(
+        normalizedImportData,
+        "tasks",
+      ).length;
+      const expectedProjectCount = getTableRowObjects(
+        normalizedImportData,
+        "projects",
+      ).length;
+
+      console.info("[ImportData] Expected rows after normalization", {
+        expectedTaskCount,
+        expectedProjectCount,
+      });
+
+      await logDbCounts("Before clear");
 
       // Clear all tables instead of deleting the database
       await db.tasks.clear();
       await db.projects.clear();
-      await db.comments.clear();
       await db.overtime.clear();
       await db.settings.clear();
+
+      await logDbCounts("After clear");
+
       // Import the data with progress tracking
       const blob = new Blob([normalizedFileContent], {
         type: "application/json",
       });
       try {
+        console.info("[ImportData] Attempting importInto");
         await importInto(db, blob);
+        console.info("[ImportData] importInto completed without throwing");
       } catch {
+        console.warn(
+          "[ImportData] importInto failed. Switching to fallback import",
+        );
         await importTablesFallback(normalizedImportData);
       }
+
+      await logDbCounts("After importInto/fallback attempt");
+
+      const [importedTaskCount, importedProjectCount] = await Promise.all([
+        db.tasks.count(),
+        db.projects.count(),
+      ]);
+
+      // Some legacy payloads may pass importInto without errors but still import no rows.
+      const requiresFallbackImport =
+        (expectedTaskCount > 0 && importedTaskCount === 0) ||
+        (expectedProjectCount > 0 && importedProjectCount === 0);
+
+      console.info("[ImportData] Post-import verification", {
+        importedTaskCount,
+        importedProjectCount,
+        requiresFallbackImport,
+      });
+
+      if (requiresFallbackImport) {
+        console.warn(
+          "[ImportData] Detected empty import result despite expected rows. Re-running fallback import.",
+        );
+        await db.tasks.clear();
+        await db.projects.clear();
+        await db.overtime.clear();
+        await db.settings.clear();
+        await importTablesFallback(normalizedImportData);
+      }
+
+      await logDbCounts("Final import result");
 
       notifications.show({
         message: "Database imported successfully! Reloading page...",
@@ -358,6 +538,7 @@ export function ImportData() {
         color: "red",
       });
     } finally {
+      console.groupEnd();
       setIsImporting(false);
       selectedFileRef.current = null;
     }
@@ -386,8 +567,8 @@ export function ImportData() {
           <>
             <Text size="sm" mb="md">
               Warning: This will completely replace your current database with
-              the imported data. All existing tasks, projects, and comments will
-              be deleted.
+              the imported data. All existing tasks and projects will be
+              deleted.
             </Text>
             <Text size="sm" fw={700} mb="md">
               This action cannot be undone!

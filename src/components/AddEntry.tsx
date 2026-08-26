@@ -4,7 +4,6 @@ import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { Comment } from "../models/Comment";
 import { useEffortumStore } from "../store";
 import { roundTimeToNearest5Minutes } from "../utils/time";
 import {
@@ -18,7 +17,6 @@ import { DateSelectionField } from "./DateField";
 export function AddEntryRow() {
   const projects = useEffortumStore((state) => state.projects);
   const addTask = useEffortumStore((state) => state.addTask);
-  const addComment = useEffortumStore((state) => state.addComment);
   const getCommentsForProject = useEffortumStore(
     (state) => state.getCommentsForProject,
   );
@@ -34,7 +32,7 @@ export function AddEntryRow() {
   const [, setEndValue] = useState<string>("");
   const [projectValue, setProjectValue] = useState<string>("");
   const [, setCommentValue] = useState<string>("");
-  const [availableComments, setAvailableComments] = useState<Comment[]>([]);
+  const [availableComments, setAvailableComments] = useState<string[]>([]);
 
   useEffect(() => {
     if (endTimeOfLastStoppedTask != null && startValue.length === 0) {
@@ -45,19 +43,22 @@ export function AddEntryRow() {
   useEffect(() => {
     const loadComments = async () => {
       // only fill comments if a project is selected
-      if (projectValue.length > 0) {
-        const project = projects.find((p) => p.name === projectValue);
-        if (!project) {
-          setAvailableComments([]);
-          return;
-        }
-
-        const comments = await getCommentsForProject(project.id);
-        setAvailableComments(comments);
+      if (projectValue.length === 0) {
+        setAvailableComments([]);
+        return;
       }
+
+      const project = projects.find((p) => p.name === projectValue);
+      if (!project) {
+        setAvailableComments([]);
+        return;
+      }
+
+      const comments = await getCommentsForProject(project.id);
+      setAvailableComments(comments);
     };
     loadComments();
-  }, [projectValue, projects]);
+  }, [projectValue, projects, getCommentsForProject]);
 
   const fieldDate = useField({
     initialValue: dayjs().format("YYYY-MM-DD"),
@@ -131,13 +132,6 @@ export function AddEntryRow() {
       projectName: selectedProject,
       comment: selectedComment || "",
     });
-
-    if (selectedComment.length > 0) {
-      await addComment({
-        comment: selectedComment,
-        projectName: selectedProject,
-      });
-    }
   };
 
   return (
@@ -174,7 +168,7 @@ export function AddEntryRow() {
       <Table.Td>
         <Autocomplete
           {...fieldComment.getInputProps()}
-          data={availableComments?.map((c) => c.comment) || []}
+          data={availableComments}
           size="xs"
           data-testid="add-entry-input-comment"
           placeholder="Select or enter a comment"

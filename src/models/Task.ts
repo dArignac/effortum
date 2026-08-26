@@ -5,5 +5,5 @@ export type Task = {
   timeEnd?: string; // ISO time string
   projectId: string;
   project?: string; // legacy compatibility during migration rollout
-  comment?: string;
+  comment?: string; // persisted task comment used for per-project autocomplete suggestions
 };
