@@ -18,7 +18,6 @@ Effortum is a local-first time tracker. User data is persisted in IndexedDB via 
 ```mermaid
 erDiagram
   PROJECT ||--o{ TASK : "project id"
-  PROJECT ||--o{ COMMENT : "project id"
 
   PROJECT {
     string id PK
@@ -30,13 +29,6 @@ erDiagram
     string date
     string timeStart
     string timeEnd
-    string projectId FK
-    string project
-    string comment
-  }
-
-  COMMENT {
-    string id PK
     string projectId FK
     string project
     string comment
@@ -56,8 +48,10 @@ erDiagram
 
 ## Runtime Structure
 
-- UI layer: routes (`src/routes`) render pages (`src/pages`) composed from reusable components (`src/components`), including the Projects page for alphabetically ordered project renaming with per-row save controls.
-- State layer: `src/store.ts` exposes actions and selectors for all user interactions, including project rename persistence and denormalized task/comment name synchronization.
+- UI layer: routes (`src/routes`) render pages (`src/pages`) composed from reusable components (`src/components`), including the Projects page for
+  alphabetically ordered project renaming with per-row save controls.
+- State layer: `src/store.ts` exposes actions and selectors for all user interactions, including project rename persistence and per-project comment suggestions
+  derived from task records.
 - Persistence layer: `src/db.ts` defines Dexie schema versions and object stores.
 - Domain layer: `src/models` contains strongly typed entities used across store and UI.
 - Logic layer: `src/utils` contains date, time, and filtering behavior.
@@ -71,7 +65,8 @@ erDiagram
 
 ## Key Constraints
 
-- Task-to-project and comment-to-project relations are canonical by project ID.
+- Task-to-project relations are canonical by project ID.
+- Comment suggestions are derived from persisted `task.comment` values; no dedicated comment entity is used.
 - Legacy project-name fields are kept during rollout for import/export compatibility and recovery.
 - Overtime and settings are single-record entities identified by fixed IDs.
 - Date filtering must normalize date-only and ISO datetime values for day-level comparisons.

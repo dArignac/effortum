@@ -5,7 +5,6 @@ import { notifications } from "@mantine/notifications";
 import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { Comment } from "../models/Comment";
 import { useEffortumStore } from "../store";
 import { getDurationAsTime, roundTimeToNearest5Minutes } from "../utils/time";
 import {
@@ -33,7 +32,7 @@ export function TaskListRow(props: { taskId: string | null }) {
   const [hasChanges, setHasChanges] = useState(false);
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [canStopTask, setCanStopTask] = useState(false);
-  const [availableComments, setAvailableComments] = useState<Comment[]>([]);
+  const [availableComments, setAvailableComments] = useState<string[]>([]);
 
   const task = tasks.find((task) => task.id === props.taskId);
   if (!task) {
@@ -97,21 +96,22 @@ export function TaskListRow(props: { taskId: string | null }) {
   useEffect(() => {
     const loadComments = async () => {
       // only fill comments if a project is selected
-      if (fieldProject.getValue().length > 0) {
-        const project = projects.find(
-          (p) => p.name === fieldProject.getValue(),
-        );
-        if (!project) {
-          setAvailableComments([]);
-          return;
-        }
-
-        const comments = await getCommentsForProject(project.id);
-        setAvailableComments(comments);
+      if (fieldProject.getValue().length === 0) {
+        setAvailableComments([]);
+        return;
       }
+
+      const project = projects.find((p) => p.name === fieldProject.getValue());
+      if (!project) {
+        setAvailableComments([]);
+        return;
+      }
+
+      const comments = await getCommentsForProject(project.id);
+      setAvailableComments(comments);
     };
     loadComments();
-  }, [fieldProject.getValue(), projects]);
+  }, [fieldProject.getValue(), projects, getCommentsForProject]);
 
   /**
    * Validates and persists row edits for the current task.
@@ -217,7 +217,7 @@ export function TaskListRow(props: { taskId: string | null }) {
       <Table.Td>
         <Autocomplete
           {...fieldComment.getInputProps()}
-          data={availableComments?.map((c: Comment) => c.comment) || []}
+          data={availableComments}
           size="xs"
           placeholder="Select or enter a comment"
         />

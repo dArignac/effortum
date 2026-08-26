@@ -396,7 +396,6 @@ test.describe("Data Import Functionality", () => {
       return await new Promise<{
         tasks: Array<Record<string, any>>;
         projects: Array<Record<string, any>>;
-        comments: Array<Record<string, any>>;
       }>((resolve, reject) => {
         const openRequest = indexedDB.open("EffortumDatabase");
 
@@ -406,14 +405,10 @@ test.describe("Data Import Functionality", () => {
 
         openRequest.onsuccess = () => {
           const database = openRequest.result;
-          const transaction = database.transaction(
-            ["tasks", "projects", "comments"],
-            "readonly",
-          );
+          const transaction = database.transaction(["tasks", "projects"], "readonly");
 
           const tasksRequest = transaction.objectStore("tasks").getAll();
           const projectsRequest = transaction.objectStore("projects").getAll();
-          const commentsRequest = transaction.objectStore("comments").getAll();
 
           transaction.onerror = () => {
             reject(transaction.error?.message || "Failed reading IndexedDB");
@@ -423,7 +418,6 @@ test.describe("Data Import Functionality", () => {
             resolve({
               tasks: tasksRequest.result || [],
               projects: projectsRequest.result || [],
-              comments: commentsRequest.result || [],
             });
           };
         };
@@ -442,13 +436,5 @@ test.describe("Data Import Functionality", () => {
         Boolean(task.projectId),
     );
     expect(hasLegacyTaskWithProjectId).toBe(true);
-
-    const hasLegacyCommentWithProjectId = importedDbData.comments.some(
-      (comment: any) =>
-        comment.project === "Legacy Project" &&
-        comment.comment === "Legacy Comment A" &&
-        Boolean(comment.projectId),
-    );
-    expect(hasLegacyCommentWithProjectId).toBe(true);
   });
 });

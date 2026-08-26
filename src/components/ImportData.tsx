@@ -3,7 +3,6 @@ import { Button, Group, Loader, Modal, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { importInto } from "dexie-export-import";
 import { useRef, useState } from "react";
-import { Comment } from "../models/Comment";
 import { Overtime } from "../models/Overtime";
 import { Project } from "../models/Project";
 import { Settings } from "../models/Settings";
@@ -24,11 +23,11 @@ function getTable(tables: DexieExportTable[], name: string) {
 }
 
 /**
- * Normalizes legacy backups that still store task/comment relations by project name.
+ * Normalizes legacy backups that still store task relations by project name.
  *
- * The function backfills `projectId` for tasks/comments, ensures projects have stable
- * IDs, and aligns table schemas with the current app format so newer import paths can
- * consume old exports.
+ * The function backfills `projectId` for tasks, ensures projects have stable IDs, and
+ * aligns table schemas with the current app format so newer import paths can consume
+ * old exports. Legacy comments tables are ignored intentionally.
  */
 function normalizeLegacyBackup(importData: any) {
   const normalized = JSON.parse(JSON.stringify(importData));
@@ -39,10 +38,9 @@ function normalizeLegacyBackup(importData: any) {
   }
 
   const tasksTable = getTable(tables, "tasks");
-  const commentsTable = getTable(tables, "comments");
   const projectsTable = getTable(tables, "projects");
 
-  if (!tasksTable || !commentsTable || !projectsTable) {
+  if (!tasksTable || !projectsTable) {
     return normalized;
   }
 
@@ -109,28 +107,11 @@ function normalizeLegacyBackup(importData: any) {
     return row;
   });
 
-  commentsTable.rows = (commentsTable.rows || []).map((row) => {
-    const comment = row[1] || {};
-    const projectName = (comment.project || "").trim();
-    const projectId =
-      typeof comment.projectId === "string"
-        ? comment.projectId
-        : comment.projectId != null
-          ? String(comment.projectId)
-          : ensureProjectId(projectName);
-    if (comment.id != null && typeof comment.id !== "string") {
-      comment.id = String(comment.id);
-    }
-
-    comment.projectId = projectId;
-    comment.project = projectName || "Migrated Project";
-    row[1] = comment;
-    return row;
-  });
-
   projectsTable.schema = "++id, &name";
   tasksTable.schema = "++id, date, timeStart, timeEnd, projectId, project";
-  commentsTable.schema = "++id, projectId, project, comment";
+
+  // Drop legacy comments tables because comment suggestions are now derived from tasks.
+  normalized.data.tables = tables.filter((table) => table.name !== "comments");
 
   return normalized;
 }
@@ -190,25 +171,6 @@ async function importTablesFallback(importData: any) {
   };
 
   /**
-   * Validates and converts a raw object into a Comment entity.
-   */
-  const asComment = (value: Record<string, any>): Comment | null => {
-    if (
-      typeof value.projectId !== "string" ||
-      typeof value.comment !== "string"
-    ) {
-      return null;
-    }
-
-    return {
-      id: typeof value.id === "string" ? value.id : undefined,
-      projectId: value.projectId,
-      project: typeof value.project === "string" ? value.project : undefined,
-      comment: value.comment,
-    };
-  };
-
-  /**
    * Validates and converts a raw object into an Overtime entity.
    */
   const asOvertime = (value: Record<string, any>): Overtime | null => {
@@ -250,9 +212,6 @@ async function importTablesFallback(importData: any) {
   const projects = getRows("projects")
     .map((row) => asProject(row))
     .filter((row): row is Project => row !== null);
-  const comments = getRows("comments")
-    .map((row) => asComment(row))
-    .filter((row): row is Comment => row !== null);
   const overtime = getRows("overtime")
     .map((row) => asOvertime(row))
     .filter((row): row is Overtime => row !== null);
@@ -265,9 +224,6 @@ async function importTablesFallback(importData: any) {
   }
   if (tasks.length > 0) {
     await db.tasks.bulkPut(tasks);
-  }
-  if (comments.length > 0) {
-    await db.comments.bulkPut(comments);
   }
   if (overtime.length > 0) {
     await db.overtime.bulkPut(overtime);
@@ -327,7 +283,6 @@ export function ImportData() {
       // Clear all tables instead of deleting the database
       await db.tasks.clear();
       await db.projects.clear();
-      await db.comments.clear();
       await db.overtime.clear();
       await db.settings.clear();
       // Import the data with progress tracking
@@ -386,8 +341,7 @@ export function ImportData() {
           <>
             <Text size="sm" mb="md">
               Warning: This will completely replace your current database with
-              the imported data. All existing tasks, projects, and comments will
-              be deleted.
+              the imported data. All existing tasks and projects will be deleted.
             </Text>
             <Text size="sm" fw={700} mb="md">
               This action cannot be undone!

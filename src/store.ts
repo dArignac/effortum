@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { EffortumDB } from "./db";
-import { Comment } from "./models/Comment";
 import { Overtime } from "./models/Overtime";
 import { Project } from "./models/Project";
 import { Settings } from "./models/Settings";
@@ -19,15 +18,9 @@ type TaskUpdateInput = Partial<Omit<Task, "projectId">> & {
   projectName?: string;
 };
 
-type CommentInput = Omit<Comment, "projectId"> & {
-  projectId?: string;
-  projectName?: string;
-};
-
 interface EffortumStore {
   tasks: Task[];
   projects: Project[];
-  comments: Comment[];
   overtime: Overtime[];
   settings: Settings[];
   selectedDateRange: [string | null, string | null];
@@ -39,8 +32,7 @@ interface EffortumStore {
   addTask: (task: TaskInput) => Promise<void>;
   updateTask: (id: string, updates: TaskUpdateInput) => Promise<void>;
 
-  addComment: (comment: CommentInput) => Promise<void>;
-  getCommentsForProject: (projectId: string) => Comment[];
+  getCommentsForProject: (projectId: string) => string[];
 
   addProject: (project: Project) => Promise<void>;
   updateProjectName: (id: string, name: string) => Promise<void>;
@@ -72,7 +64,6 @@ interface StoreGet {
 export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   projects: [],
   tasks: [],
-  comments: [],
   overtime: [],
   settings: [],
   selectedDateRange: [null, null] as [string | null, string | null],
@@ -146,25 +137,6 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
         project: task.project || project.name,
       });
     }
-
-    const comments = await db.comments.toArray();
-    for (const comment of comments) {
-      if (comment.projectId) {
-        continue;
-      }
-
-      const project =
-        (await resolveProject(comment.project)) ??
-        (await resolveProject("Migrated Project"));
-      if (!project) {
-        continue;
-      }
-
-      await db.comments.update(comment.id, {
-        projectId: project.id,
-        project: comment.project || project.name,
-      });
-    }
   },
 
   // adjust this whenever a new entity is added to the db
@@ -172,10 +144,9 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
     await get().backfillProjectRelationsIfMissing();
     const tasks = await db.tasks.orderBy("date").toArray();
     const projects = await db.projects.orderBy("name").toArray();
-    const comments = await db.comments.orderBy("comment").toArray();
     const overtime = await db.overtime.toArray();
     const settings = await db.settings.toArray();
-    set({ tasks, projects, comments, overtime, settings });
+    set({ tasks, projects, overtime, settings });
   },
 
   addTask: async (task: TaskInput) => {
@@ -251,15 +222,6 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
       set({ projects: [...get().projects, projectInstance] });
     }
 
-    // If there's a comment in the updates, add it to comments
-    if (updates.comment) {
-      await get().addComment({
-        projectId: projectInstance.id,
-        project: projectInstance.name,
-        comment: updates.comment,
-      });
-    }
-
     const taskUpdates: Partial<Task> = {
       projectId: projectInstance.id,
       project: projectInstance.name,
@@ -290,7 +252,7 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   },
 
   /**
-   * Renames a project and keeps denormalized task/comment project names in sync.
+   * Renames a project and keeps denormalized task project names in sync.
    */
   updateProjectName: async (id: string, name: string) => {
     const normalizedName = name.trim();
@@ -308,15 +270,9 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
     }
 
     try {
-      await db.transaction(
-        "rw",
-        db.projects,
-        db.tasks,
-        db.comments,
-        async () => {
-          await db.projects.update(id, { name: normalizedName });
-        },
-      );
+      await db.transaction("rw", db.projects, db.tasks, async () => {
+        await db.projects.update(id, { name: normalizedName });
+      });
     } catch (error) {
       const errorName =
         typeof error === "object" && error !== null && "name" in error
@@ -332,62 +288,25 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
       throw error;
     }
 
-    const [projects, tasks, comments] = await Promise.all([
+    const [projects, tasks] = await Promise.all([
       db.projects.toArray(),
       db.tasks.toArray(),
-      db.comments.toArray(),
     ]);
-    set({ projects, tasks, comments });
+    set({ projects, tasks });
   },
 
-  addComment: async (comment: CommentInput) => {
-    const normalizedProjectName = (
-      comment.projectName ??
-      comment.project ??
-      ""
-    ).trim();
-
-    let projectInstance: Project | undefined = get().projects.find(
-      (project) => project.id === comment.projectId,
-    );
-    if (!projectInstance && normalizedProjectName) {
-      projectInstance = get().projects.find(
-        (project) => project.name === normalizedProjectName,
-      );
-    }
-
-    if (!projectInstance) {
-      if (!normalizedProjectName) {
-        return;
-      }
-
-      projectInstance = {
-        id: comment.projectId || crypto.randomUUID(),
-        name: normalizedProjectName,
-      };
-      await db.projects.add(projectInstance);
-      set({ projects: [...get().projects, projectInstance] });
-    }
-
-    const isExisting = get().comments.some(
-      (c: Comment) =>
-        c.projectId === projectInstance.id && c.comment === comment.comment,
-    );
-
-    if (!isExisting) {
-      await db.comments.add({
-        id: comment.id,
-        projectId: projectInstance.id,
-        project: projectInstance.name,
-        comment: comment.comment,
-      });
-      const comments = await db.comments.toArray();
-      set({ comments });
-    }
-  },
-
+  /**
+   * Returns distinct, non-empty task comments for a project to feed autocomplete.
+   */
   getCommentsForProject: (projectId: string) => {
-    return get().comments.filter((comment) => comment.projectId === projectId);
+    const comments = get()
+      .tasks.filter((task) => task.projectId === projectId)
+      .map((task) => (task.comment ?? "").trim())
+      .filter((comment) => comment.length > 0);
+
+    return Array.from(new Set(comments)).sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" }),
+    );
   },
 
   setSelectedDateRange: (range: [string | null, string | null]) => {

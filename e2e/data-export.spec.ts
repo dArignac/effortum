@@ -225,7 +225,6 @@ test.describe("Data Export Functionality", () => {
 
       expect(tableNames).toContain("tasks");
       expect(tableNames).toContain("projects");
-      expect(tableNames).toContain("comments");
 
       // Verify tasks table has all tasks
       const tasksTable = tables.find((t: any) => t.name === "tasks");
@@ -246,10 +245,6 @@ test.describe("Data Export Functionality", () => {
       // Verify projects table has both projects
       const projectsTable = tables.find((t: any) => t.name === "projects");
       expect(projectsTable.rowCount).toBeGreaterThanOrEqual(2);
-
-      // Verify comments table has all comments
-      const commentsTable = tables.find((t: any) => t.name === "comments");
-      expect(commentsTable.rowCount).toBeGreaterThanOrEqual(3);
     }
   });
 
