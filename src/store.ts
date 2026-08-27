@@ -26,6 +26,7 @@ interface EffortumStore {
   settings: Settings[];
   selectedDateRange: [string | null, string | null];
   endTimeOfLastStoppedTask: string | null;
+  isDataLoading: boolean;
 
   loadFromIndexedDb: () => Promise<void>;
   backfillProjectRelationsIfMissing: () => Promise<void>;
@@ -69,6 +70,7 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   settings: [],
   selectedDateRange: [null, null] as [string | null, string | null],
   endTimeOfLastStoppedTask: null,
+  isDataLoading: false,
 
   backfillProjectRelationsIfMissing: async () => {
     // This is called by loadFromIndexedDb only when there are tasks without project IDs
@@ -145,6 +147,9 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
 
   // adjust this whenever a new entity is added to the db
   loadFromIndexedDb: async () => {
+    // Set loading state for initial data load
+    set({ isDataLoading: true });
+
     // Only run backfill if needed (optimization)
     const hasProjectIds = await db.tasks
       .limit(1)
@@ -165,7 +170,8 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
       tasks: initialData.tasks,
       projects: initialData.projects,
       overtime: initialData.overtime,
-      settings: initialData.settings
+      settings: initialData.settings,
+      isDataLoading: false
     });
   },
 

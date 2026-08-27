@@ -6,6 +6,7 @@ import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
 import { AddEntryRow } from "./AddEntry";
 import { TaskListRow } from "./TaskListRow";
+import { LoadingIndicator } from "./LoadingIndicator";
 
 function compareTasksByTimeStart(a: Task, b: Task) {
   const dateTimeA = dayjs(`${a.date} ${a.timeStart}`, "YYYY-MM-DD HH:mm");
@@ -18,6 +19,7 @@ export function TaskList() {
   const selectedDateRange = useEffortumStore(
     (state) => state.selectedDateRange,
   );
+  const isDataLoading = useEffortumStore((state) => state.isDataLoading);
 
   const sortedTasks = useMemo(() => {
     return [...tasks]
@@ -28,6 +30,32 @@ export function TaskList() {
   const canAddTask = useMemo(() => {
     return !tasks.some((task) => !task.timeEnd || task.timeEnd.length === 0);
   }, [tasks]);
+
+  // Show loading indicator when data is being fetched
+  if (isDataLoading) {
+    return (
+      <Table stickyHeader stickyHeaderOffset={0} data-testid="task-list-table">
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th w={110}>Date</Table.Th>
+            <Table.Th w={80}>Start</Table.Th>
+            <Table.Th w={80}>End</Table.Th>
+            <Table.Th>Project</Table.Th>
+            <Table.Th>Comment</Table.Th>
+            <Table.Th w={50}>Duration</Table.Th>
+            <Table.Th w={90}>Actions</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          <Table.Tr>
+            <Table.Td colSpan={7}>
+              <LoadingIndicator />
+            </Table.Td>
+          </Table.Tr>
+        </Table.Tbody>
+      </Table>
+    );
+  }
 
   return (
     <Table stickyHeader stickyHeaderOffset={0} data-testid="task-list-table">

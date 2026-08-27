@@ -51,7 +51,7 @@ erDiagram
 - UI layer: routes (`src/routes`) render pages (`src/pages`) composed from reusable components (`src/components`), including the Projects page for
   alphabetically ordered project renaming with per-row save controls.
 - State layer: `src/store.ts` exposes actions and selectors for all user interactions, including project rename persistence and per-project comment suggestions
-  derived from task records.
+  derived from task records. The store now also tracks data loading states for better UX during async operations.
 - Persistence layer: `src/db.ts` defines Dexie schema versions and object stores.
 - Domain layer: `src/models` contains strongly typed entities used across store and UI.
 - Logic layer: `src/utils` contains date, time, and filtering behavior.

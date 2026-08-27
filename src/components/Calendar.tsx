@@ -32,6 +32,9 @@ export function Calendar() {
     }
 
     try {
+      // Set loading state to show indicator
+      useEffortumStore.setState({ isDataLoading: true });
+
       // Load data for the selected date range - but only tasks need to be updated here
       // Projects, overtime, and settings are typically loaded once at app startup
       const { tasks } = await LazyDataLoader.loadDataForDateRange(
@@ -40,10 +43,11 @@ export function Calendar() {
       );
 
       // Only update tasks in store (projects, etc. remain the same)
-      useEffortumStore.setState({ tasks });
+      useEffortumStore.setState({ tasks, isDataLoading: false });
     } catch (error) {
       console.error("Failed to load data for date range:", error);
       // Optionally show a notification to the user
+      useEffortumStore.setState({ isDataLoading: false });
     }
   };
 
