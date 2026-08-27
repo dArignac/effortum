@@ -5,6 +5,7 @@ import { Overtime } from "./models/Overtime";
 import { Project } from "./models/Project";
 import { Settings } from "./models/Settings";
 import { Task } from "./models/Task";
+import { LazyDataLoader } from "./services/lazyDataLoader";
 
 export const db = new EffortumDB();
 
@@ -158,13 +159,14 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
       await get().backfillProjectRelationsIfMissing();
     }
 
-    const [tasks, projects, overtime, settings] = await Promise.all([
-      db.tasks.orderBy("date").toArray(),
-      db.projects.orderBy("name").toArray(),
-      db.overtime.toArray(),
-      db.settings.toArray(),
-    ]);
-    set({ tasks, projects, overtime, settings });
+    // Load only initial data for today's date
+    const initialData = await LazyDataLoader.loadInitialData();
+    set({
+      tasks: initialData.tasks,
+      projects: initialData.projects,
+      overtime: initialData.overtime,
+      settings: initialData.settings
+    });
   },
 
   addTask: async (task: TaskInput) => {

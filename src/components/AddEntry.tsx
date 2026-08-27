@@ -5,6 +5,7 @@ import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useEffortumStore } from "../store";
+import { LazyDataLoader } from "../services/lazyDataLoader";
 import { roundTimeToNearest5Minutes } from "../utils/time";
 import {
   validateDate,
@@ -17,9 +18,6 @@ import { DateSelectionField } from "./DateField";
 export function AddEntryRow() {
   const projects = useEffortumStore((state) => state.projects);
   const addTask = useEffortumStore((state) => state.addTask);
-  const getCommentsForProject = useEffortumStore(
-    (state) => state.getCommentsForProject,
-  );
   const endTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.endTimeOfLastStoppedTask,
   );
@@ -33,6 +31,7 @@ export function AddEntryRow() {
   const [projectValue, setProjectValue] = useState<string>("");
   const [, setCommentValue] = useState<string>("");
   const [availableComments, setAvailableComments] = useState<string[]>([]);
+  const [isCommentLoading, setIsCommentLoading] = useState(false);
 
   useEffect(() => {
     if (endTimeOfLastStoppedTask != null && startValue.length === 0) {
@@ -48,17 +47,28 @@ export function AddEntryRow() {
         return;
       }
 
-      const project = projects.find((p) => p.name === projectValue);
-      if (!project) {
-        setAvailableComments([]);
-        return;
-      }
+      setIsCommentLoading(true);
+      try {
+        // Find the project by name to get its ID
+        const project = projects.find((p) => p.name === projectValue);
+        if (!project) {
+          setAvailableComments([]);
+          return;
+        }
 
-      const comments = await getCommentsForProject(project.id);
-      setAvailableComments(comments);
+        // Load comments for this specific project on-demand
+        const comments = await LazyDataLoader.loadCommentsForProject(project.id);
+        setAvailableComments(comments);
+      } catch (error) {
+        console.error("Failed to load comments:", error);
+        setAvailableComments([]);
+      } finally {
+        setIsCommentLoading(false);
+      }
     };
+
     loadComments();
-  }, [projectValue, projects, getCommentsForProject]);
+  }, [projectValue, projects]);
 
   const fieldDate = useField({
     initialValue: dayjs().format("YYYY-MM-DD"),
@@ -172,6 +182,7 @@ export function AddEntryRow() {
           size="xs"
           data-testid="add-entry-input-comment"
           placeholder="Select or enter a comment"
+          loading={isCommentLoading}
         />
       </Table.Td>
       <Table.Td></Table.Td>
