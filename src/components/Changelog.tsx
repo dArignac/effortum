@@ -4,7 +4,10 @@ import type { ReactNode } from "react";
 const changelogEntries = [
   {
     version: "0.13.1",
-    description: ["Fixes layout issue in prject edit page."],
+    description: [
+      "Fixes layout issue in project edit page.",
+      "Clicking the 'Effortum' title takes the user to the 'Collect Times' page.",
+    ],
   },
   {
     version: "0.13.0",

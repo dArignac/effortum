@@ -3,7 +3,7 @@ import { ImportExportPage } from "@/pages/ImportExportPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { TimeCollectorPage } from "@/pages/TimeCollectorPage";
-import { Anchor, AppShell, Burger, Group, NavLink, Text } from "@mantine/core";
+import { Anchor, AppShell, Burger, Group, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconAlarmAverage,
@@ -39,9 +39,9 @@ function App() {
             onClick={toggleNavigation}
             size="sm"
           />
-          <Text fw={700} pt={2}>
+          <Anchor fw={700} c="dark" pt={2} onClick={() => setActiveNavIndex(0)}>
             Effortum
-          </Text>
+          </Anchor>
           <Anchor c="dimmed" pt={2} onClick={() => setActiveNavIndex(4)}>
             v{VERSION}
           </Anchor>
