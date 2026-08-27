@@ -3,6 +3,10 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.13.1",
+    description: ["Fixes layout issue in prject edit page."],
+  },
+  {
     version: "0.13.0",
     description: ["Adds editing of project names (Issue #72)."],
   },

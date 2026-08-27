@@ -123,6 +123,7 @@ export function ProjectsPage() {
               data-testid={`project-name-input-${project.id}`}
               value={currentName}
               style={{ flex: 1, minWidth: 0 }}
+              size="xs"
               onChange={(event) => {
                 const nextValue = event.currentTarget.value;
                 setEditedNames((current) => {
