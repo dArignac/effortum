@@ -5,24 +5,25 @@ const changelogEntries = [
   {
     version: "0.13.1",
     description: [
+      "Improves data loading performance (#131).",
       "Fixes layout issue in project edit page.",
       "Clicking the 'Effortum' title takes the user to the 'Collect Times' page.",
     ],
   },
   {
     version: "0.13.0",
-    description: ["Adds editing of project names (Issue #72)."],
+    description: ["Adds editing of project names (#72)."],
   },
   {
     version: "0.12.0",
     description: [
-      "Adds sum of tasks including the currently running task (Issue #117).",
+      "Adds sum of tasks including the currently running task (#117).",
     ],
   },
   {
     version: "0.11.3",
     description: [
-      "Improved database structure (Issue #49). Existing data is migrated automatically. Older backups are migrated automatically during import.",
+      "Improved database structure (#49). Existing data is migrated automatically. Older backups are migrated automatically during import.",
     ],
   },
   {
@@ -58,7 +59,7 @@ const changelogEntries = [
     version: "0.9.2",
     description: [
       "Technical: Adds db table for settings only.",
-      "This is to evaluate if we run into database migration issues (Issue #3).",
+      "This is to evaluate if we run into database migration issues (#3).",
     ],
   },
   {
@@ -86,7 +87,7 @@ const changelogEntries = [
 
 export const VERSION = changelogEntries[0].version;
 
-const issuePattern = /Issue #(\d+)/g;
+const issuePattern = /#(\d+)/g;
 
 export function renderDescription(description: string) {
   const parts: ReactNode[] = [];

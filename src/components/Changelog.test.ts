@@ -29,7 +29,7 @@ function expectIssueAnchor(node: unknown, issueId: string) {
   );
   expect(node.props.target).toBe("_blank");
   expect(node.props.rel).toBe("noreferrer noopener");
-  expect(node.props.children).toBe(`Issue #${issueId}`);
+  expect(node.props.children).toBe(`#${issueId}`);
 }
 
 describe("renderDescription", () => {
@@ -46,7 +46,7 @@ describe("renderDescription", () => {
   });
 
   it("creates a link when a single issue appears in the description", () => {
-    const result = renderDescription("Fixes migration bug (Issue #3).");
+    const result = renderDescription("Fixes migration bug (#3).");
 
     expect(Array.isArray(result)).toBe(true);
     expect(result).toHaveLength(3);
@@ -58,15 +58,15 @@ describe("renderDescription", () => {
   it("supports issue token positions at start, middle, and end", () => {
     const scenarios = [
       {
-        description: "Issue #10 introduces settings sync",
+        description: "#10 introduces settings sync",
         expected: ["issue", "text"],
       },
       {
-        description: "Tracks progress in Issue #11 today",
+        description: "Tracks progress in #11 today",
         expected: ["text", "issue", "text"],
       },
       {
-        description: "Settings migration references Issue #12",
+        description: "Settings migration references #12",
         expected: ["text", "issue"],
       },
     ] as const;
@@ -82,7 +82,7 @@ describe("renderDescription", () => {
   });
 
   it("creates links for multiple issue references in one sentence", () => {
-    const result = renderDescription("Issue #1 and Issue #2 were addressed");
+    const result = renderDescription("#1 and #2 were addressed");
 
     expect(Array.isArray(result)).toBe(true);
     expect(result).toHaveLength(4);
@@ -93,7 +93,7 @@ describe("renderDescription", () => {
   });
 
   it("handles consecutive issue tokens without dropping any link", () => {
-    const result = renderDescription("Issue #1Issue #2");
+    const result = renderDescription("#1#2");
 
     expect(Array.isArray(result)).toBe(true);
     expect(result).toHaveLength(2);
@@ -101,21 +101,9 @@ describe("renderDescription", () => {
     expectIssueAnchor(result[1], "2");
   });
 
-  it("keeps malformed and case-mismatched issue text unchanged", () => {
-    expect(renderDescription("issue #5 should not link")).toEqual([
-      "issue #5 should not link",
-    ]);
-    expect(renderDescription("Issue#5 should not link")).toEqual([
-      "Issue#5 should not link",
-    ]);
-    expect(renderDescription("Issue  #5 should not link")).toEqual([
-      "Issue  #5 should not link",
-    ]);
-  });
-
   it("preserves surrounding unicode text while linking issue tokens", () => {
     const result = renderDescription(
-      "Fix für Überstunden in Issue #8 heute",
+      "Fix für Überstunden in #8 heute",
     ) as unknown[];
 
     expect(Array.isArray(result)).toBe(true);
@@ -130,7 +118,7 @@ describe("renderDescriptionLines", () => {
   it("renders each description line as a bullet list item", () => {
     const result = renderDescriptionLines([
       "Technical: Adds db table for settings only.",
-      "This is to evaluate migration issues (Issue #3).",
+      "This is to evaluate migration issues (#3).",
     ]);
 
     expect(isValidElement<{ children: unknown[] }>(result)).toBe(true);

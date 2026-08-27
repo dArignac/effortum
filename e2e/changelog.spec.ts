@@ -73,7 +73,7 @@ test.describe("Changelog", () => {
     const issueRow = page.locator("tbody tr", {
       has: page.locator("td", { hasText: "0.9.2" }),
     });
-    const issueLink = issueRow.getByRole("link", { name: "Issue #3" });
+    const issueLink = issueRow.getByRole("link", { name: "#3" });
 
     await expect(issueLink).toBeVisible();
     await expect(issueLink).toHaveAttribute(
