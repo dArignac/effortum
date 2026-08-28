@@ -50,7 +50,7 @@ export function OvertimeForm() {
         })}
       >
         <Alert
-          variant="filled"
+          variant="outline"
           color="yellow"
           title="Important Note"
           icon={<IconInfoCircle />}
