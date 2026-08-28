@@ -2,6 +2,7 @@ import { Changelog, VERSION } from "@/components/Changelog";
 import { ImportExportPage } from "@/pages/ImportExportPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { TasksPage } from "@/pages/TasksPage";
 import { TimeCollectorPage } from "@/pages/TimeCollectorPage";
 import { Anchor, AppShell, Burger, Group, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -11,6 +12,7 @@ import {
   IconConfetti,
   IconDatabaseExport,
   IconFolders,
+  IconList,
 } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -42,7 +44,7 @@ function App() {
           <Anchor fw={700} c="dark" pt={2} onClick={() => setActiveNavIndex(0)}>
             Effortum
           </Anchor>
-          <Anchor c="dimmed" pt={2} onClick={() => setActiveNavIndex(4)}>
+          <Anchor c="dimmed" pt={2} onClick={() => setActiveNavIndex(5)}>
             v{VERSION}
           </Anchor>
         </Group>
@@ -77,9 +79,16 @@ function App() {
           leftSection={<IconFolders size={20} stroke={1.5} />}
         />
         <NavLink
-          data-testid="nav-changelog"
+          data-testid="nav-tasks"
           active={activeNavIndex === 4}
           onClick={() => setActiveNavIndex(4)}
+          label="Tasks"
+          leftSection={<IconList size={20} stroke={1.5} />}
+        />
+        <NavLink
+          data-testid="nav-changelog"
+          active={activeNavIndex === 5}
+          onClick={() => setActiveNavIndex(5)}
           label="Changelog"
           leftSection={<IconConfetti size={20} stroke={1.5} />}
         />
@@ -89,7 +98,8 @@ function App() {
         {activeNavIndex === 1 && <ImportExportPage />}
         {activeNavIndex === 2 && <SettingsPage />}
         {activeNavIndex === 3 && <ProjectsPage />}
-        {activeNavIndex === 4 && <Changelog />}
+        {activeNavIndex === 4 && <TasksPage />}
+        {activeNavIndex === 5 && <Changelog />}
       </AppShell.Main>
     </AppShell>
   );
