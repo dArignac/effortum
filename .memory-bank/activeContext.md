@@ -8,10 +8,10 @@ Current phase: Setup
 Project setup and documentation initialization for Effortum time tracking application.
 
 ## Active Spec
-- Spec: TBD
-- Plan: TBD
-- Current task: Documentation setup
-- Acceptance criteria in focus: Project brief, tech context, system patterns defined
+- Spec: [0001-task-name-editing.md](../.specs/active/0001-task-name-editing.md)
+- Plan: [0001-task-name-editing.plan.md](../.specs/active/0001-task-name-editing.plan.md)
+- Current task: Task name editing feature implementation
+- Acceptance criteria in focus: Inline editing of task names, project filtering, save functionality
 
 ## Changed Recently
 - Project brief updated
@@ -26,8 +26,9 @@ Project setup and documentation initialization for Effortum time tracking applic
 - None
 
 ## Next
-1. Continue with specification and planning for the time tracking features
-2. Begin implementation of core functionality
+1. Implement task name editing feature following the plan
+2. Test the implementation against all acceptance criteria
+3. Document any changes to the system patterns or architecture
 
 ## Validation
 - Done: Project documentation established
