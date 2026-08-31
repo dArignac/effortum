@@ -24,7 +24,7 @@ globs mirror the rules' `paths:` globs. On divergence this file wins.
 ## Repository Settings (managed by /sdd-setup and /sdd-featherspec-update)
 
 ```yaml
-DocLanguage: English # template default until /sdd-setup asks; governs docs and dialogue, wiring stays English.
+DocLanguage: English # set by /sdd-setup wizard
 FeatherSpecVersion: 1.6.0 # managed by /sdd-featherspec-update; do not edit by hand
 ```
 
@@ -88,15 +88,26 @@ run the `/sdd-architecture-update` workflow yourself, in the same change set, ex
 the user had typed it (its body lives in `.claude/commands/sdd-architecture-update.md`).
 
 ```yaml
-# last reconciled: never · last deep scan: never
+# last reconciled: 2026-08-31 · last deep scan: 2026-08-31
 architecture:
-  style: 'TBD'
+  style: 'modular monolith'
   entrypoints:
-    - 'TBD'
-  modules: []
-  shared: []
+    - 'src/app.tsx'
+    - 'src/main.tsx'
+  modules:
+    - 'src/components'
+    - 'src/lib'
+    - 'src/routes'
+    - 'src/services'
+    - 'src/types'
+  shared:
+    - 'src/utils'
+    - 'src/hooks'
   boundaries:
-    - 'TBD'
+    - 'src/components'
+    - 'src/lib'
+    - 'src/routes'
+    - 'src/services'
 ```
 
 ## Memory Bank (SDD Working Set)
@@ -199,3 +210,25 @@ Flow — the only source of the recommended order; commands render it from here:
 `/sdd-architecture-update` runs unprompted whenever structure drifts; type it only as fallback.
 The backlog → active move also rides on an explicit start signal (see `/sdd-plan`).
 Brownfield: run `/sdd-architecture-scan` before the first spec.
+
+## Style & Output Preferences (MUST MAINTAIN)
+
+### Rule: Preference capture (high priority)
+
+When the user, in any language, states a coding style or output preference, asks for a
+rewrite ("more idiomatic"), or asks to remember a lasting do or don't ("no comments from
+now on"): acknowledge briefly, **immediately** record it as a bullet below — replacing any
+bullet it contradicts, and saying so — and follow it strictly from then on. Bullets here
+load in every session; that is what makes them binding. This section is never finished.
+
+### Current preferences
+
+- **Comments**: Do not add comments in generated code unless explicitly requested.
+- **Formatting**: Follow the project's formatter / linter configuration when present.
+- **Quality gate (code)**: Run the Definition-of-Green commands from `techContext.md` after
+  every completed implementation step and loop until zero warnings and errors, **scoped
+  explicitly: it binds implementation steps only, never specify/clarify/plan work or
+  doc-only edits**
+- **TDD**: Red-first via `Not implemented` stubs for new behaviour; stop after every new or changed
+  test for the user's confirmation before implementing; immediately-green tests against
+  existing code allowed, with a negative control where it is cheap.

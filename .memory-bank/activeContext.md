@@ -1,31 +1,35 @@
 # Active Context
 
-Last updated: TBD
-Current branch: TBD
-Current phase: TBD
+Last updated: 2026-08-31
+Current branch: main
+Current phase: Setup
 
 ## Now
-TBD
+Project setup and documentation initialization for Effortum time tracking application.
 
 ## Active Spec
 - Spec: TBD
 - Plan: TBD
-- Current task: TBD
-- Acceptance criteria in focus: TBD
+- Current task: Documentation setup
+- Acceptance criteria in focus: Project brief, tech context, system patterns defined
 
 ## Changed Recently
-- TBD
+- Project brief updated
+- Tech context documented
+- System patterns initialized
+- Architecture snapshot updated from scan
 
 ## Decisions in Flight
-- TBD
+- None
 
 ## Blockers / Questions
-- TBD
+- None
 
 ## Next
-1. TBD
+1. Continue with specification and planning for the time tracking features
+2. Begin implementation of core functionality
 
 ## Validation
-- Done: TBD
-- Pending: TBD
-- Known issues: TBD
+- Done: Project documentation established
+- Pending: Implementation of core features
+- Known issues: None
