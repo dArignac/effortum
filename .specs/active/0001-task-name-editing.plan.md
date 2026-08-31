@@ -29,10 +29,10 @@ The plan follows the TanStack Start architecture patterns, uses Mantine UI compo
 
 ### T-001 — Create enhanced TasksPage with project selection
 
-- [ ] **Covers:** AC-001, AC-002
+- [x] **Covers:** AC-001, AC-002
 - **Do:** Modify `src/pages/TasksPage.tsx` to add a project selection dropdown and implement logic to filter tasks by selected project. This will involve using the existing projects from the store.
 - **Verify:** Run `npm run test` to ensure no regressions in existing functionality, then manually verify that project selection works
-- **Verified:** 
+- **Verified:** Implementation complete - TasksPage now includes project selection dropdown and displays filtered tasks
 - **Notes:** 
 
 ### T-002 — Create dedicated task management UI component
@@ -71,7 +71,7 @@ The plan follows the TanStack Start architecture patterns, uses Mantine UI compo
 
 | Acceptance criterion | Steps | Code / files | Test | State |
 | --- | --- | --- | --- | --- |
-| AC-001 | T-001 | `src/pages/TasksPage.tsx` | New test for project selection functionality | open |
+| AC-001 | T-001 | `src/pages/TasksPage.tsx` | New test for project selection functionality | done |
 | AC-002 | T-001, T-002 | `src/pages/TasksPage.tsx`, new component | New test for task display and filtering | open |
 | AC-003 | T-002, T-003 | New component, `src/pages/TasksPage.tsx` | New test for save button functionality | open |
 | AC-004 | T-003, T-005 | New component, validation logic | New test for duplicate name validation | open |
