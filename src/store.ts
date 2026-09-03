@@ -171,7 +171,7 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
       projects: initialData.projects,
       overtime: initialData.overtime,
       settings: initialData.settings,
-      isDataLoading: false
+      isDataLoading: false,
     });
   },
 
@@ -207,7 +207,7 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
       id: task.id,
       date: task.date,
       timeStart: task.timeStart,
-      timeEnd: task.timeEnd,
+      timeEnd: task.timeEnd ?? "", // Ensure timeEnd is properly handled - if it's undefined or null, make it an empty string
       projectId: projectInstance.id,
       project: projectInstance.name,
       comment: task.comment,

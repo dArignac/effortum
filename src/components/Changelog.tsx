@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.13.2",
+    description: [
+      "Fixes issue with passing end time as start time for new entry.",
+    ],
+  },
+  {
     version: "0.13.1",
     description: [
       "Improves data loading performance (#131).",
