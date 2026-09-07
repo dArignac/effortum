@@ -3,6 +3,10 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.14.0",
+    description: ["Shows sum of project hours in project page."],
+  },
+  {
     version: "0.13.2",
     description: [
       "Fixes issue with passing end time as start time for new entry.",
