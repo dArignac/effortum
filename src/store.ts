@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { EffortumDB } from "./db";
@@ -49,6 +50,8 @@ interface EffortumStore {
   ) => Promise<void>;
 
   updateSettings: (roundToNearest5Minutes: boolean) => Promise<void>;
+
+  getProjectBookedTimeHours: (projectId: string) => Promise<number>;
 }
 
 interface StoreSet {
@@ -71,6 +74,27 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   selectedDateRange: [null, null] as [string | null, string | null],
   endTimeOfLastStoppedTask: null,
   isDataLoading: false,
+
+  /**
+   * Calculates the total booked time in hours for a project.
+   * @param projectId - The ID of the project
+   * @returns Total hours (as a number) worked on this project
+   */
+  getProjectBookedTimeHours: async (projectId: string) => {
+    const tasks = await db.tasks.toArray();
+
+    const totalSeconds = tasks
+      .filter((task) => task.projectId === projectId && task.timeEnd)
+      .reduce((sum, task) => {
+        const startTime = dayjs(`${task.date}T${task.timeStart}`);
+        const endTime = dayjs(`${task.date}T${task.timeEnd}`);
+        const diffInSeconds = endTime.diff(startTime, "second");
+
+        return diffInSeconds > 0 ? sum + diffInSeconds : sum;
+      }, 0);
+
+    return totalSeconds / 3600;
+  },
 
   backfillProjectRelationsIfMissing: async () => {
     // This is called by loadFromIndexedDb only when there are tasks without project IDs

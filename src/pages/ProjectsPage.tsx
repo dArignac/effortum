@@ -1,5 +1,6 @@
+import { ProjectHoursSum } from "@/components/ProjectHoursSum";
 import { useEffortumStore } from "@/store";
-import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
+import { Box, Button, Group, Stack, Text, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -116,13 +117,13 @@ export function ProjectsPage() {
             w="100%"
             data-testid={`project-row-${project.id}`}
           >
-            <Text w={24} ta="right">
+            <Text w={24} ta="right" flex="0 0 24px">
               {index + 1}.
             </Text>
             <TextInput
               data-testid={`project-name-input-${project.id}`}
               value={currentName}
-              style={{ flex: 1, minWidth: 0 }}
+              style={{ flex: "1 1 0", minWidth: 0 }}
               size="xs"
               onChange={(event) => {
                 const nextValue = event.currentTarget.value;
@@ -139,10 +140,19 @@ export function ProjectsPage() {
               }}
               aria-label={`Project ${index + 1}`}
             />
+            <Box
+              w="clamp(7rem, 18vw, 10rem)"
+              miw="7rem"
+              ta="right"
+              style={{ flex: "0 0 auto", whiteSpace: "nowrap" }}
+            >
+              <ProjectHoursSum projectId={project.id} />
+            </Box>
             <Button
               data-testid={`button-save-project-${project.id}`}
               disabled={isSaveDisabled}
               loading={savingProjectId === project.id}
+              style={{ flex: "0 0 auto" }}
               onClick={() => saveProjectName(project.id, project.name)}
             >
               Save
