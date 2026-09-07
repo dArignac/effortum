@@ -36,6 +36,12 @@ interface EffortumStore {
   updateTask: (id: string, updates: TaskUpdateInput) => Promise<void>;
 
   getCommentsForProject: (projectId: string) => string[];
+  getUniqueTaskCommentsForProject: (projectId: string) => Promise<string[]>;
+  renameTaskCommentForProject: (
+    projectId: string,
+    oldComment: string,
+    newComment: string,
+  ) => Promise<void>;
 
   addProject: (project: Project) => Promise<void>;
   updateProjectName: (id: string, name: string) => Promise<void>;
@@ -357,6 +363,70 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
     return Array.from(new Set(comments)).sort((a, b) =>
       a.localeCompare(b, undefined, { sensitivity: "base" }),
     );
+  },
+
+  /**
+   * Returns distinct, non-empty comments for all tasks of a project from IndexedDB.
+   */
+  getUniqueTaskCommentsForProject: async (projectId: string) => {
+    const tasks = await db.tasks.where("projectId").equals(projectId).toArray();
+
+    const comments = tasks
+      .map((task) => (task.comment ?? "").trim())
+      .filter((comment) => comment.length > 0);
+
+    return Array.from(new Set(comments)).sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" }),
+    );
+  },
+
+  /**
+   * Renames a project-scoped task comment and updates all matching tasks.
+   */
+  renameTaskCommentForProject: async (
+    projectId: string,
+    oldComment: string,
+    newComment: string,
+  ) => {
+    const normalizedOldComment = oldComment.trim();
+    const normalizedNewComment = newComment.trim();
+
+    if (!normalizedNewComment) {
+      throw new Error("COMMENT_REQUIRED");
+    }
+
+    if (normalizedOldComment === normalizedNewComment) {
+      return;
+    }
+
+    const tasksForProject = await db.tasks
+      .where("projectId")
+      .equals(projectId)
+      .toArray();
+
+    const hasConflict = tasksForProject.some((task) => {
+      const comment = (task.comment ?? "").trim();
+      return (
+        comment === normalizedNewComment && comment !== normalizedOldComment
+      );
+    });
+
+    if (hasConflict) {
+      throw new Error("COMMENT_ALREADY_EXISTS");
+    }
+
+    await db.transaction("rw", db.tasks, async () => {
+      const tasksToRename = tasksForProject.filter(
+        (task) => (task.comment ?? "").trim() === normalizedOldComment,
+      );
+
+      for (const task of tasksToRename) {
+        await db.tasks.update(task.id, { comment: normalizedNewComment });
+      }
+    });
+
+    const tasks = await db.tasks.toArray();
+    set({ tasks });
   },
 
   setSelectedDateRange: (range: [string | null, string | null]) => {

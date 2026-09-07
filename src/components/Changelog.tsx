@@ -3,6 +3,10 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.15.0",
+    description: ["Adds editing of task comments (#73)."],
+  },
+  {
     version: "0.14.0",
     description: ["Shows sum of project hours in project page."],
   },
