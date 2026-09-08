@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 type CommentRow = {
   original: string;
   current: string;
+  taskCount: number;
 };
 
 export function TasksPage() {
@@ -15,6 +16,9 @@ export function TasksPage() {
   );
   const getUniqueTaskCommentsForProject = useEffortumStore(
     (state) => state.getUniqueTaskCommentsForProject,
+  );
+  const getTaskCommentCountsForProject = useEffortumStore(
+    (state) => state.getTaskCommentCountsForProject,
   );
   const renameTaskCommentForProject = useEffortumStore(
     (state) => state.renameTaskCommentForProject,
@@ -53,9 +57,15 @@ export function TasksPage() {
       try {
         const comments =
           await getUniqueTaskCommentsForProject(selectedProjectId);
-        console.log(comments);
+        const commentCounts =
+          await getTaskCommentCountsForProject(selectedProjectId);
+
         setCommentRows(
-          comments.map((comment) => ({ original: comment, current: comment })),
+          comments.map((comment) => ({
+            original: comment,
+            current: comment,
+            taskCount: commentCounts[comment] ?? 0,
+          })),
         );
       } catch {
         notifications.show({
@@ -68,7 +78,11 @@ export function TasksPage() {
     };
 
     void loadComments();
-  }, [selectedProjectId, getUniqueTaskCommentsForProject]);
+  }, [
+    selectedProjectId,
+    getTaskCommentCountsForProject,
+    getUniqueTaskCommentsForProject,
+  ]);
 
   const saveComment = async (index: number) => {
     if (!selectedProjectId || isSavingRef.current) {
@@ -107,7 +121,11 @@ export function TasksPage() {
       setCommentRows((current) =>
         current.map((entry, entryIndex) =>
           entryIndex === index
-            ? { original: nextValue, current: nextValue }
+            ? {
+                original: nextValue,
+                current: nextValue,
+                taskCount: entry.taskCount,
+              }
             : entry,
         ),
       );
@@ -163,6 +181,12 @@ export function TasksPage() {
         </Text>
       )}
 
+      {selectedProjectId && (
+        <Text fw={700} data-testid="tasks-list-label">
+          Tasks
+        </Text>
+      )}
+
       {selectedProjectId &&
         commentRows.map((row, index) => {
           const hasChanges = row.current.trim() !== row.original;
@@ -194,8 +218,22 @@ export function TasksPage() {
                 }}
                 aria-label={`Task comment ${index + 1}`}
               />
+              <Text
+                c="dimmed"
+                size="sm"
+                w={100}
+                ta="right"
+                style={{
+                  whiteSpace: "nowrap",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+                data-testid={`task-comment-count-${index}`}
+              >
+                {row.taskCount === 1 ? "1 task" : `${row.taskCount} tasks`}
+              </Text>
               <Button
                 data-testid={`button-save-task-comment-${index}`}
+                miw={84}
                 disabled={isDisabled}
                 loading={savingIndex === index}
                 onClick={() => saveComment(index)}

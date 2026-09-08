@@ -4,8 +4,8 @@ import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { useEffortumStore } from "../store";
 import { LazyDataLoader } from "../services/lazyDataLoader";
+import { useEffortumStore } from "../store";
 import { roundTimeToNearest5Minutes } from "../utils/time";
 import {
   validateDate,
@@ -57,7 +57,9 @@ export function AddEntryRow() {
         }
 
         // Load comments for this specific project on-demand
-        const comments = await LazyDataLoader.loadCommentsForProject(project.id);
+        const comments = await LazyDataLoader.loadCommentsForProject(
+          project.id,
+        );
         setAvailableComments(comments);
       } catch (error) {
         console.error("Failed to load comments:", error);

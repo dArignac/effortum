@@ -37,6 +37,9 @@ interface EffortumStore {
 
   getCommentsForProject: (projectId: string) => string[];
   getUniqueTaskCommentsForProject: (projectId: string) => Promise<string[]>;
+  getTaskCommentCountsForProject: (
+    projectId: string,
+  ) => Promise<Record<string, number>>;
   renameTaskCommentForProject: (
     projectId: string,
     oldComment: string,
@@ -378,6 +381,23 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
     return Array.from(new Set(comments)).sort((a, b) =>
       a.localeCompare(b, undefined, { sensitivity: "base" }),
     );
+  },
+
+  /**
+   * Returns the number of tasks per distinct, non-empty comment for one project.
+   */
+  getTaskCommentCountsForProject: async (projectId: string) => {
+    const tasks = await db.tasks.where("projectId").equals(projectId).toArray();
+
+    return tasks.reduce<Record<string, number>>((counts, task) => {
+      const comment = (task.comment ?? "").trim();
+      if (!comment) {
+        return counts;
+      }
+
+      counts[comment] = (counts[comment] ?? 0) + 1;
+      return counts;
+    }, {});
   },
 
   /**

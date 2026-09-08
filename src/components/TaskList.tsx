@@ -5,8 +5,8 @@ import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
 import { AddEntryRow } from "./AddEntry";
-import { TaskListRow } from "./TaskListRow";
 import { LoadingIndicator } from "./LoadingIndicator";
+import { TaskListRow } from "./TaskListRow";
 
 function compareTasksByTimeStart(a: Task, b: Task) {
   const dateTimeA = dayjs(`${a.date} ${a.timeStart}`, "YYYY-MM-DD HH:mm");
