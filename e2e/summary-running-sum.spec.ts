@@ -14,12 +14,16 @@ test.describe("Summary sum including running task", () => {
 
     await page.getByTestId("add-entry-input-start-time").fill("09:00");
     await page.getByTestId("add-entry-input-end-time").fill("10:00");
-    await page.getByTestId("add-entry-input-project").fill("Running Sum Project");
+    await page
+      .getByTestId("add-entry-input-project")
+      .fill("Running Sum Project");
     await page.getByTestId("button-add-task").click();
 
     await page.getByTestId("add-entry-input-start-time").fill("00:00");
     await page.getByTestId("add-entry-input-end-time").fill("");
-    await page.getByTestId("add-entry-input-project").fill("Running Sum Project");
+    await page
+      .getByTestId("add-entry-input-project")
+      .fill("Running Sum Project");
 
     const beforeAdd = new Date();
     await page.getByTestId("button-add-task").click();
@@ -31,11 +35,15 @@ test.describe("Summary sum including running task", () => {
       page.getByTestId("summary-sum-including-running-row"),
     ).toBeVisible();
 
-    const expectedBefore = formatDuration(getMinutesSinceMidnight(beforeAdd) + 60);
-    const expectedAfter = formatDuration(getMinutesSinceMidnight(afterAdd) + 60);
-    await expect(page.getByTestId("summary-sum-including-running-value")).toHaveText(
-      new RegExp(`^(${expectedBefore}|${expectedAfter})$`),
+    const expectedBefore = formatDuration(
+      getMinutesSinceMidnight(beforeAdd) + 60,
     );
+    const expectedAfter = formatDuration(
+      getMinutesSinceMidnight(afterAdd) + 60,
+    );
+    await expect(
+      page.getByTestId("summary-sum-including-running-value"),
+    ).toHaveText(new RegExp(`^(${expectedBefore}|${expectedAfter})$`));
   });
 
   test("does not show the additional sum line when running task date is outside selected date", async ({

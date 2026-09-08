@@ -23,7 +23,9 @@ test.describe("General Settings", () => {
     await expect(roundToNearest5MinutesSwitch).toBeChecked();
     await submitButton.click();
 
-    await page.waitForTimeout(500);
+    await expect(
+      page.getByText("Settings updated successfully!"),
+    ).toBeVisible();
     await page.reload();
 
     await expect(page.getByTestId("task-list-table")).toBeVisible();

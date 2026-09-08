@@ -67,12 +67,85 @@ test.describe("Tasks Page", () => {
     await navigateToTasks(page);
     await selectProjectOnTasksPage(page, projectName);
 
+    await expect(page.getByTestId("tasks-list-label")).toHaveText("Tasks");
+
     const commentRows = page.locator('[data-testid^="task-comment-row-"]');
     await expect(commentRows).toHaveCount(2);
 
     const commentInputs = page.locator('[data-testid^="task-comment-input-"]');
     await expect(commentInputs.nth(0)).toHaveValue("meeting");
     await expect(commentInputs.nth(1)).toHaveValue("review");
+
+    const taskCounts = page.locator('[data-testid^="task-comment-count-"]');
+    await expect(taskCounts).toHaveCount(2);
+    await expect(taskCounts.nth(0)).toHaveText("2 tasks");
+    await expect(taskCounts.nth(1)).toHaveText("1 task");
+  });
+
+  test("should place task count between comment input and save button for each row", async ({
+    page,
+  }) => {
+    const projectName = "Tasks Project D";
+
+    await addTask(page, projectName, "analysis", "09:00", "10:00");
+    await addTask(page, projectName, "analysis", "10:15", "11:00");
+
+    await navigateToTasks(page);
+    await selectProjectOnTasksPage(page, projectName);
+
+    const row = page.getByTestId("task-comment-row-0");
+    const input = row.getByTestId("task-comment-input-0");
+    const count = row.getByTestId("task-comment-count-0");
+    const saveButton = row.getByTestId("button-save-task-comment-0");
+
+    await expect(input).toBeVisible();
+    await expect(count).toHaveText("2 tasks");
+    await expect(saveButton).toBeVisible();
+
+    const inputBox = await input.boundingBox();
+    const countBox = await count.boundingBox();
+    const saveButtonBox = await saveButton.boundingBox();
+
+    expect(inputBox).not.toBeNull();
+    expect(countBox).not.toBeNull();
+    expect(saveButtonBox).not.toBeNull();
+    expect(inputBox?.x ?? 0).toBeLessThan(countBox?.x ?? 0);
+    expect(countBox?.x ?? 0).toBeLessThan(saveButtonBox?.x ?? 0);
+  });
+
+  test("should keep comment input widths equal across rows with different task counts", async ({
+    page,
+  }) => {
+    const projectName = "Tasks Project E";
+
+    for (let i = 0; i < 12; i++) {
+      const startHour = 8 + i;
+      await addTask(
+        page,
+        projectName,
+        "bulk",
+        `${startHour.toString().padStart(2, "0")}:00`,
+        `${startHour.toString().padStart(2, "0")}:30`,
+      );
+    }
+    await addTask(page, projectName, "single", "21:00", "21:30");
+
+    await navigateToTasks(page);
+    await selectProjectOnTasksPage(page, projectName);
+
+    const firstInput = page.getByTestId("task-comment-input-0");
+    const secondInput = page.getByTestId("task-comment-input-1");
+    await expect(firstInput).toBeVisible();
+    await expect(secondInput).toBeVisible();
+
+    const firstWidth = (await firstInput.boundingBox())?.width;
+    const secondWidth = (await secondInput.boundingBox())?.width;
+
+    expect(firstWidth).toBeDefined();
+    expect(secondWidth).toBeDefined();
+    expect(
+      Math.abs((firstWidth ?? 0) - (secondWidth ?? 0)),
+    ).toBeLessThanOrEqual(1);
   });
 
   test("should allow editing task comments and save successfully", async ({

@@ -1,21 +1,21 @@
-import { expect, test } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import fs from "fs";
 import path from "path";
+
+async function navigateToImportExport(page: Page) {
+  await page.getByTestId("navigation-burger").click();
+  const importExportNav = page.getByTestId("nav-import-export");
+  await expect(importExportNav).toBeVisible();
+  await importExportNav.click();
+  await expect(page.getByTestId("button-import-data")).toBeVisible();
+}
 
 test.describe("Data Import Functionality", () => {
   test("should display modal when file is selected", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
-    // Open the navigation by clicking the burger menu
-    const burgerMenu = page.getByTestId("navigation-burger");
-    await burgerMenu.click();
-    await expect(page.getByTestId("nav-import-export")).toBeVisible();
-
-    // Navigate to Import/Export section
-    const importExportNav = page.getByTestId("nav-import-export");
-    await importExportNav.click();
-    await expect(page.getByTestId("button-import-data")).toBeVisible();
+    await navigateToImportExport(page);
 
     const validDexieExport = JSON.stringify({
       formatName: "dexie",
@@ -58,15 +58,7 @@ test.describe("Data Import Functionality", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
-    // Open the navigation by clicking the burger menu
-    const burgerMenu = page.getByTestId("navigation-burger");
-    await burgerMenu.click();
-    await page.waitForTimeout(200);
-
-    // Navigate to Import/Export section
-    const importExportNav = page.getByTestId("nav-import-export");
-    await importExportNav.click();
-    await page.waitForTimeout(200);
+    await navigateToImportExport(page);
 
     const validDexieExport = JSON.stringify({
       formatName: "dexie",
@@ -152,15 +144,7 @@ test.describe("Data Import Functionality", () => {
     await page.getByTestId("button-add-task").click();
     await expect(addButton).toBeVisible({ timeout: 5000 });
 
-    // Open the navigation by clicking the burger menu
-    const burgerMenu = page.getByTestId("navigation-burger");
-    await burgerMenu.click();
-    await page.waitForTimeout(200);
-
-    // Navigate to Import/Export section to export the data
-    const importExportNav = page.getByTestId("nav-import-export");
-    await importExportNav.click();
-    await page.waitForTimeout(200);
+    await navigateToImportExport(page);
 
     // Export the data to get valid format
     const downloadPromise = page.waitForEvent("download");
@@ -211,8 +195,6 @@ test.describe("Data Import Functionality", () => {
     expect(tasksTable.rowCount).toBe(2);
 
     // Verify the imported data is actually displayed in the UI
-    // Wait a bit for the store to reload from IndexedDB
-    await page.waitForTimeout(500);
 
     const tableBody = page.locator("tbody");
 
@@ -249,15 +231,7 @@ test.describe("Data Import Functionality", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
-    // Open the navigation by clicking the burger menu
-    const burgerMenu = page.getByTestId("navigation-burger");
-    await burgerMenu.click();
-    await page.waitForTimeout(200);
-
-    // Navigate to Import/Export section
-    const importExportNav = page.getByTestId("nav-import-export");
-    await importExportNav.click();
-    await page.waitForTimeout(200);
+    await navigateToImportExport(page);
 
     const invalidJSON = "{ this is not valid JSON }";
 
@@ -296,15 +270,7 @@ test.describe("Data Import Functionality", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
-    // Open the navigation by clicking the burger menu
-    const burgerMenu = page.getByTestId("navigation-burger");
-    await burgerMenu.click();
-    await page.waitForTimeout(200);
-
-    // Navigate to Import/Export section
-    const importExportNav = page.getByTestId("nav-import-export");
-    await importExportNav.click();
-    await page.waitForTimeout(200);
+    await navigateToImportExport(page);
 
     const nonDexieJSON = JSON.stringify({
       formatName: "other",
@@ -348,13 +314,7 @@ test.describe("Data Import Functionality", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
-    const burgerMenu = page.getByTestId("navigation-burger");
-    await burgerMenu.click();
-    await page.waitForTimeout(200);
-
-    const importExportNav = page.getByTestId("nav-import-export");
-    await importExportNav.click();
-    await page.waitForTimeout(200);
+    await navigateToImportExport(page);
 
     const fixturePath = path.resolve(
       process.cwd(),
@@ -405,7 +365,10 @@ test.describe("Data Import Functionality", () => {
 
         openRequest.onsuccess = () => {
           const database = openRequest.result;
-          const transaction = database.transaction(["tasks", "projects"], "readonly");
+          const transaction = database.transaction(
+            ["tasks", "projects"],
+            "readonly",
+          );
 
           const tasksRequest = transaction.objectStore("tasks").getAll();
           const projectsRequest = transaction.objectStore("projects").getAll();

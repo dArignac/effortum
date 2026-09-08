@@ -40,8 +40,9 @@ test.describe("Overtime Settings", () => {
     // Submit the form
     await submitButton.click();
 
-    // Wait a bit for IndexedDB to persist the data
-    await page.waitForTimeout(500);
+    await expect(
+      page.getByText("Overtime settings updated successfully!"),
+    ).toBeVisible();
 
     // Reload the page to verify persistence
     await page.reload();
@@ -103,8 +104,9 @@ test.describe("Overtime Settings", () => {
     await workingHoursInput.clear();
     await workingHoursInput.fill("8");
     await submitButton.click();
-
-    await page.waitForTimeout(500);
+    await expect(
+      page.getByText("Overtime settings updated successfully!"),
+    ).toBeVisible();
 
     // Update with new values
     await currentBalanceInput.clear();
@@ -113,7 +115,9 @@ test.describe("Overtime Settings", () => {
     await workingHoursInput.fill("6");
     await submitButton.click();
 
-    await page.waitForTimeout(500);
+    await expect(
+      page.getByText("Overtime settings updated successfully!"),
+    ).toHaveCount(2);
 
     // Reload to verify the updated values persisted
     await page.reload();
@@ -184,8 +188,6 @@ test.describe("Overtime Settings", () => {
     await workingHoursInput.clear();
     await workingHoursInput.fill("8");
     await submitButton.click();
-
-    await page.waitForTimeout(300);
 
     // Should not have validation error
     await expect(workingHoursInput).not.toHaveAttribute("aria-invalid", "true");
