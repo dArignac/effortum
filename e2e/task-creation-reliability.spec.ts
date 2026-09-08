@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Task Creation Reliability", () => {
-  test("should create tasks with proper time handling when saving entries", async ({ page }) => {
+  test("should create tasks with proper time handling when saving entries", async ({
+    page,
+  }) => {
     await page.goto("/");
 
     // Wait for the page to load
@@ -49,7 +51,9 @@ test.describe("Task Creation Reliability", () => {
     expect(endTimeValue).toBe("");
   });
 
-  test("should properly handle task creation with explicit end time", async ({ page }) => {
+  test("should properly handle task creation with explicit end time", async ({
+    page,
+  }) => {
     await page.goto("/");
 
     // Wait for the page to load

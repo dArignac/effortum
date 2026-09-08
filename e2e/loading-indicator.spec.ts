@@ -9,7 +9,9 @@ test.describe("Loading Indicator", () => {
     await page.waitForSelector('[data-testid="task-list-table"]');
   });
 
-  test("should show loading indicator when changing date range", async ({ page }) => {
+  test("should show loading indicator when changing date range", async ({
+    page,
+  }) => {
     // Click on the date picker
     await page.getByTestId("summary-date-picker").click();
 
@@ -18,8 +20,8 @@ test.describe("Loading Indicator", () => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const todayStr = today.toISOString().split('T')[0];
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const todayStr = today.toISOString().split("T")[0];
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
     // Click on today's date
     await page.getByTestId(`summary-date-day-${todayStr}`).click();
@@ -32,7 +34,9 @@ test.describe("Loading Indicator", () => {
     await page.waitForSelector('[data-testid="task-list-table"]');
 
     // The important thing is that the UI doesn't crash and data loads correctly
-    const taskListExists = await page.isVisible('[data-testid="task-list-table"]');
+    const taskListExists = await page.isVisible(
+      '[data-testid="task-list-table"]',
+    );
     expect(taskListExists).toBe(true);
   });
 });

@@ -42,7 +42,7 @@ test.describe("Clipboard Copy Functionality", () => {
     await page.getByTestId("button-add-task").click();
 
     // Wait for summary to update
-    await page.waitForTimeout(500);
+    await expect(page.getByTestId("summary-sum-value")).toHaveText("02:00");
 
     // Click the clipboard button for ProjectA
     const clipboardButton = page.getByTestId("button-copy-comments-ProjectA");
@@ -87,7 +87,7 @@ test.describe("Clipboard Copy Functionality", () => {
     await page.getByTestId("button-add-task").click();
 
     // Wait for summary to update
-    await page.waitForTimeout(500);
+    await expect(page.getByTestId("summary-sum-value")).toHaveText("03:00");
 
     // Click the clipboard button for ProjectB
     const clipboardButton = page.getByTestId("button-copy-comments-ProjectB");
@@ -120,7 +120,7 @@ test.describe("Clipboard Copy Functionality", () => {
     await page.getByTestId("button-add-task").click();
 
     // Wait for summary to update
-    await page.waitForTimeout(500);
+    await expect(page.getByTestId("summary-sum-value")).toHaveText("02:00");
 
     // Click the clipboard button for ProjectC
     const clipboardButton = page.getByTestId("button-copy-comments-ProjectC");
@@ -165,7 +165,7 @@ test.describe("Clipboard Copy Functionality", () => {
     await page.getByTestId("button-add-task").click();
 
     // Wait for summary to update
-    await page.waitForTimeout(500);
+    await expect(page.getByTestId("summary-sum-value")).toHaveText("03:00");
 
     // Click the clipboard button for ProjectD
     const clipboardButton = page.getByTestId("button-copy-comments-ProjectD");
@@ -203,7 +203,7 @@ test.describe("Clipboard Copy Functionality", () => {
     await page.getByTestId("button-add-task").click();
 
     // Wait for summary to update
-    await page.waitForTimeout(500);
+    await expect(page.getByTestId("summary-sum-value")).toHaveText("02:00");
 
     // Click the clipboard button for ProjectE only
     const clipboardButtonE = page.getByTestId("button-copy-comments-ProjectE");
@@ -254,7 +254,7 @@ test.describe("Clipboard Copy Functionality", () => {
     await page.getByTestId("button-add-task").click();
 
     // Wait for tasks to be added
-    await page.waitForTimeout(500);
+    await expect(page.getByTestId("summary-sum-value")).toHaveText("01:00");
 
     // By default, date range should be today only
     // Click the clipboard button for ProjectG
@@ -295,7 +295,7 @@ test.describe("Clipboard Copy Functionality", () => {
     await todayButton.click();
 
     // Wait for summary to update
-    await page.waitForTimeout(500);
+    await expect(page.getByTestId("summary-sum-value")).toHaveText("02:00");
 
     // Click the clipboard button again
     clipboardButton = page.getByTestId("button-copy-comments-ProjectG");
@@ -337,7 +337,8 @@ test.describe("Clipboard Copy Functionality", () => {
     await page.getByTestId("add-entry-input-comment").fill("Unique Comment");
     await page.getByTestId("button-add-task").click();
 
-    await page.waitForTimeout(500);
+    // Wait for summary to update
+    await expect(page.getByTestId("summary-sum-value")).toHaveText("03:00");
 
     // Toggle grouping mode to group by comment
     await page.getByLabel("List by task").click();
@@ -378,7 +379,8 @@ test.describe("Clipboard Copy Functionality", () => {
     await page.getByTestId("add-entry-input-project").fill("ProjectL");
     await page.getByTestId("button-add-task").click();
 
-    await page.waitForTimeout(500);
+    // Wait for summary to update
+    await expect(page.getByTestId("summary-sum-value")).toHaveText("02:00");
 
     await page.getByTestId("checkbox-list-by-task").click();
 
@@ -427,7 +429,7 @@ test.describe("Clipboard Copy Functionality", () => {
     await page.getByTestId("button-add-task").click();
 
     // Wait for summary to update
-    await page.waitForTimeout(500);
+    await expect(page.getByTestId("summary-sum-value")).toHaveText("03:00");
 
     // Click the clipboard button for ProjectH
     const clipboardButton = page.getByTestId("button-copy-comments-ProjectH");
