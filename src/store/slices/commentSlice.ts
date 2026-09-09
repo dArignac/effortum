@@ -1,5 +1,6 @@
 import { db } from "@/store/db";
 import { StoreGet, StoreSet } from "@/store/types";
+import dayjs from "dayjs";
 
 export const createCommentSlice = (_set: StoreSet, get: StoreGet) => ({
   /**
@@ -46,6 +47,40 @@ export const createCommentSlice = (_set: StoreSet, get: StoreGet) => ({
       counts[comment] = (counts[comment] ?? 0) + 1;
       return counts;
     }, {});
+  },
+
+  /**
+   * Calculates the total booked time in hours per distinct task comment for a project.
+   */
+  getTaskCommentHoursForProject: async (projectId: string) => {
+    const tasks = await db.tasks.where("projectId").equals(projectId).toArray();
+
+    const secondsByComment = tasks.reduce<Record<string, number>>(
+      (seconds, task) => {
+        const comment = (task.comment ?? "").trim();
+        if (!comment || !task.timeEnd) {
+          return seconds;
+        }
+
+        const startTime = dayjs(`${task.date}T${task.timeStart}`);
+        const endTime = dayjs(`${task.date}T${task.timeEnd}`);
+        const diffInSeconds = endTime.diff(startTime, "second");
+
+        if (diffInSeconds > 0) {
+          seconds[comment] = (seconds[comment] ?? 0) + diffInSeconds;
+        }
+
+        return seconds;
+      },
+      {},
+    );
+
+    return Object.fromEntries(
+      Object.entries(secondsByComment).map(([comment, totalSeconds]) => [
+        comment,
+        totalSeconds / 3600,
+      ]),
+    );
   },
 
   /**

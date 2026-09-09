@@ -136,4 +136,95 @@ describe("createCommentSlice", () => {
     expect(mockDb.tasks.update).toHaveBeenCalledWith("t3", { comment: "New" });
     expect(set).toHaveBeenCalledWith({ tasks: [{ id: "t1", comment: "New" }] });
   });
+
+  it("getTaskCommentHoursForProject calculates per-comment booked hours from positive durations", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ tasks: [] }));
+
+    const equals = vi.fn(() => ({
+      toArray: vi.fn().mockResolvedValue([
+        {
+          id: "t1",
+          date: "2026-09-08",
+          timeStart: "09:00",
+          timeEnd: "10:30",
+          comment: "meeting",
+        },
+        {
+          id: "t2",
+          date: "2026-09-08",
+          timeStart: "11:00",
+          timeEnd: "11:30",
+          comment: " meeting ",
+        },
+        {
+          id: "t3",
+          date: "2026-09-08",
+          timeStart: "13:00",
+          timeEnd: "12:00",
+          comment: "meeting",
+        },
+        {
+          id: "t4",
+          date: "2026-09-08",
+          timeStart: "14:00",
+          timeEnd: "15:15",
+          comment: "review",
+        },
+        {
+          id: "t5",
+          date: "2026-09-08",
+          timeStart: "16:00",
+          timeEnd: "",
+          comment: "review",
+        },
+        {
+          id: "t6",
+          date: "2026-09-08",
+          timeStart: "09:00",
+          timeEnd: "10:00",
+          comment: "   ",
+        },
+      ]),
+    }));
+    mockDb.tasks.where.mockReturnValue({ equals });
+
+    const slice = createCommentSlice(set as never, get as never);
+
+    await expect(slice.getTaskCommentHoursForProject("p1")).resolves.toEqual({
+      meeting: 2,
+      review: 1.25,
+    });
+  });
+
+  it("getTaskCommentHoursForProject calculates hours across multiple dates without filters", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ tasks: [] }));
+
+    const equals = vi.fn(() => ({
+      toArray: vi.fn().mockResolvedValue([
+        {
+          id: "t1",
+          date: "2026-09-01",
+          timeStart: "09:00",
+          timeEnd: "11:00",
+          comment: "feature",
+        },
+        {
+          id: "t2",
+          date: "2026-09-09",
+          timeStart: "13:00",
+          timeEnd: "14:30",
+          comment: "feature",
+        },
+      ]),
+    }));
+    mockDb.tasks.where.mockReturnValue({ equals });
+
+    const slice = createCommentSlice(set as never, get as never);
+
+    await expect(slice.getTaskCommentHoursForProject("p1")).resolves.toEqual({
+      feature: 3.5,
+    });
+  });
 });

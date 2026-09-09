@@ -78,8 +78,8 @@ test.describe("Tasks Page", () => {
 
     const taskCounts = page.locator('[data-testid^="task-comment-count-"]');
     await expect(taskCounts).toHaveCount(2);
-    await expect(taskCounts.nth(0)).toHaveText("2 tasks");
-    await expect(taskCounts.nth(1)).toHaveText("1 task");
+    await expect(taskCounts.nth(0)).toHaveText("2 tasks, 1.75 h");
+    await expect(taskCounts.nth(1)).toHaveText("1 task, 0.75 h");
   });
 
   test("should place task count between comment input and save button for each row", async ({
@@ -99,7 +99,7 @@ test.describe("Tasks Page", () => {
     const saveButton = row.getByTestId("button-save-task-comment-0");
 
     await expect(input).toBeVisible();
-    await expect(count).toHaveText("2 tasks");
+    await expect(count).toHaveText("2 tasks, 1.75 h");
     await expect(saveButton).toBeVisible();
 
     const inputBox = await input.boundingBox();
