@@ -49,7 +49,8 @@ erDiagram
 ## Runtime Structure
 
 - UI layer: routes (`src/routes`) render pages (`src/pages`) composed from reusable components (`src/components`), including the Projects page for
-  alphabetically ordered project renaming with per-row save controls and the Tasks page for per-project task-comment management.
+  alphabetically ordered project renaming with per-row save controls and project deletion (supporting zero-task deletion or modal-based task deletion/migration
+  with comment conflict checks), and the Tasks page for per-project task-comment management.
 - State layer: `src/store.ts` is a thin facade that re-exports the composed store from `src/store/index.ts`. The composed store is organized into focused slices
   under `src/store/slices`: `taskSlice`, `projectSlice`, `commentSlice`, `settingsOvertimeSlice`, `uiSlice`, and `loadingMigrationSlice`. This keeps domain
   logic isolated while preserving a single Zustand store for consumers.
@@ -68,6 +69,9 @@ erDiagram
 
 - Task-to-project relations are canonical by project ID.
 - Comment suggestions are derived from persisted `task.comment` values; no dedicated comment entity is used.
+- Project deletion requires handling associated tasks: zero-task projects can be deleted directly with confirmation; task-bearing projects require choosing
+  between permanently deleting associated tasks or reassigning them to a destination project.
+- Moving tasks checks for conflicting task comments between projects, warning the user and guiding them to the Task Management page if needed.
 - Legacy project-name fields are kept during rollout for import/export compatibility and recovery.
 - Overtime and settings are single-record entities identified by fixed IDs.
 - Date filtering must normalize date-only and ISO datetime values for day-level comparisons.

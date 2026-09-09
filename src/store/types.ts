@@ -13,6 +13,10 @@ export type TaskUpdateInput = Partial<Omit<Task, "projectId">> & {
   projectName?: string;
 };
 
+export type DeleteProjectOptions =
+  | { taskAction: "delete" }
+  | { taskAction: "move"; destinationProjectId: string };
+
 export interface EffortumStore {
   tasks: Task[];
   projects: Project[];
@@ -44,6 +48,11 @@ export interface EffortumStore {
 
   addProject: (project: Project) => Promise<void>;
   updateProjectName: (id: string, name: string) => Promise<void>;
+  getProjectTaskCount: (projectId: string) => Promise<number>;
+  deleteProject: (
+    projectId: string,
+    options?: DeleteProjectOptions,
+  ) => Promise<void>;
 
   setSelectedDateRange: (range: [string | null, string | null]) => void;
 

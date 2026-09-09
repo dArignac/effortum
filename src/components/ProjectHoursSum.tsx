@@ -6,6 +6,7 @@ export function ProjectHoursSum(props: { projectId: string }) {
   const getProjectBookedTimeHours = useEffortumStore(
     (state) => state.getProjectBookedTimeHours,
   );
+  const tasks = useEffortumStore((state) => state.tasks);
   const [sum, setSum] = useState<number>(0);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export function ProjectHoursSum(props: { projectId: string }) {
     return () => {
       isActive = false;
     };
-  }, [getProjectBookedTimeHours, props.projectId]);
+  }, [getProjectBookedTimeHours, props.projectId, tasks]);
 
   return (
     <Text
