@@ -102,6 +102,7 @@ export function ProjectsPage() {
 
   return (
     <Stack data-testid="projects-page" gap="xs">
+      <Text fw={700}>Project Management</Text>
       {sortedProjects.map((project, index) => {
         const currentName = editedNames[project.id] ?? project.name;
         const hasNameChanges = currentName !== project.name;
