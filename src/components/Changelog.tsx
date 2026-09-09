@@ -3,8 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.17.0",
+    description: ["Adds spent time for each task to tasks management page."],
+  },
+  {
     version: "0.16.0",
-    description: ["Adds count of tasks in the task page."],
+    description: ["Adds count of tasks in the tasks management page."],
   },
   {
     version: "0.15.0",

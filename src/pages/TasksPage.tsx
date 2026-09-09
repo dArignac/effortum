@@ -7,6 +7,7 @@ type CommentRow = {
   original: string;
   current: string;
   taskCount: number;
+  spentHours: number;
 };
 
 export function TasksPage() {
@@ -19,6 +20,9 @@ export function TasksPage() {
   );
   const getTaskCommentCountsForProject = useEffortumStore(
     (state) => state.getTaskCommentCountsForProject,
+  );
+  const getTaskCommentHoursForProject = useEffortumStore(
+    (state) => state.getTaskCommentHoursForProject,
   );
   const renameTaskCommentForProject = useEffortumStore(
     (state) => state.renameTaskCommentForProject,
@@ -59,12 +63,15 @@ export function TasksPage() {
           await getUniqueTaskCommentsForProject(selectedProjectId);
         const commentCounts =
           await getTaskCommentCountsForProject(selectedProjectId);
+        const commentHours =
+          await getTaskCommentHoursForProject(selectedProjectId);
 
         setCommentRows(
           comments.map((comment) => ({
             original: comment,
             current: comment,
             taskCount: commentCounts[comment] ?? 0,
+            spentHours: commentHours[comment] ?? 0,
           })),
         );
       } catch {
@@ -81,6 +88,7 @@ export function TasksPage() {
   }, [
     selectedProjectId,
     getTaskCommentCountsForProject,
+    getTaskCommentHoursForProject,
     getUniqueTaskCommentsForProject,
   ]);
 
@@ -125,6 +133,7 @@ export function TasksPage() {
                 original: nextValue,
                 current: nextValue,
                 taskCount: entry.taskCount,
+                spentHours: entry.spentHours,
               }
             : entry,
         ),
@@ -221,7 +230,7 @@ export function TasksPage() {
               <Text
                 c="dimmed"
                 size="sm"
-                w={100}
+                w={160}
                 ta="right"
                 style={{
                   whiteSpace: "nowrap",
@@ -229,7 +238,8 @@ export function TasksPage() {
                 }}
                 data-testid={`task-comment-count-${index}`}
               >
-                {row.taskCount === 1 ? "1 task" : `${row.taskCount} tasks`}
+                {row.taskCount === 1 ? "1 task" : `${row.taskCount} tasks`},{" "}
+                {row.spentHours.toFixed(2)} h
               </Text>
               <Button
                 data-testid={`button-save-task-comment-${index}`}

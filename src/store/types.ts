@@ -33,6 +33,9 @@ export interface EffortumStore {
   getTaskCommentCountsForProject: (
     projectId: string,
   ) => Promise<Record<string, number>>;
+  getTaskCommentHoursForProject: (
+    projectId: string,
+  ) => Promise<Record<string, number>>;
   renameTaskCommentForProject: (
     projectId: string,
     oldComment: string,
