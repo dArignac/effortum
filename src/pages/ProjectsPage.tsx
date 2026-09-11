@@ -1,7 +1,18 @@
+import { DeleteProjectModal } from "@/components/DeleteProjectModal";
 import { ProjectHoursSum } from "@/components/ProjectHoursSum";
+import { Project } from "@/models/Project";
 import { useEffortumStore } from "@/store";
-import { Box, Button, Group, Stack, Text, TextInput } from "@mantine/core";
+import {
+  Alert,
+  Box,
+  Button,
+  Group,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IconInfoCircle } from "@tabler/icons-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 /**
@@ -17,6 +28,7 @@ export function ProjectsPage() {
   );
   const [editedNames, setEditedNames] = useState<Record<string, string>>({});
   const [savingProjectId, setSavingProjectId] = useState<string | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const isSavingRef = useRef(false);
 
   const sortedProjects = useMemo(
@@ -103,6 +115,15 @@ export function ProjectsPage() {
   return (
     <Stack data-testid="projects-page" gap="xs">
       <Text fw={700}>Project Management</Text>
+      <Alert
+        variant="outline"
+        color="yellow"
+        title="Important Note"
+        icon={<IconInfoCircle />}
+        mb={"sm"}
+      >
+        Before deleting any project, consider creating a Backup.
+      </Alert>
       {sortedProjects.map((project, index) => {
         const currentName = editedNames[project.id] ?? project.name;
         const hasNameChanges = currentName !== project.name;
@@ -158,9 +179,29 @@ export function ProjectsPage() {
             >
               Save
             </Button>
+            <Button
+              color="red"
+              variant="light"
+              data-testid={`button-delete-project-${project.id}`}
+              style={{ flex: "0 0 auto" }}
+              onClick={() => setProjectToDelete(project)}
+            >
+              Delete
+            </Button>
           </Group>
         );
       })}
+      <DeleteProjectModal
+        project={projectToDelete}
+        onClose={() => setProjectToDelete(null)}
+        onDeleted={(deletedId) => {
+          setEditedNames((current) => {
+            const next = { ...current };
+            delete next[deletedId];
+            return next;
+          });
+        }}
+      />
     </Stack>
   );
 }
