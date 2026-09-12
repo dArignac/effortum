@@ -330,4 +330,50 @@ test.describe("Project Deletion", () => {
       "2 tasks",
     );
   });
+
+  test("should reset conflict checking state when clearing destination or switching away from move", async ({
+    page,
+  }) => {
+    await addTask(page, "AlphaProject", "TaskAlpha", "09:00", "10:00");
+    await addTask(page, "BetaProject", "TaskBeta", "10:00", "11:00");
+
+    await navigateToProjects(page);
+
+    const alphaRow = await getProjectRowByName(page, "AlphaProject");
+    await alphaRow.locator('[data-testid^="button-delete-project-"]').click();
+
+    await expect(page.getByTestId("modal-delete-project")).toBeVisible();
+    await page.getByTestId("radio-move-tasks").click();
+
+    const destSelect = page.getByTestId("select-destination-project");
+    await destSelect.click();
+    await page.getByRole("option", { name: "BetaProject" }).click();
+
+    // Verify conflicts checked
+    await expect(page.getByTestId("text-no-conflicts")).toBeVisible();
+    await expect(page.getByText("Checking task comments...")).not.toBeVisible();
+
+    // Clear destination
+    await page.getByLabel("Clear destination project").click();
+    await expect(page.getByText("Checking task comments...")).not.toBeVisible();
+    await expect(page.getByTestId("text-no-conflicts")).not.toBeVisible();
+
+    // Re-select destination
+    await destSelect.click();
+    await page.getByRole("option", { name: "BetaProject" }).click();
+    await expect(page.getByTestId("text-no-conflicts")).toBeVisible();
+
+    // Switch to delete tasks action
+    await page.getByTestId("radio-delete-tasks").click();
+    await expect(page.getByText("Checking task comments...")).not.toBeVisible();
+    await expect(page.getByTestId("alert-delete-all-tasks")).toBeVisible();
+
+    // Switch back to move tasks action
+    await page.getByTestId("radio-move-tasks").click();
+    await expect(page.getByText("Checking task comments...")).not.toBeVisible();
+
+    // Cancel modal
+    await page.getByTestId("button-cancel-delete-project").click();
+    await expect(page.getByTestId("modal-delete-project")).not.toBeVisible();
+  });
 });

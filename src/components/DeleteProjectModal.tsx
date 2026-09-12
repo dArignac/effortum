@@ -90,6 +90,7 @@ export function DeleteProjectModal({
           setTaskAction("delete");
           setSelectedDestinationId(null);
           setConflictingComments([]);
+          setIsCheckingConflicts(false);
         }
       } catch {
         if (isActive) {
@@ -116,6 +117,7 @@ export function DeleteProjectModal({
     const checkConflicts = async () => {
       if (!project || taskAction !== "move" || !selectedDestinationId) {
         setConflictingComments([]);
+        setIsCheckingConflicts(false);
         return;
       }
 
@@ -161,6 +163,7 @@ export function DeleteProjectModal({
     setTaskAction("delete");
     setSelectedDestinationId(null);
     setConflictingComments([]);
+    setIsCheckingConflicts(false);
     onClose();
   };
 
@@ -309,6 +312,9 @@ export function DeleteProjectModal({
                   onChange={setSelectedDestinationId}
                   searchable
                   clearable
+                  clearButtonProps={{
+                    "aria-label": "Clear destination project",
+                  }}
                   data-testid="select-destination-project"
                 />
 
