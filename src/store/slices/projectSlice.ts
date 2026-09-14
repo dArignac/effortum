@@ -96,12 +96,14 @@ export const createProjectSlice = (set: StoreSet, get: StoreGet) => ({
           .equals(id)
           .toArray();
 
-        for (const task of tasksToMove) {
-          await db.tasks.update(task.id, {
-            projectId: destinationProject.id,
-            project: destinationProject.name,
-          });
-        }
+        await Promise.all(
+          tasksToMove.map((task) =>
+            db.tasks.update(task.id, {
+              projectId: destinationProject.id,
+              project: destinationProject.name,
+            }),
+          ),
+        );
 
         await db.projects.delete(id);
       });

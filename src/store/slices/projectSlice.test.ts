@@ -277,4 +277,59 @@ describe("createProjectSlice", () => {
       ],
     });
   });
+
+  it("deleteProject updates tasks in parallel when moving tasks", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({
+      projects: [
+        { id: "p1", name: "Alpha" },
+        { id: "p2", name: "Beta" },
+      ],
+    }));
+    const count = vi.fn().mockResolvedValue(2);
+    const tasksToMove = [
+      { id: "t1", projectId: "p1", project: "Alpha" },
+      { id: "t2", projectId: "p1", project: "Alpha" },
+    ];
+    const toArray = vi.fn().mockResolvedValue(tasksToMove);
+    mockDb.tasks.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ count, toArray }),
+    });
+    mockDb.transaction.mockImplementation(
+      async (
+        _mode: string,
+        _projects: unknown,
+        _tasks: unknown,
+        fn: () => Promise<void>,
+      ) => fn(),
+    );
+    mockDb.projects.toArray.mockResolvedValue([{ id: "p2", name: "Beta" }]);
+    mockDb.tasks.toArray.mockResolvedValue([]);
+
+    let resolveTask1: () => void = () => {};
+    const task1Promise = new Promise<void>((resolve) => {
+      resolveTask1 = resolve;
+    });
+
+    let task2UpdatedWhileTask1Pending = false;
+    mockDb.tasks.update.mockImplementation((id: string) => {
+      if (id === "t1") {
+        return task1Promise;
+      }
+      if (id === "t2") {
+        task2UpdatedWhileTask1Pending = true;
+        resolveTask1();
+        return Promise.resolve();
+      }
+      return Promise.resolve();
+    });
+
+    const slice = createProjectSlice(set as never, get as never);
+    await slice.deleteProject("p1", {
+      taskAction: "move",
+      destinationProjectId: "p2",
+    });
+
+    expect(task2UpdatedWhileTask1Pending).toBe(true);
+  });
 });
