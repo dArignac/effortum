@@ -6,6 +6,15 @@ export function ProjectHoursSum(props: { projectId: string }) {
   const getProjectBookedTimeHours = useEffortumStore(
     (state) => state.getProjectBookedTimeHours,
   );
+  const projectTasksVersion = useEffortumStore((state) => {
+    const parts: string[] = [];
+    for (const task of state.tasks) {
+      if (task.projectId === props.projectId) {
+        parts.push(`${task.id}:${task.date}:${task.timeStart}:${task.timeEnd}`);
+      }
+    }
+    return parts.sort().join(";");
+  });
   const [sum, setSum] = useState<number>(0);
 
   useEffect(() => {
@@ -24,7 +33,7 @@ export function ProjectHoursSum(props: { projectId: string }) {
     return () => {
       isActive = false;
     };
-  }, [getProjectBookedTimeHours, props.projectId]);
+  }, [getProjectBookedTimeHours, props.projectId, projectTasksVersion]);
 
   return (
     <Text

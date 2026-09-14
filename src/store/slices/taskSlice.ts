@@ -13,10 +13,10 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
    * @returns Total hours (as a number) worked on this project
    */
   getProjectBookedTimeHours: async (projectId: string) => {
-    const tasks = await db.tasks.toArray();
+    const tasks = await db.tasks.where("projectId").equals(projectId).toArray();
 
     const totalSeconds = tasks
-      .filter((task) => task.projectId === projectId && task.timeEnd)
+      .filter((task) => task.timeEnd)
       .reduce((sum, task) => {
         const startTime = dayjs(`${task.date}T${task.timeStart}`);
         const endTime = dayjs(`${task.date}T${task.timeEnd}`);

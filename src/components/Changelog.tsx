@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.18.0",
+    description: [
+      "Adds deletion of projects (with moving or deleting of their tasks) (#156).",
+    ],
+  },
+  {
     version: "0.17.0",
     description: ["Adds spent time for each task to tasks management page."],
   },

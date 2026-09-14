@@ -7,9 +7,12 @@ const { mockDb } = vi.hoisted(() => ({
       add: vi.fn(),
       toArray: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
     },
     tasks: {
       toArray: vi.fn(),
+      update: vi.fn(),
+      where: vi.fn(),
     },
     transaction: vi.fn(),
   },
@@ -99,5 +102,234 @@ describe("createProjectSlice", () => {
       projects: [{ id: "p1", name: "Beta" }],
       tasks: [{ id: "t1", projectId: "p1" }],
     });
+  });
+
+  it("getProjectTaskCount returns task count for a project", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ projects: [] }));
+    const count = vi.fn().mockResolvedValue(5);
+    mockDb.tasks.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ count }),
+    });
+
+    const slice = createProjectSlice(set as never, get as never);
+    const result = await slice.getProjectTaskCount("p1");
+
+    expect(result).toBe(5);
+    expect(mockDb.tasks.where).toHaveBeenCalledWith("projectId");
+  });
+
+  it("deleteProject throws PROJECT_NOT_FOUND when project does not exist", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ projects: [] }));
+
+    const slice = createProjectSlice(set as never, get as never);
+
+    await expect(slice.deleteProject("missing")).rejects.toThrow(
+      "PROJECT_NOT_FOUND",
+    );
+  });
+
+  it("deleteProject throws PROJECT_HAS_TASKS when project has tasks and no options provided", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ projects: [{ id: "p1", name: "Alpha" }] }));
+    const count = vi.fn().mockResolvedValue(2);
+    mockDb.tasks.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ count }),
+    });
+
+    const slice = createProjectSlice(set as never, get as never);
+
+    await expect(slice.deleteProject("p1")).rejects.toThrow(
+      "PROJECT_HAS_TASKS",
+    );
+  });
+
+  it("deleteProject deletes an empty project directly", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ projects: [{ id: "p1", name: "Alpha" }] }));
+    const count = vi.fn().mockResolvedValue(0);
+    mockDb.tasks.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ count }),
+    });
+    mockDb.projects.toArray.mockResolvedValue([]);
+    mockDb.tasks.toArray.mockResolvedValue([]);
+
+    const slice = createProjectSlice(set as never, get as never);
+    await slice.deleteProject("p1");
+
+    expect(mockDb.projects.delete).toHaveBeenCalledWith("p1");
+    expect(set).toHaveBeenCalledWith({ projects: [], tasks: [] });
+  });
+
+  it("deleteProject deletes project and its tasks when taskAction is delete", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ projects: [{ id: "p1", name: "Alpha" }] }));
+    const count = vi.fn().mockResolvedValue(3);
+    const deleteTasks = vi.fn().mockResolvedValue(3);
+    mockDb.tasks.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ count, delete: deleteTasks }),
+    });
+    mockDb.transaction.mockImplementation(
+      async (
+        _mode: string,
+        _projects: unknown,
+        _tasks: unknown,
+        fn: () => Promise<void>,
+      ) => fn(),
+    );
+    mockDb.projects.toArray.mockResolvedValue([]);
+    mockDb.tasks.toArray.mockResolvedValue([]);
+
+    const slice = createProjectSlice(set as never, get as never);
+    await slice.deleteProject("p1", { taskAction: "delete" });
+
+    expect(deleteTasks).toHaveBeenCalled();
+    expect(mockDb.projects.delete).toHaveBeenCalledWith("p1");
+    expect(set).toHaveBeenCalledWith({ projects: [], tasks: [] });
+  });
+
+  it("deleteProject throws CANNOT_MOVE_TO_SAME_PROJECT when destination is same", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ projects: [{ id: "p1", name: "Alpha" }] }));
+    const count = vi.fn().mockResolvedValue(1);
+    mockDb.tasks.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ count }),
+    });
+
+    const slice = createProjectSlice(set as never, get as never);
+    await expect(
+      slice.deleteProject("p1", {
+        taskAction: "move",
+        destinationProjectId: "p1",
+      }),
+    ).rejects.toThrow("CANNOT_MOVE_TO_SAME_PROJECT");
+  });
+
+  it("deleteProject throws DESTINATION_PROJECT_NOT_FOUND when destination does not exist", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ projects: [{ id: "p1", name: "Alpha" }] }));
+    const count = vi.fn().mockResolvedValue(1);
+    mockDb.tasks.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ count }),
+    });
+
+    const slice = createProjectSlice(set as never, get as never);
+    await expect(
+      slice.deleteProject("p1", {
+        taskAction: "move",
+        destinationProjectId: "missing",
+      }),
+    ).rejects.toThrow("DESTINATION_PROJECT_NOT_FOUND");
+  });
+
+  it("deleteProject moves tasks to destination project and deletes project", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({
+      projects: [
+        { id: "p1", name: "Alpha" },
+        { id: "p2", name: "Beta" },
+      ],
+    }));
+    const count = vi.fn().mockResolvedValue(2);
+    const tasksToMove = [
+      { id: "t1", projectId: "p1", project: "Alpha" },
+      { id: "t2", projectId: "p1", project: "Alpha" },
+    ];
+    const toArray = vi.fn().mockResolvedValue(tasksToMove);
+    mockDb.tasks.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ count, toArray }),
+    });
+    mockDb.transaction.mockImplementation(
+      async (
+        _mode: string,
+        _projects: unknown,
+        _tasks: unknown,
+        fn: () => Promise<void>,
+      ) => fn(),
+    );
+    mockDb.projects.toArray.mockResolvedValue([{ id: "p2", name: "Beta" }]);
+    mockDb.tasks.toArray.mockResolvedValue([
+      { id: "t1", projectId: "p2", project: "Beta" },
+      { id: "t2", projectId: "p2", project: "Beta" },
+    ]);
+
+    const slice = createProjectSlice(set as never, get as never);
+    await slice.deleteProject("p1", {
+      taskAction: "move",
+      destinationProjectId: "p2",
+    });
+
+    expect(mockDb.tasks.update).toHaveBeenCalledWith("t1", {
+      projectId: "p2",
+      project: "Beta",
+    });
+    expect(mockDb.tasks.update).toHaveBeenCalledWith("t2", {
+      projectId: "p2",
+      project: "Beta",
+    });
+    expect(mockDb.projects.delete).toHaveBeenCalledWith("p1");
+    expect(set).toHaveBeenCalledWith({
+      projects: [{ id: "p2", name: "Beta" }],
+      tasks: [
+        { id: "t1", projectId: "p2", project: "Beta" },
+        { id: "t2", projectId: "p2", project: "Beta" },
+      ],
+    });
+  });
+
+  it("deleteProject updates tasks in parallel when moving tasks", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({
+      projects: [
+        { id: "p1", name: "Alpha" },
+        { id: "p2", name: "Beta" },
+      ],
+    }));
+    const count = vi.fn().mockResolvedValue(2);
+    const tasksToMove = [
+      { id: "t1", projectId: "p1", project: "Alpha" },
+      { id: "t2", projectId: "p1", project: "Alpha" },
+    ];
+    const toArray = vi.fn().mockResolvedValue(tasksToMove);
+    mockDb.tasks.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ count, toArray }),
+    });
+    mockDb.transaction.mockImplementation(
+      async (
+        _mode: string,
+        _projects: unknown,
+        _tasks: unknown,
+        fn: () => Promise<void>,
+      ) => fn(),
+    );
+    mockDb.projects.toArray.mockResolvedValue([{ id: "p2", name: "Beta" }]);
+    mockDb.tasks.toArray.mockResolvedValue([]);
+
+    let resolveTask1: () => void = () => {};
+    const task1Promise = new Promise<void>((resolve) => {
+      resolveTask1 = resolve;
+    });
+
+    let task2UpdatedWhileTask1Pending = false;
+    mockDb.tasks.update.mockImplementation((id: string) => {
+      if (id === "t1") {
+        return task1Promise;
+      }
+      if (id === "t2") {
+        task2UpdatedWhileTask1Pending = true;
+        resolveTask1();
+        return Promise.resolve();
+      }
+      return Promise.resolve();
+    });
+
+    const slice = createProjectSlice(set as never, get as never);
+    await slice.deleteProject("p1", {
+      taskAction: "move",
+      destinationProjectId: "p2",
+    });
+
+    expect(task2UpdatedWhileTask1Pending).toBe(true);
   });
 });
