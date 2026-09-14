@@ -122,7 +122,7 @@ export function ProjectsPage() {
         icon={<IconInfoCircle />}
         mb={"sm"}
       >
-        Before deleting any project, consider creating a Backup.
+        Before deleting any project, consider creating a backup.
       </Alert>
       {sortedProjects.map((project, index) => {
         const currentName = editedNames[project.id] ?? project.name;
