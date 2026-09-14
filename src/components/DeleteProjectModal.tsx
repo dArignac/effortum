@@ -218,7 +218,7 @@ export function DeleteProjectModal({
       closeOnEscape={!isDeleting}
     >
       <div data-testid="modal-delete-project">
-        {isLoadingTaskCount ? (
+        {isLoadingTaskCount || taskCount === null ? (
           <Group justify="center" p="md">
             <Loader size="sm" />
           </Group>
