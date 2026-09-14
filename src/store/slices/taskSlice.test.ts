@@ -5,6 +5,7 @@ const { mockDb } = vi.hoisted(() => ({
   mockDb: {
     tasks: {
       toArray: vi.fn(),
+      where: vi.fn(),
       add: vi.fn(),
       update: vi.fn(),
     },
@@ -28,38 +29,36 @@ describe("createTaskSlice", () => {
     const get = vi.fn(() => ({ projects: [], tasks: [] }));
     const slice = createTaskSlice(set as never, get as never);
 
-    mockDb.tasks.toArray.mockResolvedValue([
-      {
-        id: "t1",
-        date: "2026-09-08",
-        timeStart: "09:00",
-        timeEnd: "10:30",
-        projectId: "p1",
-      },
-      {
-        id: "t2",
-        date: "2026-09-08",
-        timeStart: "11:00",
-        timeEnd: "11:30",
-        projectId: "p1",
-      },
-      {
-        id: "t3",
-        date: "2026-09-08",
-        timeStart: "13:00",
-        timeEnd: "12:00",
-        projectId: "p1",
-      },
-      {
-        id: "t4",
-        date: "2026-09-08",
-        timeStart: "09:00",
-        timeEnd: "10:00",
-        projectId: "p2",
-      },
-    ]);
+    const equals = vi.fn(() => ({
+      toArray: vi.fn().mockResolvedValue([
+        {
+          id: "t1",
+          date: "2026-09-08",
+          timeStart: "09:00",
+          timeEnd: "10:30",
+          projectId: "p1",
+        },
+        {
+          id: "t2",
+          date: "2026-09-08",
+          timeStart: "11:00",
+          timeEnd: "11:30",
+          projectId: "p1",
+        },
+        {
+          id: "t3",
+          date: "2026-09-08",
+          timeStart: "13:00",
+          timeEnd: "12:00",
+          projectId: "p1",
+        },
+      ]),
+    }));
+    mockDb.tasks.where.mockReturnValue({ equals });
 
     await expect(slice.getProjectBookedTimeHours("p1")).resolves.toBe(2);
+    expect(mockDb.tasks.where).toHaveBeenCalledWith("projectId");
+    expect(equals).toHaveBeenCalledWith("p1");
   });
 
   it("addTask creates missing project and persists normalized task", async () => {
