@@ -216,7 +216,7 @@ importers:
         version: 4.4.6
       dexie-export-import:
         specifier: ^4.4.0
-        version: 4.4.0(dexie@4.4.6)
+        version: 4.4.1(dexie@4.4.6)
       nitro:
         specifier: 3.0.260610-beta
         version: 3.0.260610-beta(@electric-sql/pglite@0.3.16)(@netlify/blobs@11.0.3(supports-color@7.2.0))(@netlify/runtime@4.1.29(supports-color@7.2.0))(chokidar@5.0.0)(dotenv@16.6.1)(jiti@2.7.0)(lru-cache@11.5.2)(vite@8.2.2(@types/node@26.5.1)(esbuild@0.28.1)(jiti@2.7.0)(sugarss@5.0.1(postcss@8.5.28))(yaml@2.9.0))
@@ -2750,10 +2750,10 @@ packages:
   dettle@1.0.5:
     resolution: {integrity: sha512-ZVyjhAJ7sCe1PNXEGveObOH9AC8QvMga3HJIghHawtG7mE4K5pW9nz/vDGAr/U7a3LWgdOzEE7ac9MURnyfaTA==}
 
-  dexie-export-import@4.4.0:
-    resolution: {integrity: sha512-r2yvfkcwzP0klAAsiwcCtyioD9xJG0m/mELsiuJnvJ4oP74NabUBblupYtxplEwAnDxF1JzOcsoKU+srfrkyaw==}
+  dexie-export-import@4.4.1:
+    resolution: {integrity: sha512-B84UhmfGaImK47OKRW+uw8EleHtlUk8WbaeqAvPX/bwv3pl2W+l3/v8jJNpPUjwS8Dn/U/5kHAyXda9T6NofOQ==}
     peerDependencies:
-      dexie: ^4.4.0
+      dexie: ^4.4.5
 
   dexie@4.4.6:
     resolution: {integrity: sha512-hJP/BO6mjB+tX6hToIO1kmxYLNmun90wYbfcoAoLpKEyDYal/k33dg0TAfoUe2TDsbbLoVIzljJ3BN2UbR5EOg==}
@@ -7598,7 +7598,7 @@ snapshots:
 
   dettle@1.0.5: {}
 
-  dexie-export-import@4.4.0(dexie@4.4.6):
+  dexie-export-import@4.4.1(dexie@4.4.6):
     dependencies:
       dexie: 4.4.6
 
