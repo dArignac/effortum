@@ -45,12 +45,6 @@ function getYesterdayIso(): string {
   return yesterday.toISOString().split("T")[0];
 }
 
-function getTomorrowIso(): string {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow.toISOString().split("T")[0];
-}
-
 test.describe("Calendar", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -87,21 +81,14 @@ test.describe("Calendar", () => {
     await expect(page.locator('[data-testid^="task-row-"]')).toHaveCount(1);
   });
 
-  test("should select a date range across multiple days", async ({ page }) => {
+  test("should filter tasks by single date and date range across multiple days", async ({
+    page,
+  }) => {
     const todayIso = getTodayIso();
-    const tomorrowIso = getTomorrowIso();
+    const yesterdayIso = getYesterdayIso();
 
-    // Click today and then tomorrow to select a range
-    await page.getByTestId(`summary-date-day-${todayIso}`).click();
-    await page.getByTestId(`summary-date-day-${tomorrowIso}`).click();
-
-    // The task list table should remain functional
-    await expect(page.getByTestId("task-list-table")).toBeVisible();
-  });
-
-  test("should filter tasks to show only selected date", async ({ page }) => {
     // Add a task for today
-    await addTask(page, "FilterProject", "", "09:00", "10:00");
+    await addTask(page, "TodayProject", "Today Task", "09:00", "10:00");
 
     // Add a task for yesterday via the date picker preset
     await ensureAddButtonIsVisible(page);
@@ -109,26 +96,76 @@ test.describe("Calendar", () => {
     await page.getByRole("button", { name: "Yesterday" }).click();
     await page.getByTestId("add-entry-input-start-time").fill("14:00");
     await page.getByTestId("add-entry-input-end-time").fill("16:00");
-    await page.getByTestId("add-entry-input-project").fill("FilterProject");
+    await page.getByTestId("add-entry-input-project").fill("YesterdayProject");
+    await page.getByTestId("add-entry-input-comment").fill("Yesterday Task");
     await page.getByTestId("button-add-task").click();
     await expect(page.getByTestId("button-add-task")).toBeVisible({
       timeout: 5000,
     });
 
-    // Select only today in the calendar
-    const todayIso = getTodayIso();
+    // 1. Select only today: verify only today's task is shown with exact date and details
     await page.getByTestId(`summary-date-day-${todayIso}`).click();
     await page.getByTestId(`summary-date-day-${todayIso}`).click();
 
-    // Should only show today's task
-    await expect(page.locator('[data-testid^="task-row-"]')).toHaveCount(1);
+    const todayRows = page.locator('[data-testid^="task-row-"]');
+    await expect(todayRows).toHaveCount(1);
+    const todayRow = todayRows.first();
+    await expect(todayRow.getByTestId(`date-selection-${todayIso}`)).toHaveText(
+      todayIso,
+    );
+    await expect(todayRow.locator("td").nth(3).locator("input")).toHaveValue(
+      "TodayProject",
+    );
+    await expect(todayRow.locator("td").nth(4).locator("input")).toHaveValue(
+      "Today Task",
+    );
 
-    // Now select only yesterday
-    const yesterdayIso = getYesterdayIso();
+    // 2. Select only yesterday: verify only yesterday's task is shown with exact date and details
     await page.getByTestId(`summary-date-day-${yesterdayIso}`).click();
     await page.getByTestId(`summary-date-day-${yesterdayIso}`).click();
 
-    // Should only show yesterday's task
-    await expect(page.locator('[data-testid^="task-row-"]')).toHaveCount(1);
+    const yesterdayRows = page.locator('[data-testid^="task-row-"]');
+    await expect(yesterdayRows).toHaveCount(1);
+    const yesterdayRow = yesterdayRows.first();
+    await expect(
+      yesterdayRow.getByTestId(`date-selection-${yesterdayIso}`),
+    ).toHaveText(yesterdayIso);
+    await expect(
+      yesterdayRow.locator("td").nth(3).locator("input"),
+    ).toHaveValue("YesterdayProject");
+    await expect(
+      yesterdayRow.locator("td").nth(4).locator("input"),
+    ).toHaveValue("Yesterday Task");
+
+    // 3. Select date range [yesterday, today]: verify both tasks are shown with exact dates and details
+    await page.getByTestId(`summary-date-day-${yesterdayIso}`).click();
+    await page.getByTestId(`summary-date-day-${todayIso}`).click();
+
+    const rangeRows = page.locator('[data-testid^="task-row-"]');
+    await expect(rangeRows).toHaveCount(2);
+
+    // First row: yesterday's task (chronologically earlier)
+    const firstRow = rangeRows.nth(0);
+    await expect(
+      firstRow.getByTestId(`date-selection-${yesterdayIso}`),
+    ).toHaveText(yesterdayIso);
+    await expect(firstRow.locator("td").nth(3).locator("input")).toHaveValue(
+      "YesterdayProject",
+    );
+    await expect(firstRow.locator("td").nth(4).locator("input")).toHaveValue(
+      "Yesterday Task",
+    );
+
+    // Second row: today's task
+    const secondRow = rangeRows.nth(1);
+    await expect(
+      secondRow.getByTestId(`date-selection-${todayIso}`),
+    ).toHaveText(todayIso);
+    await expect(secondRow.locator("td").nth(3).locator("input")).toHaveValue(
+      "TodayProject",
+    );
+    await expect(secondRow.locator("td").nth(4).locator("input")).toHaveValue(
+      "Today Task",
+    );
   });
 });
