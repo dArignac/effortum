@@ -1,18 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
-
-async function ensureAddButtonIsVisible(page: Page) {
-  const addButton = page.getByTestId("button-add-task");
-  const isAddButtonVisible = await addButton.isVisible();
-
-  if (!isAddButtonVisible) {
-    const emptyEndTimeInput = page.getByTestId("add-entry-input-end-time");
-    if (await emptyEndTimeInput.isVisible()) {
-      await emptyEndTimeInput.fill("17:00");
-      await emptyEndTimeInput.blur();
-      await expect(addButton).toBeVisible({ timeout: 5000 });
-    }
-  }
-}
+import { ensureAddButtonIsVisible } from "./utils";
 
 async function addTaskWithProject(
   page: Page,
