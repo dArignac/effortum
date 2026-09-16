@@ -167,4 +167,40 @@ test.describe("Projects Page", () => {
     );
     await expect(projectInput).toHaveValue("Gamma Prime");
   });
+
+  test("should disable save button when project name is cleared or reverted", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    await addTaskWithProject(page, "Delta", "09:00", "10:00");
+    await navigateToProjects(page);
+
+    const projectInput = page
+      .locator('[data-testid^="project-name-input-"]')
+      .nth(0);
+    const saveButton = page
+      .locator('[data-testid^="button-save-project-"]')
+      .nth(0);
+
+    await expect(projectInput).toHaveValue("Delta");
+    await expect(saveButton).toBeDisabled();
+
+    // Clear project name
+    await projectInput.clear();
+    await expect(saveButton).toBeDisabled();
+
+    // Fill with spaces only
+    await projectInput.fill("   ");
+    await expect(saveButton).toBeDisabled();
+
+    // Revert back to original name
+    await projectInput.fill("Delta");
+    await expect(saveButton).toBeDisabled();
+
+    // Change to valid new name
+    await projectInput.fill("Delta New");
+    await expect(saveButton).toBeEnabled();
+  });
 });

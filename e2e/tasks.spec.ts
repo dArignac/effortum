@@ -221,4 +221,57 @@ test.describe("Tasks Page", () => {
     await expect(commentInputs.nth(0)).toHaveValue("analysis");
     await expect(commentInputs.nth(1)).toHaveValue("sync");
   });
+
+  test("should show empty state when project has no task comments and reset when selection cleared", async ({
+    page,
+  }) => {
+    const projectName = "Tasks Project Empty";
+
+    // Add task with no comment
+    await addTask(page, projectName, "", "09:00", "10:00");
+
+    await navigateToTasks(page);
+    await selectProjectOnTasksPage(page, projectName);
+
+    // Should show empty comments state
+    await expect(page.getByTestId("tasks-empty-state")).toBeVisible();
+    await expect(
+      page.locator('[data-testid^="task-comment-row-"]'),
+    ).toHaveCount(0);
+
+    // Clear project selection using the clear button
+    const clearButton = page.locator(".mantine-InputClearButton-root");
+    await expect(clearButton).toBeVisible();
+    await clearButton.click();
+
+    // Should return to no project selected state
+    await expect(page.getByTestId("tasks-no-project-selected")).toBeVisible();
+  });
+
+  test("should disable save button when comment input is cleared", async ({
+    page,
+  }) => {
+    const projectName = "Tasks Project Blank Test";
+
+    await addTask(page, projectName, "initial comment", "09:00", "10:00");
+
+    await navigateToTasks(page);
+    await selectProjectOnTasksPage(page, projectName);
+
+    const commentInput = page.getByTestId("task-comment-input-0");
+    const saveButton = page.getByTestId("button-save-task-comment-0");
+
+    await expect(commentInput).toHaveValue("initial comment");
+    await expect(saveButton).toBeDisabled();
+
+    // Clear input
+    await commentInput.clear();
+
+    // Save button must remain disabled when input is empty
+    await expect(saveButton).toBeDisabled();
+
+    // Restore text
+    await commentInput.fill("valid comment");
+    await expect(saveButton).toBeEnabled();
+  });
 });
