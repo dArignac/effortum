@@ -1,26 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
-import { ensureAddButtonIsVisible } from "./utils";
-
-async function addTask(
-  page: Page,
-  projectName: string,
-  comment: string,
-  startTime: string,
-  endTime: string,
-) {
-  await ensureAddButtonIsVisible(page);
-
-  await page.getByTestId("add-entry-input-start-time").fill(startTime);
-  await page.getByTestId("add-entry-input-end-time").fill(endTime);
-  await page.getByTestId("add-entry-input-project").fill(projectName);
-  if (comment) {
-    await page.getByTestId("add-entry-input-comment").fill(comment);
-  }
-  await page.getByTestId("button-add-task").click();
-  await expect(page.getByTestId("button-add-task")).toBeVisible({
-    timeout: 5000,
-  });
-}
+import { addTask, ensureAddButtonIsVisible } from "./utils";
 
 async function addRunningTask(
   page: Page,
@@ -49,7 +28,7 @@ test.describe("Task Editing", () => {
   test("should enable update button only when changes are made", async ({
     page,
   }) => {
-    await addTask(page, "EditProject", "", "09:00", "10:00");
+    await addTask(page, "EditProject", "09:00", "10:00");
 
     const taskRow = page.locator('[data-testid^="task-row-"]').first();
     await expect(taskRow).toBeVisible();
@@ -67,7 +46,7 @@ test.describe("Task Editing", () => {
   test("should update task start and end time and persist after reload", async ({
     page,
   }) => {
-    await addTask(page, "EditProject", "", "09:00", "10:00");
+    await addTask(page, "EditProject", "09:00", "10:00");
 
     const taskRow = page.locator('[data-testid^="task-row-"]').first();
     await expect(taskRow).toBeVisible();
@@ -100,7 +79,7 @@ test.describe("Task Editing", () => {
   test("should update task project and persist after reload", async ({
     page,
   }) => {
-    await addTask(page, "ProjectX", "", "09:00", "10:00");
+    await addTask(page, "ProjectX", "09:00", "10:00");
 
     const taskRow = page.locator('[data-testid^="task-row-"]').first();
     await expect(taskRow).toBeVisible();
@@ -130,7 +109,7 @@ test.describe("Task Editing", () => {
   test("should update task comment and persist after reload", async ({
     page,
   }) => {
-    await addTask(page, "CommentProject", "initial comment", "09:00", "10:00");
+    await addTask(page, "CommentProject", "09:00", "10:00", "initial comment");
 
     const taskRow = page.locator('[data-testid^="task-row-"]').first();
     await expect(taskRow).toBeVisible();
@@ -160,7 +139,7 @@ test.describe("Task Editing", () => {
   test("should show validation error when setting end time before start time", async ({
     page,
   }) => {
-    await addTask(page, "ValidationProject", "", "09:00", "10:00");
+    await addTask(page, "ValidationProject", "09:00", "10:00");
 
     const taskRow = page.locator('[data-testid^="task-row-"]').first();
     await expect(taskRow).toBeVisible();
@@ -181,7 +160,7 @@ test.describe("Task Editing", () => {
   test("should update task date using date picker and reflect in date filter", async ({
     page,
   }) => {
-    await addTask(page, "DateChangeProject", "initial task", "09:00", "10:00");
+    await addTask(page, "DateChangeProject", "09:00", "10:00", "initial task");
 
     const taskRow = page.locator('[data-testid^="task-row-"]').first();
     await expect(taskRow).toBeVisible();
@@ -231,7 +210,7 @@ test.describe("Task Editing", () => {
   test("should show validation error when clearing start time or project on task edit", async ({
     page,
   }) => {
-    await addTask(page, "RequiredFieldsProject", "", "09:00", "10:00");
+    await addTask(page, "RequiredFieldsProject", "09:00", "10:00");
 
     const taskRow = page.locator('[data-testid^="task-row-"]').first();
     await expect(taskRow).toBeVisible();

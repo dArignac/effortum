@@ -1,24 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
-import { ensureAddButtonIsVisible } from "./utils";
-
-async function addTask(
-  page: Page,
-  projectName: string,
-  comment: string,
-  startTime: string,
-  endTime: string,
-) {
-  await ensureAddButtonIsVisible(page);
-
-  await page.getByTestId("add-entry-input-start-time").fill(startTime);
-  await page.getByTestId("add-entry-input-end-time").fill(endTime);
-  await page.getByTestId("add-entry-input-project").fill(projectName);
-  await page.getByTestId("add-entry-input-comment").fill(comment);
-  await page.getByTestId("button-add-task").click();
-  await expect(page.getByTestId("button-add-task")).toBeVisible({
-    timeout: 5000,
-  });
-}
+import { addTask, ensureAddButtonIsVisible } from "./utils";
 
 async function navigateToTasks(page: Page) {
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -49,7 +30,7 @@ test.describe("Tasks Page - Booked Time", () => {
   }) => {
     const projectName = "BookedTime Project A";
 
-    await addTask(page, projectName, "implementation", "09:00", "11:00");
+    await addTask(page, projectName, "09:00", "11:00", "implementation");
 
     await navigateToTasks(page);
     await selectProjectOnTasksPage(page, projectName);
@@ -59,7 +40,7 @@ test.describe("Tasks Page - Booked Time", () => {
 
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
-    await addTask(page, projectName, "implementation", "13:00", "14:30");
+    await addTask(page, projectName, "13:00", "14:30", "implementation");
 
     await page.reload();
     await expect(page.getByTestId("task-list-table")).toBeVisible();
@@ -76,9 +57,9 @@ test.describe("Tasks Page - Booked Time", () => {
   }) => {
     const projectName = "BookedTime Project B";
 
-    await addTask(page, projectName, "design", "08:00", "09:15");
-    await addTask(page, projectName, "review", "10:00", "11:00");
-    await addTask(page, projectName, "design", "13:00", "14:15");
+    await addTask(page, projectName, "08:00", "09:15", "design");
+    await addTask(page, projectName, "10:00", "11:00", "review");
+    await addTask(page, projectName, "13:00", "14:15", "design");
 
     await navigateToTasks(page);
     await selectProjectOnTasksPage(page, projectName);
@@ -99,7 +80,7 @@ test.describe("Tasks Page - Booked Time", () => {
   }) => {
     const projectName = "BookedTime Project C";
 
-    await addTask(page, projectName, "feature", "09:00", "11:00");
+    await addTask(page, projectName, "09:00", "11:00", "feature");
 
     await ensureAddButtonIsVisible(page);
     await page.getByTestId("add-entry-input-date").click();

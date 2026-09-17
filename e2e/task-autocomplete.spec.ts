@@ -1,26 +1,5 @@
-import { expect, Page, test } from "@playwright/test";
-import { ensureAddButtonIsVisible } from "./utils";
-
-async function addTask(
-  page: Page,
-  projectName: string,
-  comment: string,
-  startTime: string,
-  endTime: string,
-) {
-  await ensureAddButtonIsVisible(page);
-
-  await page.getByTestId("add-entry-input-start-time").fill(startTime);
-  await page.getByTestId("add-entry-input-end-time").fill(endTime);
-  await page.getByTestId("add-entry-input-project").fill(projectName);
-  if (comment) {
-    await page.getByTestId("add-entry-input-comment").fill(comment);
-  }
-  await page.getByTestId("button-add-task").click();
-  await expect(page.getByTestId("button-add-task")).toBeVisible({
-    timeout: 5000,
-  });
-}
+import { expect, test } from "@playwright/test";
+import { addTask } from "./utils";
 
 test.describe("Task Autocomplete", () => {
   test.beforeEach(async ({ page }) => {
@@ -31,8 +10,8 @@ test.describe("Task Autocomplete", () => {
   test("should suggest existing projects in project autocomplete dropdown and select one", async ({
     page,
   }) => {
-    await addTask(page, "AlphaProject", "First task", "09:00", "10:00");
-    await addTask(page, "BetaProject", "Second task", "10:00", "11:00");
+    await addTask(page, "AlphaProject", "09:00", "10:00", "First task");
+    await addTask(page, "BetaProject", "10:00", "11:00", "Second task");
 
     const projectInput = page.getByTestId("add-entry-input-project");
     await projectInput.click();
@@ -48,9 +27,9 @@ test.describe("Task Autocomplete", () => {
   test("should suggest only comments for the selected project", async ({
     page,
   }) => {
-    await addTask(page, "ProjectOne", "Design review", "09:00", "10:00");
-    await addTask(page, "ProjectOne", "Code review", "10:00", "11:00");
-    await addTask(page, "ProjectTwo", "Sprint retro", "11:00", "12:00");
+    await addTask(page, "ProjectOne", "09:00", "10:00", "Design review");
+    await addTask(page, "ProjectOne", "10:00", "11:00", "Code review");
+    await addTask(page, "ProjectTwo", "11:00", "12:00", "Sprint retro");
 
     const projectInput = page.getByTestId("add-entry-input-project");
     await projectInput.fill("ProjectOne");
@@ -76,7 +55,7 @@ test.describe("Task Autocomplete", () => {
   test("should populate comment input when an autocomplete option is clicked", async ({
     page,
   }) => {
-    await addTask(page, "ProjectGamma", "Frontend testing", "09:00", "10:00");
+    await addTask(page, "ProjectGamma", "09:00", "10:00", "Frontend testing");
 
     const projectInput = page.getByTestId("add-entry-input-project");
     await projectInput.fill("ProjectGamma");
@@ -94,7 +73,7 @@ test.describe("Task Autocomplete", () => {
   test("should clear comment suggestions when project input is cleared", async ({
     page,
   }) => {
-    await addTask(page, "ProjectDelta", "Database indexing", "09:00", "10:00");
+    await addTask(page, "ProjectDelta", "09:00", "10:00", "Database indexing");
 
     const projectInput = page.getByTestId("add-entry-input-project");
     await projectInput.fill("ProjectDelta");

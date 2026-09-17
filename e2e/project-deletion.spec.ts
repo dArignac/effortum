@@ -1,26 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
-import { ensureAddButtonIsVisible } from "./utils";
-
-async function addTask(
-  page: Page,
-  projectName: string,
-  comment: string,
-  startTime: string,
-  endTime: string,
-) {
-  await ensureAddButtonIsVisible(page);
-
-  await page.getByTestId("add-entry-input-start-time").fill(startTime);
-  await page.getByTestId("add-entry-input-end-time").fill(endTime);
-  await page.getByTestId("add-entry-input-project").fill(projectName);
-  if (comment) {
-    await page.getByTestId("add-entry-input-comment").fill(comment);
-  }
-  await page.getByTestId("button-add-task").click();
-  await expect(page.getByTestId("button-add-task")).toBeVisible({
-    timeout: 5000,
-  });
-}
+import { addTask } from "./utils";
 
 async function navigateToProjects(page: Page) {
   await page.getByTestId("navigation-burger").click();
@@ -122,7 +101,7 @@ test.describe("Project Deletion", () => {
   test("should delete project and all its tasks when user chooses delete tasks option", async ({
     page,
   }) => {
-    await addTask(page, "ProjectToDelete", "Initial task", "09:00", "10:00");
+    await addTask(page, "ProjectToDelete", "09:00", "10:00", "Initial task");
     await navigateToProjects(page);
 
     const row = await getProjectRowByName(page, "ProjectToDelete");
@@ -150,7 +129,7 @@ test.describe("Project Deletion", () => {
   test("should cancel deletion of a project with tasks without deleting project or tasks", async ({
     page,
   }) => {
-    await addTask(page, "ProjectToKeep", "Important task", "09:00", "10:00");
+    await addTask(page, "ProjectToKeep", "09:00", "10:00", "Important task");
     await navigateToProjects(page);
 
     const row = await getProjectRowByName(page, "ProjectToKeep");
@@ -172,7 +151,7 @@ test.describe("Project Deletion", () => {
   test("should disable move option when there are no other projects available", async ({
     page,
   }) => {
-    await addTask(page, "SoleProject", "Sole task", "09:00", "10:00");
+    await addTask(page, "SoleProject", "09:00", "10:00", "Sole task");
     await navigateToProjects(page);
 
     const row = await getProjectRowByName(page, "SoleProject");
@@ -188,8 +167,8 @@ test.describe("Project Deletion", () => {
   test("should move tasks to another project without conflicts and update booked hours", async ({
     page,
   }) => {
-    await addTask(page, "SourceProj", "SourceComment", "09:00", "10:00"); // 1h
-    await addTask(page, "TargetProj", "TargetComment", "11:00", "13:00"); // 2h
+    await addTask(page, "SourceProj", "09:00", "10:00", "SourceComment"); // 1h
+    await addTask(page, "TargetProj", "11:00", "13:00", "TargetComment"); // 2h
 
     await navigateToProjects(page);
 
@@ -233,8 +212,8 @@ test.describe("Project Deletion", () => {
   test("should warn on conflicting comments when moving tasks, allow cancel without data change", async ({
     page,
   }) => {
-    await addTask(page, "ProjectOne", "CommonTask", "09:00", "10:00");
-    await addTask(page, "ProjectTwo", "CommonTask", "11:00", "12:00");
+    await addTask(page, "ProjectOne", "09:00", "10:00", "CommonTask");
+    await addTask(page, "ProjectTwo", "11:00", "12:00", "CommonTask");
 
     await navigateToProjects(page);
 
@@ -275,8 +254,8 @@ test.describe("Project Deletion", () => {
   test("should allow accepting task move despite conflicting comments and merge comments", async ({
     page,
   }) => {
-    await addTask(page, "BetaProject", "SharedComment", "08:00", "09:00");
-    await addTask(page, "GammaProject", "SharedComment", "10:00", "11:30");
+    await addTask(page, "BetaProject", "08:00", "09:00", "SharedComment");
+    await addTask(page, "GammaProject", "10:00", "11:30", "SharedComment");
 
     await navigateToProjects(page);
 
@@ -321,8 +300,8 @@ test.describe("Project Deletion", () => {
   test("should reset conflict checking state when clearing destination or switching away from move", async ({
     page,
   }) => {
-    await addTask(page, "AlphaProject", "TaskAlpha", "09:00", "10:00");
-    await addTask(page, "BetaProject", "TaskBeta", "10:00", "11:00");
+    await addTask(page, "AlphaProject", "09:00", "10:00", "TaskAlpha");
+    await addTask(page, "BetaProject", "10:00", "11:00", "TaskBeta");
 
     await navigateToProjects(page);
 

@@ -1,26 +1,5 @@
-import { expect, Page, test } from "@playwright/test";
-import { ensureAddButtonIsVisible } from "./utils";
-
-async function addTask(
-  page: Page,
-  projectName: string,
-  comment: string,
-  startTime: string,
-  endTime: string,
-) {
-  await ensureAddButtonIsVisible(page);
-
-  await page.getByTestId("add-entry-input-start-time").fill(startTime);
-  await page.getByTestId("add-entry-input-end-time").fill(endTime);
-  await page.getByTestId("add-entry-input-project").fill(projectName);
-  if (comment) {
-    await page.getByTestId("add-entry-input-comment").fill(comment);
-  }
-  await page.getByTestId("button-add-task").click();
-  await expect(page.getByTestId("button-add-task")).toBeVisible({
-    timeout: 5000,
-  });
-}
+import { expect, test } from "@playwright/test";
+import { addTask, ensureAddButtonIsVisible } from "./utils";
 
 test.describe("Summary", () => {
   test.beforeEach(async ({ page }) => {
@@ -31,15 +10,15 @@ test.describe("Summary", () => {
   test("should display sum of completed tasks grouped by project", async ({
     page,
   }) => {
-    await addTask(page, "Alpha", "", "09:00", "10:00");
-    await addTask(page, "Beta", "", "10:30", "11:30");
+    await addTask(page, "Alpha", "09:00", "10:00");
+    await addTask(page, "Beta", "10:30", "11:30");
 
     await expect(page.getByTestId("summary-sum-value")).toHaveText("02:00");
   });
 
   test("should toggle between project and task grouping", async ({ page }) => {
-    await addTask(page, "ProjectA", "meeting", "09:00", "10:00");
-    await addTask(page, "ProjectA", "coding", "10:30", "11:30");
+    await addTask(page, "ProjectA", "09:00", "10:00", "meeting");
+    await addTask(page, "ProjectA", "10:30", "11:30", "coding");
 
     // Default: grouped by project - should show one row "ProjectA"
     const summaryTable = page.locator("table").last();
@@ -70,7 +49,7 @@ test.describe("Summary", () => {
     page,
   }) => {
     // Add a task for today
-    await addTask(page, "FilterProject", "", "09:00", "10:00");
+    await addTask(page, "FilterProject", "09:00", "10:00");
 
     // Add a task for yesterday using the date picker preset
     await ensureAddButtonIsVisible(page);
@@ -96,8 +75,8 @@ test.describe("Summary", () => {
   test("should prepend project name when same comment exists across multiple projects in list-by-task mode", async ({
     page,
   }) => {
-    await addTask(page, "PA", "meeting", "09:00", "10:00");
-    await addTask(page, "PB", "meeting", "10:30", "11:30");
+    await addTask(page, "PA", "09:00", "10:00", "meeting");
+    await addTask(page, "PB", "10:30", "11:30", "meeting");
 
     // Toggle to list by task
     await page.getByTestId("checkbox-list-by-task").click();
@@ -115,8 +94,8 @@ test.describe("Summary", () => {
   test("should display (No comment) for tasks without comments in list-by-task mode", async ({
     page,
   }) => {
-    await addTask(page, "SoloProject", "", "09:00", "10:00");
-    await addTask(page, "SoloProject", "Design", "10:00", "11:30");
+    await addTask(page, "SoloProject", "09:00", "10:00");
+    await addTask(page, "SoloProject", "10:00", "11:30", "Design");
 
     // Toggle to list by task
     await page.getByTestId("checkbox-list-by-task").click();

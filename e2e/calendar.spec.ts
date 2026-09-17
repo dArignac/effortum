@@ -1,26 +1,5 @@
-import { expect, Page, test } from "@playwright/test";
-import { ensureAddButtonIsVisible } from "./utils";
-
-async function addTask(
-  page: Page,
-  projectName: string,
-  comment: string,
-  startTime: string,
-  endTime: string,
-) {
-  await ensureAddButtonIsVisible(page);
-
-  await page.getByTestId("add-entry-input-start-time").fill(startTime);
-  await page.getByTestId("add-entry-input-end-time").fill(endTime);
-  await page.getByTestId("add-entry-input-project").fill(projectName);
-  if (comment) {
-    await page.getByTestId("add-entry-input-comment").fill(comment);
-  }
-  await page.getByTestId("button-add-task").click();
-  await expect(page.getByTestId("button-add-task")).toBeVisible({
-    timeout: 5000,
-  });
-}
+import { expect, test } from "@playwright/test";
+import { addTask, ensureAddButtonIsVisible } from "./utils";
 
 function getTodayIso(): string {
   return new Date().toISOString().split("T")[0];
@@ -62,7 +41,7 @@ test.describe("Calendar", () => {
   test("should select a single date and show tasks for that date", async ({
     page,
   }) => {
-    await addTask(page, "CalProject", "", "09:00", "10:00");
+    await addTask(page, "CalProject", "09:00", "10:00");
 
     // Today should be selected by default, showing the task
     await expect(page.locator('[data-testid^="task-row-"]')).toHaveCount(1);
@@ -75,7 +54,7 @@ test.describe("Calendar", () => {
     const yesterdayIso = getYesterdayIso();
 
     // Add a task for today
-    await addTask(page, "TodayProject", "Today Task", "09:00", "10:00");
+    await addTask(page, "TodayProject", "09:00", "10:00", "Today Task");
 
     // Add a task for yesterday via the date picker preset
     await ensureAddButtonIsVisible(page);

@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { addTask } from "./utils";
 
 async function navigateToTasks(page: Page) {
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -8,21 +9,6 @@ async function navigateToTasks(page: Page) {
   await tasksNav.scrollIntoViewIfNeeded();
   await tasksNav.click({ force: true });
   await expect(page.getByTestId("tasks-page")).toBeVisible();
-}
-
-async function addTask(
-  page: Page,
-  projectName: string,
-  comment: string,
-  startTime: string,
-  endTime: string,
-) {
-  await page.getByTestId("add-entry-input-start-time").fill(startTime);
-  await page.getByTestId("add-entry-input-end-time").fill(endTime);
-  await page.getByTestId("add-entry-input-project").fill(projectName);
-  await page.getByTestId("add-entry-input-comment").fill(comment);
-  await page.getByTestId("button-add-task").click();
-  await expect(page.getByTestId("button-add-task")).toBeVisible();
 }
 
 async function selectProjectOnTasksPage(page: Page, projectName: string) {
@@ -60,9 +46,9 @@ test.describe("Tasks Page", () => {
   test("should display tasks for selected project", async ({ page }) => {
     const projectName = "Tasks Project A";
 
-    await addTask(page, projectName, "meeting", "09:00", "10:00");
-    await addTask(page, projectName, "meeting", "10:15", "11:00");
-    await addTask(page, projectName, "review", "11:15", "12:00");
+    await addTask(page, projectName, "09:00", "10:00", "meeting");
+    await addTask(page, projectName, "10:15", "11:00", "meeting");
+    await addTask(page, projectName, "11:15", "12:00", "review");
 
     await navigateToTasks(page);
     await selectProjectOnTasksPage(page, projectName);
@@ -87,8 +73,8 @@ test.describe("Tasks Page", () => {
   }) => {
     const projectName = "Tasks Project D";
 
-    await addTask(page, projectName, "analysis", "09:00", "10:00");
-    await addTask(page, projectName, "analysis", "10:15", "11:00");
+    await addTask(page, projectName, "09:00", "10:00", "analysis");
+    await addTask(page, projectName, "10:15", "11:00", "analysis");
 
     await navigateToTasks(page);
     await selectProjectOnTasksPage(page, projectName);
@@ -123,12 +109,12 @@ test.describe("Tasks Page", () => {
       await addTask(
         page,
         projectName,
-        "bulk",
         `${startHour.toString().padStart(2, "0")}:00`,
         `${startHour.toString().padStart(2, "0")}:30`,
+        "bulk",
       );
     }
-    await addTask(page, projectName, "single", "21:00", "21:30");
+    await addTask(page, projectName, "21:00", "21:30", "single");
 
     await navigateToTasks(page);
     await selectProjectOnTasksPage(page, projectName);
@@ -153,9 +139,9 @@ test.describe("Tasks Page", () => {
   }) => {
     const projectName = "Tasks Project B";
 
-    await addTask(page, projectName, "meeting", "09:00", "10:00");
-    await addTask(page, projectName, "meeting", "10:15", "11:00");
-    await addTask(page, projectName, "review", "11:15", "12:00");
+    await addTask(page, projectName, "09:00", "10:00", "meeting");
+    await addTask(page, projectName, "10:15", "11:00", "meeting");
+    await addTask(page, projectName, "11:15", "12:00", "review");
 
     await navigateToTasks(page);
     await selectProjectOnTasksPage(page, projectName);
@@ -191,9 +177,9 @@ test.describe("Tasks Page", () => {
   }) => {
     const projectName = "Tasks Project C";
 
-    await addTask(page, projectName, "analysis", "09:00", "10:00");
-    await addTask(page, projectName, "analysis", "10:15", "11:00");
-    await addTask(page, projectName, "sync", "11:15", "12:00");
+    await addTask(page, projectName, "09:00", "10:00", "analysis");
+    await addTask(page, projectName, "10:15", "11:00", "analysis");
+    await addTask(page, projectName, "11:15", "12:00", "sync");
 
     await navigateToTasks(page);
     await selectProjectOnTasksPage(page, projectName);
@@ -228,7 +214,7 @@ test.describe("Tasks Page", () => {
     const projectName = "Tasks Project Empty";
 
     // Add task with no comment
-    await addTask(page, projectName, "", "09:00", "10:00");
+    await addTask(page, projectName, "09:00", "10:00");
 
     await navigateToTasks(page);
     await selectProjectOnTasksPage(page, projectName);
@@ -253,7 +239,7 @@ test.describe("Tasks Page", () => {
   }) => {
     const projectName = "Tasks Project Blank Test";
 
-    await addTask(page, projectName, "initial comment", "09:00", "10:00");
+    await addTask(page, projectName, "09:00", "10:00", "initial comment");
 
     await navigateToTasks(page);
     await selectProjectOnTasksPage(page, projectName);

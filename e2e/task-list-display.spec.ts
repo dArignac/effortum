@@ -1,26 +1,5 @@
-import { expect, Page, test } from "@playwright/test";
-import { ensureAddButtonIsVisible } from "./utils";
-
-async function addTask(
-  page: Page,
-  projectName: string,
-  comment: string,
-  startTime: string,
-  endTime: string,
-) {
-  await ensureAddButtonIsVisible(page);
-
-  await page.getByTestId("add-entry-input-start-time").fill(startTime);
-  await page.getByTestId("add-entry-input-end-time").fill(endTime);
-  await page.getByTestId("add-entry-input-project").fill(projectName);
-  if (comment) {
-    await page.getByTestId("add-entry-input-comment").fill(comment);
-  }
-  await page.getByTestId("button-add-task").click();
-  await expect(page.getByTestId("button-add-task")).toBeVisible({
-    timeout: 5000,
-  });
-}
+import { expect, test } from "@playwright/test";
+import { addTask, ensureAddButtonIsVisible } from "./utils";
 
 test.describe("Task List Display and Sorting", () => {
   test.beforeEach(async ({ page }) => {
@@ -32,9 +11,9 @@ test.describe("Task List Display and Sorting", () => {
     page,
   }) => {
     // Add tasks in reverse / mixed order
-    await addTask(page, "SortProject", "Afternoon", "15:00", "16:00");
-    await addTask(page, "SortProject", "Morning", "08:30", "09:30");
-    await addTask(page, "SortProject", "Lunch", "12:00", "13:00");
+    await addTask(page, "SortProject", "15:00", "16:00", "Afternoon");
+    await addTask(page, "SortProject", "08:30", "09:30", "Morning");
+    await addTask(page, "SortProject", "12:00", "13:00", "Lunch");
 
     const taskRows = page.locator('[data-testid^="task-row-"]');
     await expect(taskRows).toHaveCount(3);
@@ -67,8 +46,8 @@ test.describe("Task List Display and Sorting", () => {
   test("should display correctly formatted duration in the duration column", async ({
     page,
   }) => {
-    await addTask(page, "DurationProject", "One hour 45 min", "09:00", "10:45");
-    await addTask(page, "DurationProject", "Twenty minutes", "11:00", "11:20");
+    await addTask(page, "DurationProject", "09:00", "10:45", "One hour 45 min");
+    await addTask(page, "DurationProject", "11:00", "11:20", "Twenty minutes");
 
     const taskRows = page.locator('[data-testid^="task-row-"]');
     await expect(taskRows).toHaveCount(2);
@@ -98,7 +77,7 @@ test.describe("Task List Display and Sorting", () => {
   test("should update duration display immediately when start or end time is edited", async ({
     page,
   }) => {
-    await addTask(page, "EditDuration", "", "09:00", "10:00");
+    await addTask(page, "EditDuration", "09:00", "10:00");
 
     const taskRow = page.locator('[data-testid^="task-row-"]').first();
     await expect(taskRow.locator("td").nth(5)).toHaveText("01:00");
