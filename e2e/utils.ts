@@ -44,3 +44,14 @@ export async function addTask(
     timeout: 5000,
   });
 }
+
+export async function navigateToImportExport(
+  page: Page,
+  action: "export" | "import",
+) {
+  await page.getByTestId("navigation-burger").click();
+  const importExportNav = page.getByTestId("nav-import-export");
+  await expect(importExportNav).toBeVisible();
+  await importExportNav.click();
+  await expect(page.getByTestId(`button-${action}-data`)).toBeVisible();
+}

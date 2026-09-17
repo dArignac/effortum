@@ -1,13 +1,6 @@
-import { expect, Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import fs from "fs";
-
-async function navigateToImportExport(page: Page) {
-  await page.getByTestId("navigation-burger").click();
-  const importExportNav = page.getByTestId("nav-import-export");
-  await expect(importExportNav).toBeVisible();
-  await importExportNav.click();
-  await expect(page.getByTestId("button-export-data")).toBeVisible();
-}
+import { navigateToImportExport } from "./utils";
 
 function getProjectIdByName(tables: any[], name: string): string | undefined {
   const projectsTable = tables.find((table: any) => table.name === "projects");
@@ -57,7 +50,7 @@ test.describe("Data Export Functionality", () => {
   test("should trigger download when export button is clicked", async ({
     page,
   }) => {
-    await navigateToImportExport(page);
+    await navigateToImportExport(page, "export");
 
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
@@ -96,7 +89,7 @@ test.describe("Data Export Functionality", () => {
       timeout: 5000,
     });
 
-    await navigateToImportExport(page);
+    await navigateToImportExport(page, "export");
 
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
@@ -185,7 +178,7 @@ test.describe("Data Export Functionality", () => {
       });
     }
 
-    await navigateToImportExport(page);
+    await navigateToImportExport(page, "export");
 
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
@@ -256,7 +249,7 @@ test.describe("Data Export Functionality", () => {
       page.locator('[data-testid^="button-stop-task-"]'),
     ).toBeVisible();
 
-    await navigateToImportExport(page);
+    await navigateToImportExport(page, "export");
 
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
@@ -309,7 +302,7 @@ test.describe("Data Export Functionality", () => {
   test("should export empty database when no data exists", async ({ page }) => {
     // No tasks added - export should still work
 
-    await navigateToImportExport(page);
+    await navigateToImportExport(page, "export");
 
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
@@ -380,7 +373,7 @@ test.describe("Data Export Functionality", () => {
       timeout: 5000,
     });
 
-    await navigateToImportExport(page);
+    await navigateToImportExport(page, "export");
 
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
@@ -427,7 +420,7 @@ test.describe("Data Export Functionality", () => {
   });
 
   test("should include schema information in export", async ({ page }) => {
-    await navigateToImportExport(page);
+    await navigateToImportExport(page, "export");
 
     // Set up download listener
     const downloadPromise = page.waitForEvent("download");
@@ -479,7 +472,7 @@ test.describe("Data Export Functionality", () => {
       timeout: 5000,
     });
 
-    await navigateToImportExport(page);
+    await navigateToImportExport(page, "export");
 
     // Export multiple times in succession
     const exportButton = page.getByTestId("button-export-data");
