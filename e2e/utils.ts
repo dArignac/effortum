@@ -1,5 +1,15 @@
 import { expect, Page } from "@playwright/test";
 
+export function getTodayIso(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+export function getYesterdayIso(): string {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split("T")[0];
+}
+
 export async function ensureAddButtonIsVisible(page: Page) {
   const addButton = page.getByTestId("button-add-task");
   const isAddButtonVisible = await addButton.isVisible();
@@ -34,5 +44,3 @@ export async function addTask(
     timeout: 5000,
   });
 }
-
-// TODO addRunningTask und andere Helper

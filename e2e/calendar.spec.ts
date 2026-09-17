@@ -1,15 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { addTask, ensureAddButtonIsVisible } from "./utils";
-
-function getTodayIso(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
-function getYesterdayIso(): string {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return yesterday.toISOString().split("T")[0];
-}
+import {
+  addTask,
+  ensureAddButtonIsVisible,
+  getTodayIso,
+  getYesterdayIso,
+} from "./utils";
 
 test.describe("Calendar", () => {
   test.beforeEach(async ({ page }) => {
