@@ -1,35 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
-
-async function ensureAddButtonIsVisible(page: Page) {
-  const addButton = page.getByTestId("button-add-task");
-  const isAddButtonVisible = await addButton.isVisible();
-
-  if (!isAddButtonVisible) {
-    const emptyEndTimeInput = page.getByTestId("add-entry-input-end-time");
-    if (await emptyEndTimeInput.isVisible()) {
-      await emptyEndTimeInput.fill("17:00");
-      await emptyEndTimeInput.blur();
-      await expect(addButton).toBeVisible({ timeout: 5000 });
-    }
-  }
-}
-
-async function addTaskWithProject(
-  page: Page,
-  projectName: string,
-  startTime: string,
-  endTime: string,
-) {
-  await ensureAddButtonIsVisible(page);
-
-  await page.getByTestId("add-entry-input-start-time").fill(startTime);
-  await page.getByTestId("add-entry-input-end-time").fill(endTime);
-  await page.getByTestId("add-entry-input-project").fill(projectName);
-  await page.getByTestId("button-add-task").click();
-  await expect(page.getByTestId("button-add-task")).toBeVisible({
-    timeout: 5000,
-  });
-}
+import { addTask } from "./utils";
 
 async function navigateToProjects(page: Page) {
   await page.getByTestId("navigation-burger").click();
@@ -61,7 +31,7 @@ test.describe("Projects Page - Booked Time", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
-    await addTaskWithProject(page, "Alpha", "09:00", "11:00");
+    await addTask(page, "Alpha", "09:00", "11:00");
 
     await navigateToProjects(page);
 
@@ -72,7 +42,7 @@ test.describe("Projects Page - Booked Time", () => {
 
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
-    await addTaskWithProject(page, "Alpha", "13:00", "14:00");
+    await addTask(page, "Alpha", "13:00", "14:00");
 
     await page.reload();
     await expect(page.getByTestId("task-list-table")).toBeVisible();

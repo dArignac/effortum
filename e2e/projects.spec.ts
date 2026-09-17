@@ -1,35 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
-
-async function ensureAddButtonIsVisible(page: Page) {
-  const addButton = page.getByTestId("button-add-task");
-  const isAddButtonVisible = await addButton.isVisible();
-
-  if (!isAddButtonVisible) {
-    const emptyEndTimeInput = page.getByTestId("add-entry-input-end-time");
-    if (await emptyEndTimeInput.isVisible()) {
-      await emptyEndTimeInput.fill("17:00");
-      await emptyEndTimeInput.blur();
-      await expect(addButton).toBeVisible({ timeout: 5000 });
-    }
-  }
-}
-
-async function addTaskWithProject(
-  page: Page,
-  projectName: string,
-  startTime: string,
-  endTime: string,
-) {
-  await ensureAddButtonIsVisible(page);
-
-  await page.getByTestId("add-entry-input-start-time").fill(startTime);
-  await page.getByTestId("add-entry-input-end-time").fill(endTime);
-  await page.getByTestId("add-entry-input-project").fill(projectName);
-  await page.getByTestId("button-add-task").click();
-  await expect(page.getByTestId("button-add-task")).toBeVisible({
-    timeout: 5000,
-  });
-}
+import { addTask } from "./utils";
 
 async function navigateToProjects(page: Page) {
   await page.getByTestId("navigation-burger").click();
@@ -59,9 +29,9 @@ test.describe("Projects Page", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
-    await addTaskWithProject(page, "Zeta", "09:00", "10:00");
-    await addTaskWithProject(page, "alpha", "10:15", "11:15");
-    await addTaskWithProject(page, "Beta", "11:30", "12:30");
+    await addTask(page, "Zeta", "09:00", "10:00");
+    await addTask(page, "alpha", "10:15", "11:15");
+    await addTask(page, "Beta", "11:30", "12:30");
 
     await navigateToProjects(page);
 
@@ -79,7 +49,7 @@ test.describe("Projects Page", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
-    await addTaskWithProject(page, "Alpha", "09:00", "10:00");
+    await addTask(page, "Alpha", "09:00", "10:00");
     await navigateToProjects(page);
 
     const projectInputs = page.locator('[data-testid^="project-name-input-"]');
@@ -115,8 +85,8 @@ test.describe("Projects Page", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
-    await addTaskWithProject(page, "Alpha", "09:00", "10:00");
-    await addTaskWithProject(page, "Beta", "10:15", "11:15");
+    await addTask(page, "Alpha", "09:00", "10:00");
+    await addTask(page, "Beta", "10:15", "11:15");
     await navigateToProjects(page);
 
     const projectInputs = page.locator('[data-testid^="project-name-input-"]');
@@ -148,7 +118,7 @@ test.describe("Projects Page", () => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();
 
-    await addTaskWithProject(page, "Gamma", "09:00", "10:00");
+    await addTask(page, "Gamma", "09:00", "10:00");
     await navigateToProjects(page);
 
     const projectInput = page
@@ -166,5 +136,41 @@ test.describe("Projects Page", () => {
       1,
     );
     await expect(projectInput).toHaveValue("Gamma Prime");
+  });
+
+  test("should disable save button when project name is cleared or reverted", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    await addTask(page, "Delta", "09:00", "10:00");
+    await navigateToProjects(page);
+
+    const projectInput = page
+      .locator('[data-testid^="project-name-input-"]')
+      .nth(0);
+    const saveButton = page
+      .locator('[data-testid^="button-save-project-"]')
+      .nth(0);
+
+    await expect(projectInput).toHaveValue("Delta");
+    await expect(saveButton).toBeDisabled();
+
+    // Clear project name
+    await projectInput.clear();
+    await expect(saveButton).toBeDisabled();
+
+    // Fill with spaces only
+    await projectInput.fill("   ");
+    await expect(saveButton).toBeDisabled();
+
+    // Revert back to original name
+    await projectInput.fill("Delta");
+    await expect(saveButton).toBeDisabled();
+
+    // Change to valid new name
+    await projectInput.fill("Delta New");
+    await expect(saveButton).toBeEnabled();
   });
 });
