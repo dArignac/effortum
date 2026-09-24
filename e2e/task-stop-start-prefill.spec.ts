@@ -45,12 +45,15 @@ test.describe("Task Stop and Start Prefill", () => {
     // Wait for the stop operation to complete and verify that we now have a stopped task
     await expect(stopButton).not.toBeVisible();
 
+    const endTimeInput = taskRows.first().locator("td").nth(2).locator("input");
+    const stoppedEndTime = await endTimeInput.inputValue();
+    expect(stoppedEndTime).toMatch(/^\d{2}:\d{2}$/);
+
     // Create another new task - this should have start time prefilled from last stopped task's end time
     const startInput = page.getByTestId("add-entry-input-start-time");
 
-    // The start time should be prefilled (this is the key test)
-    // We expect it to be prefilled with "09:00" since that was the end time of our stopped task
     await expect(startInput).toBeVisible();
+    await expect(startInput).toHaveValue(stoppedEndTime);
   });
 
   test("should handle task flow correctly from stop to new task creation", async ({
@@ -97,10 +100,20 @@ test.describe("Task Stop and Start Prefill", () => {
     // Wait for the stop operation to complete
     await expect(stopButton).not.toBeVisible();
 
+    const endTimeInput = taskRows.first().locator("td").nth(2).locator("input");
+    const stoppedEndTime = await endTimeInput.inputValue();
+    expect(stoppedEndTime).toMatch(/^\d{2}:\d{2}$/);
+
     // Now create a new task - it should have start time prefilled from last stopped task's end time
     const newStartInput = page.getByTestId("add-entry-input-start-time");
 
-    // Verify that we can see the add form with start time potentially prefilled
     await expect(newStartInput).toBeVisible();
+    await expect(newStartInput).toHaveValue(stoppedEndTime);
+
+    // Complete adding the new task with the prefilled start time
+    await page.getByTestId("add-entry-input-end-time").fill("23:59");
+    await page.getByTestId("add-entry-input-project").fill("Second Project");
+    await page.getByTestId("button-add-task").click();
+    await expect(page.locator('[data-testid^="task-row-"]')).toHaveCount(2);
   });
 });
