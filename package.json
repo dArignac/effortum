@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev --port 3000",
+    "dev:alt": "vite dev --port 3005",
     "build": "vite build",
     "serve": "vite preview",
     "test": "vitest run",
