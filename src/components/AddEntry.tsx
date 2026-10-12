@@ -3,7 +3,7 @@ import { TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LazyDataLoader } from "../services/lazyDataLoader";
 import { useEffortumStore } from "../store";
 import { roundTimeToNearest5Minutes } from "../utils/time";
@@ -21,6 +21,9 @@ export function AddEntryRow() {
   const endTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.endTimeOfLastStoppedTask,
   );
+  const setEndTimeOfLastStoppedTask = useEffortumStore(
+    (state) => state.setEndTimeOfLastStoppedTask,
+  );
   const roundToNearest5Minutes = useEffortumStore(
     (state) => state.settings.at(0)?.roundToNearest5Minutes ?? false,
   );
@@ -32,10 +35,18 @@ export function AddEntryRow() {
   const [, setCommentValue] = useState<string>("");
   const [availableComments, setAvailableComments] = useState<string[]>([]);
   const [isCommentLoading, setIsCommentLoading] = useState(false);
+  const lastPrefilledTimeRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (endTimeOfLastStoppedTask != null && startValue.length === 0) {
-      fieldStart.setValue(endTimeOfLastStoppedTask);
+    if (endTimeOfLastStoppedTask != null) {
+      if (
+        (startValue.length === 0 ||
+          startValue === lastPrefilledTimeRef.current) &&
+        fieldStart.getValue() !== endTimeOfLastStoppedTask
+      ) {
+        fieldStart.setValue(endTimeOfLastStoppedTask);
+        lastPrefilledTimeRef.current = endTimeOfLastStoppedTask;
+      }
     }
   }, [startValue, endTimeOfLastStoppedTask]);
 
@@ -144,6 +155,9 @@ export function AddEntryRow() {
       projectName: selectedProject,
       comment: selectedComment || "",
     });
+
+    setEndTimeOfLastStoppedTask(null);
+    lastPrefilledTimeRef.current = null;
   };
 
   return (

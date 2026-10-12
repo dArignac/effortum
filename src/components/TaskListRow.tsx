@@ -25,6 +25,9 @@ export function TaskListRow(props: { taskId: string | null }) {
   const setEndTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.setEndTimeOfLastStoppedTask,
   );
+  const endTimeOfLastStoppedTask = useEffortumStore(
+    (state) => state.endTimeOfLastStoppedTask,
+  );
   const roundToNearest5Minutes = useEffortumStore(
     (state) => state.settings.at(0)?.roundToNearest5Minutes ?? false,
   );
@@ -142,6 +145,15 @@ export function TaskListRow(props: { taskId: string | null }) {
       : "";
 
     try {
+      if (
+        (canStopTask && endTime) ||
+        (endTimeOfLastStoppedTask &&
+          task.timeEnd === endTimeOfLastStoppedTask &&
+          endTime)
+      ) {
+        setEndTimeOfLastStoppedTask(endTime);
+      }
+
       await updateTask(task.id, {
         date: dateValue || dayjs().format("YYYY-MM-DD"),
         timeStart: startTime,
@@ -173,6 +185,9 @@ export function TaskListRow(props: { taskId: string | null }) {
       : nowAsTime;
 
     try {
+      // Store the end time to be able to set it as new start time before updateTask
+      setEndTimeOfLastStoppedTask(endTime);
+
       await updateTask(task.id, {
         timeEnd: endTime,
         projectName: fieldProject.getValue(),
@@ -181,9 +196,6 @@ export function TaskListRow(props: { taskId: string | null }) {
 
       fieldEnd.setValue(endTime);
       setHasChanges(false);
-
-      // Store the end time to be able to set it as new start time.
-      setEndTimeOfLastStoppedTask(endTime);
     } catch {
       notifications.show({
         message: "Failed to stop task. Please try again.",

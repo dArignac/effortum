@@ -3,9 +3,13 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.18.2",
+    description: ["Fixes invalid set start time for new task (#172)."],
+  },
+  {
     version: "0.18.1",
     description: [
-      "Fixes an issue that the row for adding a new entry was not shown when a completed task was added or a running task was stopped (#203).",
+      "Fixes the issue, that the row for adding a new entry was not shown when a completed task was added or a running task was stopped (#203).",
     ],
   },
   {
