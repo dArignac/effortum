@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.18.1",
+    description: [
+      "Fixes an issue that the row for adding a new entry was not shown when a completed task was added or a running task was stopped (#203).",
+    ],
+  },
+  {
     version: "0.18.0",
     description: [
       "Adds deletion of projects (with moving or deleting of their tasks) (#156).",

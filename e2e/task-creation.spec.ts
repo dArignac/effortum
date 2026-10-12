@@ -372,4 +372,62 @@ test.describe("Task Creation", () => {
       new RegExp(`^(${expectedStopTimes.join("|")})$`),
     );
   });
+
+  test("should keep AddEntryRow visible after adding entry with end time or stopping entry even if an incomplete task exists on another date", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    // 1. Create an incomplete running task for yesterday
+    await page.getByTestId("add-entry-input-date").click();
+    await page.getByRole("button", { name: "Yesterday" }).click();
+    await page.getByTestId("add-entry-input-start-time").fill("09:00");
+    await page.getByTestId("add-entry-input-end-time").clear();
+    await page
+      .getByTestId("add-entry-input-project")
+      .fill("Yesterday Incomplete");
+    await page.getByTestId("button-add-task").click();
+
+    // 2. Reload the page so today's view is shown (initial view)
+    await page.reload();
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    // The Add button should be visible for today
+    const addButton = page.getByTestId("button-add-task");
+    await expect(addButton).toBeVisible();
+
+    // 3. Add a completed task for today with set end time
+    await page.getByTestId("add-entry-input-start-time").fill("10:00");
+    await page.getByTestId("add-entry-input-end-time").fill("11:00");
+    await page.getByTestId("add-entry-input-project").fill("Today Completed");
+    await addButton.click();
+
+    // Wait for the completed task row to be visible
+    await expect(page.locator('[data-testid^="task-row-"]')).toHaveCount(1, {
+      timeout: 5000,
+    });
+
+    // The Add button must still be visible after adding a completed task!
+    await expect(addButton).toBeVisible({ timeout: 3000 });
+
+    // 4. Start a running task for today
+    await page.getByTestId("add-entry-input-start-time").fill("11:30");
+    await page.getByTestId("add-entry-input-end-time").clear();
+    await page.getByTestId("add-entry-input-project").fill("Today Running");
+    await addButton.click();
+
+    // While running today, Add button should be hidden
+    await expect(addButton).not.toBeVisible();
+
+    // 5. Stop the running task today
+    const stopButton = page
+      .locator('[data-testid^="button-stop-task-"]')
+      .first();
+    await expect(stopButton).toBeVisible();
+    await stopButton.click();
+
+    // After stopping the task, Add button must become visible again!
+    await expect(addButton).toBeVisible({ timeout: 3000 });
+  });
 });

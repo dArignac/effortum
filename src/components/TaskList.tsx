@@ -28,8 +28,10 @@ export function TaskList() {
   }, [tasks, selectedDateRange]);
 
   const canAddTask = useMemo(() => {
-    return !tasks.some((task) => !task.timeEnd || task.timeEnd.length === 0);
-  }, [tasks]);
+    return !sortedTasks.some(
+      (task) => !task.timeEnd || task.timeEnd.length === 0,
+    );
+  }, [sortedTasks]);
 
   // Show loading indicator when data is being fetched
   if (isDataLoading) {
