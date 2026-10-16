@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.18.4",
+    description: [
+      "Fixes issue that newly added comments not appearing in autocompletion (#173).",
+    ],
+  },
+  {
     version: "0.18.3",
     description: [
       "Fixes issue with not shown task sum including running tasks (#212).",
