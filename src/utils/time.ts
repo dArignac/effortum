@@ -56,3 +56,29 @@ export function formatDuration(duration: number): string {
   const minutes = (duration % 60).toString().padStart(2, "0");
   return `${hours}:${minutes}`;
 }
+
+/**
+ * Returns whether a task is currently running (no end time).
+ */
+export function isRunningTask(task: { timeEnd?: string }): boolean {
+  return !task.timeEnd || task.timeEnd.length === 0;
+}
+
+/**
+ * Computes elapsed running minutes for an active task from its start datetime to now.
+ */
+export function getRunningDuration(
+  task: { date: string; timeStart: string },
+  currentTimestamp: number,
+): number {
+  if (!task.timeStart || task.timeStart.trim().length === 0) {
+    return 0;
+  }
+  const startDateTime = dayjs(`${task.date} ${task.timeStart}`);
+  if (!startDateTime.isValid()) {
+    return 0;
+  }
+
+  const duration = dayjs(currentTimestamp).diff(startDateTime, "minute");
+  return duration > 0 ? duration : 0;
+}

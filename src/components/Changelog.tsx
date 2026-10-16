@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.18.3",
+    description: [
+      "Fixes issue with not shown task sum including running tasks (#212).",
+    ],
+  },
+  {
     version: "0.18.2",
     description: ["Fixes invalid set start time for new task (#172)."],
   },
