@@ -4,7 +4,6 @@ import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
-import { LazyDataLoader } from "../services/lazyDataLoader";
 import { useEffortumStore } from "../store";
 import { roundTimeToNearest5Minutes } from "../utils/time";
 import {
@@ -17,7 +16,11 @@ import { DateSelectionField } from "./DateField";
 
 export function AddEntryRow() {
   const projects = useEffortumStore((state) => state.projects);
+  const tasks = useEffortumStore((state) => state.tasks);
   const addTask = useEffortumStore((state) => state.addTask);
+  const getUniqueTaskCommentsForProject = useEffortumStore(
+    (state) => state.getUniqueTaskCommentsForProject,
+  );
   const endTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.endTimeOfLastStoppedTask,
   );
@@ -51,6 +54,8 @@ export function AddEntryRow() {
   }, [startValue, endTimeOfLastStoppedTask]);
 
   useEffect(() => {
+    let isCancelled = false;
+
     const loadComments = async () => {
       // only fill comments if a project is selected
       if (projectValue.length === 0) {
@@ -68,20 +73,28 @@ export function AddEntryRow() {
         }
 
         // Load comments for this specific project on-demand
-        const comments = await LazyDataLoader.loadCommentsForProject(
-          project.id,
-        );
-        setAvailableComments(comments);
+        const comments = await getUniqueTaskCommentsForProject(project.id);
+        if (!isCancelled) {
+          setAvailableComments(comments);
+        }
       } catch (error) {
         console.error("Failed to load comments:", error);
-        setAvailableComments([]);
+        if (!isCancelled) {
+          setAvailableComments([]);
+        }
       } finally {
-        setIsCommentLoading(false);
+        if (!isCancelled) {
+          setIsCommentLoading(false);
+        }
       }
     };
 
     loadComments();
-  }, [projectValue, projects]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [projectValue, projects, tasks, getUniqueTaskCommentsForProject]);
 
   const fieldDate = useField({
     initialValue: dayjs().format("YYYY-MM-DD"),

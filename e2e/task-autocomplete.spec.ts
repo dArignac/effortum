@@ -93,4 +93,50 @@ test.describe("Task Autocomplete", () => {
       page.getByRole("option", { name: "Database indexing" }),
     ).not.toBeVisible();
   });
+
+  test("should suggest new comment value in other task rows after updating first task comment", async ({
+    page,
+  }) => {
+    await addTask(page, "ProjectSync", "08:00", "09:00", "Initial comment 1");
+    await addTask(page, "ProjectSync", "09:00", "10:00", "Initial comment 2");
+    await addTask(page, "ProjectSync", "10:00", "11:00", "Initial comment 3");
+
+    const rows = page.locator('[data-testid^="task-row-"]');
+    await expect(rows).toHaveCount(3);
+
+    // Update comment of the first task to a brand new value
+    const firstRow = rows.nth(0);
+    const firstRowCommentInput = firstRow.locator("td").nth(4).locator("input");
+    await firstRowCommentInput.clear();
+    await firstRowCommentInput.fill("Brand new comment");
+
+    const updateButton = firstRow.locator(
+      '[data-testid^="button-update-task-"]',
+    );
+    await updateButton.click();
+    await expect(page.getByText("Task updated successfully!")).toBeVisible();
+
+    // Now adjust comment on the second task - expect new comment to be suggested in dropdown
+    const secondRow = rows.nth(1);
+    const secondRowCommentInput = secondRow
+      .locator("td")
+      .nth(4)
+      .locator("input");
+    await secondRowCommentInput.clear();
+    await secondRowCommentInput.click();
+
+    await expect(
+      page.getByRole("option", { name: "Brand new comment" }),
+    ).toBeVisible();
+
+    // Also adjust comment on the third task - expect new comment to be suggested in dropdown
+    const thirdRow = rows.nth(2);
+    const thirdRowCommentInput = thirdRow.locator("td").nth(4).locator("input");
+    await thirdRowCommentInput.clear();
+    await thirdRowCommentInput.click();
+
+    await expect(
+      page.getByRole("option", { name: "Brand new comment" }),
+    ).toBeVisible();
+  });
 });

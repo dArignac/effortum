@@ -4,7 +4,7 @@ import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useEffortumStore } from "../store";
 import { getDurationAsTime, roundTimeToNearest5Minutes } from "../utils/time";
 import {
@@ -35,7 +35,6 @@ export function TaskListRow(props: { taskId: string | null }) {
   const [hasChanges, setHasChanges] = useState(false);
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [canStopTask, setCanStopTask] = useState(false);
-  const [availableComments, setAvailableComments] = useState<string[]>([]);
 
   const task = tasks.find((task) => task.id === props.taskId);
   if (!task) {
@@ -96,25 +95,19 @@ export function TaskListRow(props: { taskId: string | null }) {
     },
   });
 
-  useEffect(() => {
-    const loadComments = async () => {
-      // only fill comments if a project is selected
-      if (fieldProject.getValue().length === 0) {
-        setAvailableComments([]);
-        return;
-      }
+  const availableComments = useMemo(() => {
+    const projectName = fieldProject.getValue().trim();
+    if (projectName.length === 0) {
+      return [];
+    }
 
-      const project = projects.find((p) => p.name === fieldProject.getValue());
-      if (!project) {
-        setAvailableComments([]);
-        return;
-      }
+    const project = projects.find((p) => p.name === projectName);
+    if (!project) {
+      return [];
+    }
 
-      const comments = await getCommentsForProject(project.id);
-      setAvailableComments(comments);
-    };
-    loadComments();
-  }, [fieldProject.getValue(), projects, getCommentsForProject]);
+    return getCommentsForProject(project.id);
+  }, [fieldProject.getValue(), projects, getCommentsForProject, tasks]);
 
   /**
    * Validates and persists row edits for the current task.
