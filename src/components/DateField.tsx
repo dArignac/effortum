@@ -27,6 +27,12 @@ export function DateSelectionField(props: {
         },
       ]}
       size="xs"
+      styles={{
+        input: {
+          whiteSpace: "nowrap",
+          fontVariantNumeric: "tabular-nums",
+        },
+      }}
       error={props.error}
       data-testid={props.dataTestId}
     />
