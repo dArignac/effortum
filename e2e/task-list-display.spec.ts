@@ -88,4 +88,30 @@ test.describe("Task List Display and Sorting", () => {
     // Duration should update immediately based on field values
     await expect(taskRow.locator("td").nth(5)).toHaveText("02:30");
   });
+
+  test("should render date input on a single line without wrapping or height expansion", async ({
+    page,
+  }) => {
+    await addTask(page, "DateWrapTest", "09:00", "10:00");
+
+    const taskRow = page.locator('[data-testid^="task-row-"]').first();
+    const dateButton = taskRow.locator("td").nth(0).locator("button");
+    await expect(dateButton).toBeVisible();
+
+    // Verify white-space nowrap is applied to prevent text wrapping on any font/OS
+    await expect(dateButton).toHaveCSS("white-space", "nowrap");
+
+    // Verify date button has standard single-line height (~30px) and does not expand to multiple lines
+    const box = await dateButton.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.height).toBeLessThanOrEqual(36);
+
+    // Verify table header Date column has at least 125px width
+    const dateHeader = page
+      .locator('[data-testid="task-list-table"] th')
+      .first();
+    const headerBox = await dateHeader.boundingBox();
+    expect(headerBox).not.toBeNull();
+    expect(headerBox!.width).toBeGreaterThanOrEqual(125);
+  });
 });

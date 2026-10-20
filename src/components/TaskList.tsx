@@ -39,7 +39,7 @@ export function TaskList() {
       <Table stickyHeader stickyHeaderOffset={0} data-testid="task-list-table">
         <Table.Thead>
           <Table.Tr>
-            <Table.Th w={110}>Date</Table.Th>
+            <Table.Th w={125}>Date</Table.Th>
             <Table.Th w={80}>Start</Table.Th>
             <Table.Th w={80}>End</Table.Th>
             <Table.Th>Project</Table.Th>
@@ -63,7 +63,7 @@ export function TaskList() {
     <Table stickyHeader stickyHeaderOffset={0} data-testid="task-list-table">
       <Table.Thead>
         <Table.Tr>
-          <Table.Th w={110}>Date</Table.Th>
+          <Table.Th w={125}>Date</Table.Th>
           <Table.Th w={80}>Start</Table.Th>
           <Table.Th w={80}>End</Table.Th>
           <Table.Th>Project</Table.Th>
