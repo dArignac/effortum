@@ -99,10 +99,19 @@ test.describe("Summary sum including running task", () => {
     await page.getByTestId("add-entry-input-project").fill("Today Project");
     await page.getByTestId("button-add-task").click();
 
-    // 4. Start a running task for today
+    // 4. Try to start a running task for today while yesterday's task is still running (prevented)
     await page.getByTestId("add-entry-input-start-time").fill("00:00");
     await page.getByTestId("add-entry-input-end-time").fill("");
     await page.getByTestId("add-entry-input-project").fill("Today Project");
+    await page.getByTestId("button-add-task").click();
+    await expect(
+      page.locator('text="End time is required while another task is running"'),
+    ).toBeVisible({ timeout: 5000 });
+
+    // Stop yesterday's running task first
+    await page.getByTestId("button-stop-active-task").click();
+
+    // Now start the running task for today
     await page.getByTestId("button-add-task").click();
 
     // Expected: Summary sum including running task should be visible immediately WITHOUT page reload!

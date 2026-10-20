@@ -11,13 +11,27 @@ export class LazyDataLoader {
   /**
    * Load tasks for a specific date range
    */
-  static async loadTasksForDateRange(startDate: string, endDate: string): Promise<Task[]> {
+  static async loadTasksForDateRange(
+    startDate: string,
+    endDate: string,
+  ): Promise<Task[]> {
     try {
       // Query tasks within the specified date range
       const tasks = await db.tasks
-        .where('date')
+        .where("date")
         .between(startDate, endDate, true, true)
         .toArray();
+
+      // Query any active running tasks (e.g. started on another date and still running)
+      const activeTasks = await db.tasks
+        .filter((task) => !task.timeEnd || task.timeEnd.length === 0)
+        .toArray();
+
+      for (const activeTask of activeTasks) {
+        if (!tasks.some((t) => t.id === activeTask.id)) {
+          tasks.push(activeTask);
+        }
+      }
 
       return tasks;
     } catch (error) {
@@ -31,7 +45,7 @@ export class LazyDataLoader {
    */
   static async loadProjects(): Promise<Project[]> {
     try {
-      const projects = await db.projects.orderBy('name').toArray();
+      const projects = await db.projects.orderBy("name").toArray();
       return projects;
     } catch (error) {
       console.error("Error loading projects:", error);
@@ -72,17 +86,17 @@ export class LazyDataLoader {
     try {
       // Get all tasks for this project and extract unique comments
       const tasks = await db.tasks
-        .where('projectId')
+        .where("projectId")
         .equals(projectId)
         .toArray();
 
       const comments = tasks
-        .map(task => (task.comment ?? "").trim())
-        .filter(comment => comment.length > 0);
+        .map((task) => (task.comment ?? "").trim())
+        .filter((comment) => comment.length > 0);
 
       // Return unique comments, sorted alphabetically
       return Array.from(new Set(comments)).sort((a, b) =>
-        a.localeCompare(b, undefined, { sensitivity: "base" })
+        a.localeCompare(b, undefined, { sensitivity: "base" }),
       );
     } catch (error) {
       console.error("Error loading comments for project:", error);
@@ -93,7 +107,10 @@ export class LazyDataLoader {
   /**
    * Load all data for a specific date range
    */
-  static async loadDataForDateRange(startDate: string, endDate: string): Promise<{
+  static async loadDataForDateRange(
+    startDate: string,
+    endDate: string,
+  ): Promise<{
     tasks: Task[];
     projects: Project[];
     overtime: Overtime[];
@@ -104,7 +121,7 @@ export class LazyDataLoader {
         this.loadTasksForDateRange(startDate, endDate),
         this.loadProjects(),
         this.loadOvertime(),
-        this.loadSettings()
+        this.loadSettings(),
       ]);
 
       return { tasks, projects, overtime, settings };
@@ -125,13 +142,13 @@ export class LazyDataLoader {
   }> {
     try {
       // For initial load, we should get the tasks for today only
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
 
       const [tasks, projects, overtime, settings] = await Promise.all([
         this.loadTasksForDateRange(today, today),
         this.loadProjects(),
         this.loadOvertime(),
-        this.loadSettings()
+        this.loadSettings(),
       ]);
 
       return { tasks, projects, overtime, settings };

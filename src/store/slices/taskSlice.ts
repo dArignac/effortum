@@ -2,6 +2,7 @@ import { Project } from "@/models/Project";
 import { Task } from "@/models/Task";
 import { db } from "@/store/db";
 import { StoreGet, StoreSet, TaskInput, TaskUpdateInput } from "@/store/types";
+import { isRunningTask } from "../../utils/time";
 import dayjs from "dayjs";
 
 export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
@@ -29,6 +30,16 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
   },
 
   addTask: async (task: TaskInput) => {
+    const isNewTaskActive = isRunningTask(task);
+    if (isNewTaskActive) {
+      const existingActiveTask = get().tasks.find(isRunningTask);
+      if (existingActiveTask) {
+        throw new Error(
+          "Only one active task is allowed. Please stop the running task first.",
+        );
+      }
+    }
+
     const normalizedProjectName = (
       task.projectName ??
       task.project ??
@@ -75,6 +86,20 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
     if (!task) {
       console.error(`Task with id ${id} not found`);
       return;
+    }
+
+    if (
+      updates.timeEnd !== undefined &&
+      (!updates.timeEnd || updates.timeEnd.trim().length === 0)
+    ) {
+      const existingActiveTask = get().tasks.find(
+        (t) => t.id !== id && isRunningTask(t),
+      );
+      if (existingActiveTask) {
+        throw new Error(
+          "Only one active task is allowed. Please stop the running task first.",
+        );
+      }
     }
 
     const normalizedProjectName = (

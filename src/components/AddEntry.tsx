@@ -3,9 +3,9 @@ import { TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useEffortumStore } from "../store";
-import { roundTimeToNearest5Minutes } from "../utils/time";
+import { isRunningTask, roundTimeToNearest5Minutes } from "../utils/time";
 import {
   validateDate,
   validateEnd,
@@ -39,6 +39,9 @@ export function AddEntryRow() {
   const [availableComments, setAvailableComments] = useState<string[]>([]);
   const [isCommentLoading, setIsCommentLoading] = useState(false);
   const lastPrefilledTimeRef = useRef<string | null>(null);
+
+  const runningTask = useMemo(() => tasks.find(isRunningTask), [tasks]);
+  const runningTaskRef = useRef(runningTask);
 
   useEffect(() => {
     if (endTimeOfLastStoppedTask != null) {
@@ -110,9 +113,24 @@ export function AddEntryRow() {
 
   const fieldEnd = useField({
     initialValue: "",
-    validate: (value) => validateEnd(value, fieldStart.getValue()),
+    validate: (value) => {
+      if (runningTaskRef.current && (!value || value.trim().length === 0)) {
+        return "End time is required while another task is running";
+      }
+      return validateEnd(value, fieldStart.getValue());
+    },
     onValueChange: (value) => setEndValue(value),
   });
+
+  useEffect(() => {
+    runningTaskRef.current = runningTask;
+    if (
+      !runningTask &&
+      fieldEnd.error === "End time is required while another task is running"
+    ) {
+      fieldEnd.setError(null);
+    }
+  }, [runningTask, fieldEnd]);
 
   const fieldProject = useField({
     initialValue: "",
@@ -160,17 +178,37 @@ export function AddEntryRow() {
         : selectedEnd
       : "";
 
-    await addTask({
-      id: crypto.randomUUID(),
-      date: selectedDate,
-      timeStart: roundedStartValue,
-      timeEnd: roundedEndValue,
-      projectName: selectedProject,
-      comment: selectedComment || "",
-    });
+    if (runningTask && !selectedEnd.trim()) {
+      notifications.show({
+        title: "Active task already running",
+        message: `An active task is already running on ${runningTask.date} (${runningTask.project || "No project"}). Only one active task is allowed. Please stop that task first or set an end time.`,
+        color: "red",
+      });
+      return;
+    }
 
-    setEndTimeOfLastStoppedTask(null);
-    lastPrefilledTimeRef.current = null;
+    try {
+      await addTask({
+        id: crypto.randomUUID(),
+        date: selectedDate,
+        timeStart: roundedStartValue,
+        timeEnd: roundedEndValue,
+        projectName: selectedProject,
+        comment: selectedComment || "",
+      });
+
+      setEndTimeOfLastStoppedTask(null);
+      lastPrefilledTimeRef.current = null;
+    } catch (error) {
+      notifications.show({
+        title: "Failed to add task",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to add task. Please try again.",
+        color: "red",
+      });
+    }
   };
 
   return (
@@ -191,6 +229,7 @@ export function AddEntryRow() {
       <Table.Td>
         <TimeInput
           size="xs"
+          placeholder={runningTask ? "End (required)" : undefined}
           {...fieldEnd.getInputProps()}
           data-testid="add-entry-input-end-time"
         />
