@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.18.5",
+    description: [
+      "Fixes issue with input field widths in some cases in Chrome on MacOS.",
+    ],
+  },
+  {
     version: "0.18.4",
     description: [
       "Fixes issue that newly added comments not appearing in autocompletion (#173).",
