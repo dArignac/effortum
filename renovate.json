@@ -14,6 +14,10 @@
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true
+    },
+    {
+      "matchDepTypes": ["packageManager"],
+      "enabled": false
     }
   ]
 }
