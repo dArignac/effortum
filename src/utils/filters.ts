@@ -7,7 +7,7 @@ dayjs.extend(isBetween);
 
 export function filterTasksByDateRange(
   selectedDateRange: [string | null, string | null],
-): (value: Task, index: number, array: Task[]) => boolean {
+): (value: Task, index?: number, array?: Task[]) => boolean {
   return (task) => {
     if (selectedDateRange[0] === null && selectedDateRange[1] === null) {
       return true;

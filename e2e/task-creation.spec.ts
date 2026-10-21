@@ -411,16 +411,30 @@ test.describe("Task Creation", () => {
     // The Add button must still be visible after adding a completed task!
     await expect(addButton).toBeVisible({ timeout: 3000 });
 
-    // 4. Start a running task for today
+    // 4. Try to start a running task for today while yesterday's task is still running (should be prevented)
     await page.getByTestId("add-entry-input-start-time").fill("11:30");
     await page.getByTestId("add-entry-input-end-time").clear();
     await page.getByTestId("add-entry-input-project").fill("Today Running");
     await addButton.click();
 
+    // The active task from yesterday must prevent starting a new running task
+    await expect(
+      page.locator('text="End time is required while another task is running"'),
+    ).toBeVisible({ timeout: 5000 });
+    await expect(addButton).toBeVisible();
+
+    // 5. Stop yesterday's running task using the stop button in the active task alert
+    const stopActiveAlertButton = page.getByTestId("button-stop-active-task");
+    await expect(stopActiveAlertButton).toBeVisible();
+    await stopActiveAlertButton.click();
+
+    // 6. Now that the previous active task is stopped, start the running task for today
+    await addButton.click();
+
     // While running today, Add button should be hidden
     await expect(addButton).not.toBeVisible();
 
-    // 5. Stop the running task today
+    // 7. Stop the running task today
     const stopButton = page
       .locator('[data-testid^="button-stop-task-"]')
       .first();

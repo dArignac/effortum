@@ -150,4 +150,109 @@ describe("createTaskSlice", () => {
       tasks: [{ id: "t1", comment: "Updated" }],
     });
   });
+
+  it("addTask rejects adding an active task when an active task is already running", async () => {
+    const set = vi.fn();
+    const state = {
+      projects: [{ id: "p1", name: "Alpha" }],
+      tasks: [
+        {
+          id: "t1",
+          date: "2026-09-08",
+          timeStart: "09:00",
+          timeEnd: "",
+          projectId: "p1",
+          project: "Alpha",
+          comment: "Existing running task",
+        },
+      ],
+    };
+    const get = vi.fn(() => state);
+    const slice = createTaskSlice(set as never, get as never);
+
+    await expect(
+      slice.addTask({
+        id: "t2",
+        date: "2026-09-09",
+        timeStart: "10:00",
+        projectName: "Alpha",
+        comment: "Second running task",
+      }),
+    ).rejects.toThrow("Only one active task is allowed");
+
+    expect(mockDb.tasks.add).not.toHaveBeenCalled();
+  });
+
+  it("addTask allows adding a completed task when an active task is running", async () => {
+    const set = vi.fn();
+    const state = {
+      projects: [{ id: "p1", name: "Alpha" }],
+      tasks: [
+        {
+          id: "t1",
+          date: "2026-09-08",
+          timeStart: "09:00",
+          timeEnd: "",
+          projectId: "p1",
+          project: "Alpha",
+          comment: "Existing running task",
+        },
+      ],
+    };
+    const get = vi.fn(() => state);
+    const slice = createTaskSlice(set as never, get as never);
+
+    mockDb.tasks.toArray.mockResolvedValue([
+      state.tasks[0],
+      { id: "t2", timeEnd: "11:00" },
+    ]);
+
+    await slice.addTask({
+      id: "t2",
+      date: "2026-09-09",
+      timeStart: "10:00",
+      timeEnd: "11:00",
+      projectName: "Alpha",
+      comment: "Completed task",
+    });
+
+    expect(mockDb.tasks.add).toHaveBeenCalledTimes(1);
+  });
+
+  it("updateTask rejects clearing timeEnd when another active task is already running", async () => {
+    const set = vi.fn();
+    const state = {
+      projects: [{ id: "p1", name: "Alpha" }],
+      tasks: [
+        {
+          id: "t1",
+          date: "2026-09-08",
+          timeStart: "09:00",
+          timeEnd: "",
+          projectId: "p1",
+          project: "Alpha",
+          comment: "Running task",
+        },
+        {
+          id: "t2",
+          date: "2026-09-08",
+          timeStart: "10:00",
+          timeEnd: "11:00",
+          projectId: "p1",
+          project: "Alpha",
+          comment: "Completed task",
+        },
+      ],
+    };
+    const get = vi.fn(() => state);
+    const slice = createTaskSlice(set as never, get as never);
+
+    await expect(
+      slice.updateTask("t2", {
+        timeEnd: "",
+      }),
+    ).rejects.toThrow("Only one active task is allowed");
+
+    expect(mockDb.tasks.update).not.toHaveBeenCalled();
+  });
 });

@@ -3,6 +3,10 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.18.6",
+    description: ["Fixes issue that allowed multiple running tasks (#217)."],
+  },
+  {
     version: "0.18.5",
     description: [
       "Fixes issue with input field widths in some cases in Chrome on MacOS.",

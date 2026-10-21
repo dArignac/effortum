@@ -1,9 +1,7 @@
 import { ActionIcon, Box, Checkbox, Table } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconClipboardList } from "@tabler/icons-react";
-import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
 import {
