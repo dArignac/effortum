@@ -8,6 +8,7 @@ const { mockDb } = vi.hoisted(() => ({
       where: vi.fn(),
       toArray: vi.fn(),
       update: vi.fn(),
+      filter: vi.fn(),
     },
     projects: {
       toArray: vi.fn(),
@@ -31,6 +32,9 @@ vi.mock("@/store/db", () => ({
 describe("createLoadingMigrationSlice", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDb.tasks.filter.mockReturnValue({
+      toArray: vi.fn().mockResolvedValue([]),
+    });
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-08T10:00:00.000Z"));
   });
@@ -107,6 +111,59 @@ describe("createLoadingMigrationSlice", () => {
     await slice.loadFromIndexedDb();
 
     expect(state.backfillProjectRelationsIfMissing).toHaveBeenCalledTimes(1);
+  });
+
+  it("loadFromIndexedDb includes active running tasks from other dates", async () => {
+    const set = vi.fn();
+    const state = {
+      projects: [],
+      backfillProjectRelationsIfMissing: vi.fn(),
+    };
+    const get = vi.fn(() => state);
+
+    mockDb.tasks.limit.mockReturnValue({
+      toArray: vi.fn().mockResolvedValue([{ projectId: "p1" }]),
+    });
+    mockDb.tasks.where.mockReturnValue({
+      between: vi.fn(() => ({
+        toArray: vi.fn().mockResolvedValue([
+          {
+            id: "today-task",
+            date: "2026-09-08",
+            timeStart: "09:00",
+            timeEnd: "10:00",
+          },
+        ]),
+      })),
+    });
+    mockDb.tasks.filter.mockReturnValue({
+      toArray: vi.fn().mockResolvedValue([
+        {
+          id: "running-past-task",
+          date: "2026-09-01",
+          timeStart: "08:00",
+          timeEnd: "",
+        },
+      ]),
+    });
+    mockDb.projects.orderBy.mockReturnValue({
+      toArray: vi.fn().mockResolvedValue([]),
+    });
+    mockDb.overtime.toArray.mockResolvedValue([]);
+    mockDb.settings.toArray.mockResolvedValue([]);
+
+    const slice = createLoadingMigrationSlice(set as never, get as never);
+
+    await slice.loadFromIndexedDb();
+
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tasks: [
+          expect.objectContaining({ id: "today-task" }),
+          expect.objectContaining({ id: "running-past-task" }),
+        ],
+      }),
+    );
   });
 
   it("backfillProjectRelationsIfMissing creates fallback project and updates orphan task", async () => {

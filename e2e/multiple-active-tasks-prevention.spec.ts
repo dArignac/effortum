@@ -33,7 +33,6 @@ test.describe("Multiple Active Tasks Prevention (#217)", () => {
     await expect(externalRow).toBeVisible();
     await expect(externalRow).toContainText("Vacation Project");
     await expect(externalRow).toContainText("09:00");
-    await expect(externalRow).toContainText("Active");
 
     // 3. User tries to start a new active task for today (leaving End time empty) -> PREVENTED!
     await page.getByTestId("add-entry-input-start-time").fill("10:00");
@@ -114,5 +113,47 @@ test.describe("Multiple Active Tasks Prevention (#217)", () => {
     // Verify alert and additional row disappear immediately
     await expect(page.getByTestId("active-task-alert")).not.toBeVisible();
     await expect(page.getByTestId("active-running-task-row")).not.toBeVisible();
+  });
+
+  test("persists warning sign and running task after page reload and prevents starting second active task", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    // 1. Switch to yesterday in date selection and start a task
+    await page.getByTestId("add-entry-input-date").click();
+    await page.getByRole("button", { name: "Yesterday" }).click();
+    await page.getByTestId("add-entry-input-start-time").fill("09:00");
+    await page.getByTestId("add-entry-input-end-time").clear();
+    await page.getByTestId("add-entry-input-project").fill("Past Project");
+    await page.getByTestId("button-add-task").click();
+
+    // 2. Select today in the calendar
+    const todayIso = new Date().toISOString().split("T")[0];
+    await page.getByTestId(`summary-date-day-${todayIso}`).click();
+    await page.getByTestId(`summary-date-day-${todayIso}`).click();
+
+    // Warning alert is visible
+    await expect(page.getByTestId("active-task-alert")).toBeVisible();
+    await expect(page.getByTestId("active-running-task-row")).toBeVisible();
+
+    // 3. RELOAD the page (today is shown by default on fresh page load)
+    await page.reload();
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    // Warning sign MUST be shown on page reload!
+    await expect(page.getByTestId("active-task-alert")).toBeVisible();
+    await expect(page.getByTestId("active-running-task-row")).toBeVisible();
+
+    // 4. Try to start a new active task for today -> PREVENTED!
+    await page.getByTestId("add-entry-input-start-time").fill("10:00");
+    await page.getByTestId("add-entry-input-end-time").clear();
+    await page.getByTestId("add-entry-input-project").fill("Today Project");
+    await page.getByTestId("button-add-task").click();
+
+    await expect(
+      page.locator('text="End time is required while another task is running"'),
+    ).toBeVisible({ timeout: 5000 });
   });
 });

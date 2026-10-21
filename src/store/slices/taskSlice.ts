@@ -32,7 +32,12 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
   addTask: async (task: TaskInput) => {
     const isNewTaskActive = isRunningTask(task);
     if (isNewTaskActive) {
-      const existingActiveTask = get().tasks.find(isRunningTask);
+      let existingActiveTask = get().tasks.find(isRunningTask);
+      if (!existingActiveTask && typeof db.tasks?.filter === "function") {
+        existingActiveTask = await db.tasks
+          .filter((t) => !t.timeEnd || t.timeEnd.length === 0)
+          .first();
+      }
       if (existingActiveTask) {
         throw new Error(
           "Only one active task is allowed. Please stop the running task first.",
@@ -92,9 +97,14 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
       updates.timeEnd !== undefined &&
       (!updates.timeEnd || updates.timeEnd.trim().length === 0)
     ) {
-      const existingActiveTask = get().tasks.find(
+      let existingActiveTask = get().tasks.find(
         (t) => t.id !== id && isRunningTask(t),
       );
+      if (!existingActiveTask && typeof db.tasks?.filter === "function") {
+        existingActiveTask = await db.tasks
+          .filter((t) => t.id !== id && (!t.timeEnd || t.timeEnd.length === 0))
+          .first();
+      }
       if (existingActiveTask) {
         throw new Error(
           "Only one active task is allowed. Please stop the running task first.",

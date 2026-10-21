@@ -1,7 +1,6 @@
 import {
   ActionIcon,
   Alert,
-  Badge,
   Button,
   Group,
   Space,
@@ -184,12 +183,7 @@ export function TaskList() {
               bg="var(--mantine-color-orange-light)"
             >
               <Table.Td>
-                <Group gap={4} wrap="nowrap">
-                  <Badge color="orange" size="xs">
-                    Active
-                  </Badge>
-                  <Text size="xs">{runningTask.date}</Text>
-                </Group>
+                <Text size="xs">{runningTask.date}</Text>
               </Table.Td>
               <Table.Td>
                 <Text size="xs">{runningTask.timeStart}</Text>

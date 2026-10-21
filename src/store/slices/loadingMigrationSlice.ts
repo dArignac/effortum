@@ -1,5 +1,6 @@
 import { db } from "@/store/db";
 import { StoreGet, StoreSet } from "@/store/types";
+import dayjs from "dayjs";
 
 export const createLoadingMigrationSlice = (set: StoreSet, get: StoreGet) => ({
   backfillProjectRelationsIfMissing: async () => {
@@ -91,13 +92,25 @@ export const createLoadingMigrationSlice = (set: StoreSet, get: StoreGet) => ({
       }
 
       // Load only initial data for today's date
-      const today = new Date().toISOString().split("T")[0];
-      const [tasks, projects, overtime, settings] = await Promise.all([
+      const today = dayjs().format("YYYY-MM-DD");
+      const [todayTasks, projects, overtime, settings] = await Promise.all([
         db.tasks.where("date").between(today, today, true, true).toArray(),
         db.projects.orderBy("name").toArray(),
         db.overtime.toArray(),
         db.settings.toArray(),
       ]);
+
+      // Query any active running tasks (unclosed tasks with no timeEnd)
+      const activeTasks = await db.tasks
+        .filter((task) => !task.timeEnd || task.timeEnd.length === 0)
+        .toArray();
+
+      const tasks = [...todayTasks];
+      for (const activeTask of activeTasks) {
+        if (!tasks.some((t) => t.id === activeTask.id)) {
+          tasks.push(activeTask);
+        }
+      }
 
       set({
         tasks,
