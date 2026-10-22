@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.19.0",
+    description: [
+      "Adds possibility to start a task based on tasks from the currently shown list (#224).",
+    ],
+  },
+  {
     version: "0.18.6",
     description: ["Fixes issue that allowed multiple running tasks (#217)."],
   },
