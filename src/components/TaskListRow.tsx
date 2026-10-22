@@ -1,12 +1,20 @@
-import { ActionIcon, Autocomplete, Table } from "@mantine/core";
+import { ActionIcon, Autocomplete, Group, Table } from "@mantine/core";
 import { TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconClockPause, IconPencilCheck } from "@tabler/icons-react";
+import {
+  IconClockPause,
+  IconPencilCheck,
+  IconPlayerPlay,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { useEffortumStore } from "../store";
-import { getDurationAsTime, roundTimeToNearest5Minutes } from "../utils/time";
+import {
+  getDurationAsTime,
+  isRunningTask,
+  roundTimeToNearest5Minutes,
+} from "../utils/time";
 import {
   validateDate,
   validateEnd,
@@ -17,6 +25,7 @@ import { DateSelectionField } from "./DateField";
 
 export function TaskListRow(props: { taskId: string | null }) {
   const tasks = useEffortumStore((state) => state.tasks);
+  const addTask = useEffortumStore((state) => state.addTask);
   const updateTask = useEffortumStore((state) => state.updateTask);
   const getCommentsForProject = useEffortumStore(
     (state) => state.getCommentsForProject,
@@ -35,6 +44,8 @@ export function TaskListRow(props: { taskId: string | null }) {
   const [hasChanges, setHasChanges] = useState(false);
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [canStopTask, setCanStopTask] = useState(false);
+
+  const hasRunningTask = useMemo(() => tasks.some(isRunningTask), [tasks]);
 
   const task = tasks.find((task) => task.id === props.taskId);
   if (!task) {
@@ -197,6 +208,39 @@ export function TaskListRow(props: { taskId: string | null }) {
     }
   };
 
+  /**
+   * Starts a new running task with this task's project and comment at the current time.
+   */
+  const restartTask = async () => {
+    const nowAsTime = dayjs().format("HH:mm");
+    const startTime = roundToNearest5Minutes
+      ? roundTimeToNearest5Minutes(nowAsTime)
+      : nowAsTime;
+    const today = dayjs().format("YYYY-MM-DD");
+    const projectToUse = fieldProject.getValue().trim() || currentProjectName;
+    const commentToUse = fieldComment.getValue() || task.comment || "";
+
+    try {
+      setEndTimeOfLastStoppedTask(null);
+      await addTask({
+        id: crypto.randomUUID(),
+        date: today,
+        timeStart: startTime,
+        timeEnd: "",
+        projectId: task.projectId,
+        projectName: projectToUse,
+        comment: commentToUse,
+      });
+
+      notifications.show({ message: "Task started successfully!" });
+    } catch {
+      notifications.show({
+        message: "Failed to start task. Please try again.",
+        color: "red",
+      });
+    }
+  };
+
   return (
     <Table.Tr key={task.id} data-testid={`task-row-${task.id}`}>
       <Table.Td>
@@ -231,28 +275,41 @@ export function TaskListRow(props: { taskId: string | null }) {
         {getDurationAsTime(fieldStart.getValue(), fieldEnd.getValue())}
       </Table.Td>
       <Table.Td>
-        <ActionIcon
-          variant="default"
-          size="md"
-          aria-label="Update Task"
-          mt={1}
-          onClick={updateEntry}
-          disabled={!hasChanges}
-          data-testid={`button-update-task-${task.id}`}
-        >
-          <IconPencilCheck />
-        </ActionIcon>{" "}
-        {canStopTask && (
+        <Group gap={4} wrap="nowrap">
           <ActionIcon
-            variant="light"
+            variant="default"
             size="md"
-            aria-label="Stop Task"
-            onClick={stopTask}
-            data-testid={`button-stop-task-${task.id}`}
+            aria-label="Update Task"
+            mt={1}
+            onClick={updateEntry}
+            disabled={!hasChanges}
+            data-testid={`button-update-task-${task.id}`}
           >
-            <IconClockPause />
+            <IconPencilCheck />
           </ActionIcon>
-        )}
+          {canStopTask && (
+            <ActionIcon
+              variant="light"
+              size="md"
+              aria-label="Stop Task"
+              onClick={stopTask}
+              data-testid={`button-stop-task-${task.id}`}
+            >
+              <IconClockPause />
+            </ActionIcon>
+          )}
+          {!hasRunningTask && (
+            <ActionIcon
+              variant="subtle"
+              size="md"
+              aria-label="Restart Task"
+              onClick={restartTask}
+              data-testid={`button-restart-task-${task.id}`}
+            >
+              <IconPlayerPlay />
+            </ActionIcon>
+          )}
+        </Group>
       </Table.Td>
     </Table.Tr>
   );
