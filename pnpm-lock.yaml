@@ -238,10 +238,10 @@ importers:
         version: 1.11.23
       dexie:
         specifier: ^4.4.6
-        version: 4.4.6
+        version: 4.4.7
       dexie-export-import:
         specifier: ^4.4.1
-        version: 4.4.1(dexie@4.4.6)
+        version: 4.4.2(dexie@4.4.7)
       nitro:
         specifier: 3.0.260903-beta
         version: 3.0.260903-beta
@@ -2577,13 +2577,13 @@ packages:
   dettle@1.0.5:
     resolution: {integrity: sha512-ZVyjhAJ7sCe1PNXEGveObOH9AC8QvMga3HJIghHawtG7mE4K5pW9nz/vDGAr/U7a3LWgdOzEE7ac9MURnyfaTA==}
 
-  dexie-export-import@4.4.1:
-    resolution: {integrity: sha512-B84UhmfGaImK47OKRW+uw8EleHtlUk8WbaeqAvPX/bwv3pl2W+l3/v8jJNpPUjwS8Dn/U/5kHAyXda9T6NofOQ==}
+  dexie-export-import@4.4.2:
+    resolution: {integrity: sha512-bvDkLkgvo1ZDpfiAi11Jj6CmaCJx9QUrhA5Q8T3MMQHDcFqlC8lZdhg151+jj3gvqEPEyvryYF9/kJZeC34sOw==}
     peerDependencies:
-      dexie: ^4.4.5
+      dexie: ^4.4.7
 
-  dexie@4.4.6:
-    resolution: {integrity: sha512-hJP/BO6mjB+tX6hToIO1kmxYLNmun90wYbfcoAoLpKEyDYal/k33dg0TAfoUe2TDsbbLoVIzljJ3BN2UbR5EOg==}
+  dexie@4.4.7:
+    resolution: {integrity: sha512-wemFiCl3DTCnfzyqepUTX1ugbYbkTrw3aEZOG7YjAOUoEQB5g5PrEywPzk5JpbX/SxqQ9IvjUpxCDIEjoOWEfA==}
 
   diff@9.0.0:
     resolution: {integrity: sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==}
@@ -7067,11 +7067,11 @@ snapshots:
 
   dettle@1.0.5: {}
 
-  dexie-export-import@4.4.1(dexie@4.4.6):
+  dexie-export-import@4.4.2(dexie@4.4.7):
     dependencies:
-      dexie: 4.4.6
+      dexie: 4.4.7
 
-  dexie@4.4.6: {}
+  dexie@4.4.7: {}
 
   diff@9.0.0: {}
 
