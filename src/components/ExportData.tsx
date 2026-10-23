@@ -1,6 +1,7 @@
 import { db } from "@/store";
 import { Button } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import dayjs from "dayjs";
 import { exportDB } from "dexie-export-import";
 
 export function ExportData() {
@@ -10,7 +11,7 @@ export function ExportData() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `database-backup-${new Date().toISOString()}.json`;
+      a.download = `database-backup-${dayjs().toISOString()}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {

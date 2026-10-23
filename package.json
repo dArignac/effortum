@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "check:invariants": "node --experimental-strip-types scripts/check-invariants.ts"
   },
   "dependencies": {
     "@mantine/charts": "^9.6.3",
