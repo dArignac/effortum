@@ -76,6 +76,9 @@ pnpm test:e2e
 
 # Run tests in watch mode
 pnpm test:watch
+
+# Run architectural invariant checks
+pnpm check:invariants
 ```
 
 ### Testing
@@ -123,6 +126,55 @@ includes:
 - Modifications to component architecture
 
 When making any change that affects the overall system design, ensure that `docs/architecture.md` is updated accordingly to reflect the current implementation.
+
+## Architectural Invariant Enforcement
+
+The repository includes a deterministic invariant verification tool (`scripts/check-invariants.ts`) executed via:
+
+```bash
+pnpm check:invariants
+```
+
+It enforces four non-negotiable architectural invariants:
+
+1. **`no-direct-dexie-in-ui`**: UI components, pages, and routes must query state exclusively via Zustand store slices, never importing `dexie` or `src/db`
+   directly (whitelisted: `ExportData.tsx` and `ImportData.tsx`).
+2. **`enforce-dayjs`**: All date and time operations across application code in `src/` must use `dayjs` rather than raw `new Date()`.
+3. **`dexie-migration-immutability`**: Historical database schema versions in `src/db.ts` must never be modified in-place; schema changes must append a new
+   `version(N + 1)` block.
+4. **`no-suppressed-tests-or-types`**: Prohibits introducing `@ts-ignore`, `@ts-nocheck`, `it.skip`, `test.skip`, `describe.skip`, and test isolation (`.only`).
+
+### When to Update the Invariant Guard (`scripts/check-invariants.ts`)
+
+Whenever significant changes to the architecture occur, `scripts/check-invariants.ts` and its test suite `scripts/check-invariants.test.ts` must be updated
+alongside `docs/architecture.md`. Update the guard upon any of these 4 triggers:
+
+1. **New Architectural Invariants**: Adding a new constraint in `docs/architecture.md` (e.g. forbidding a library or enforcing a layer boundary) requires adding
+   a matching check in `scripts/check-invariants.ts`.
+2. **Dexie Migration Increments**: When a new database schema migration is merged in `src/db.ts` (e.g. bumping to `version(8)`), add the new version number to
+   `FROZEN_DEXIE_VERSIONS` in `scripts/check-invariants.ts` to ensure it remains immutable for future PRs.
+3. **New Architectural Exceptions**: If a legitimate architectural exception is approved (e.g., a new data migration utility that requires direct database
+   access), register its path in the corresponding rule's whitelist.
+4. **Structural Directory Changes**: Adding or reorganizing layer directories requires updating directory traversal and scanning rules.
+
+## Autonomous Feature & Bug Implementation Workflow
+
+The repository includes a specialized Antigravity workflow skill (`skills/implement-issue/SKILL.md`) triggered via `/implement-issue`. It manages autonomous
+implementation of GitHub issues labeled `ready-for-implementation` using a Separation-of-Powers architecture:
+
+1. **Lead Architect (Orchestrator)**:
+   - Triages issues and checks sizing heuristics (suggesting splits and offering automated GitHub child issue creation if too large).
+   - Authors immutable specification, plan, and tasks in `docs/specs/issue-<id>-<slug>/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Pauses for **Human Gate 1** (Spec & Plan Approval).
+2. **Builder Subagent (`feature-implementer`)**:
+   - Explicit persona defined in `agents/feature-implementer.md`.
+   - Executes implementation task-by-task applying `incremental-implementation` (simplicity first, scope discipline, 3 self-heal cycles).
+   - Writes code and tests (`*.test.ts`, `e2e/issue-<id>.spec.ts`) leaving repository compilable and passing after each slice.
+3. **Independent Auditor Subagent (`architectural-auditor`)**:
+   - Explicit persona defined in `agents/architectural-auditor.md`.
+   - In a fresh context, verifies code against invariants via `pnpm check:invariants`, tests (`pnpm test`, `pnpm test:e2e`), and updates `docs/architecture.md`.
+   - Generates `docs/specs/issue-<id>-<slug>/audit-report.md`.
+   - Stages PR for **Human Gate 2** (Final PR & Diff Approval).
 
 ## Code Formatting
 

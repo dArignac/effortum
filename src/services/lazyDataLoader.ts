@@ -3,6 +3,7 @@ import { Task } from "@/models/Task";
 import { Project } from "@/models/Project";
 import { Overtime } from "@/models/Overtime";
 import { Settings } from "@/models/Settings";
+import dayjs from "dayjs";
 
 /**
  * Service for lazy loading data based on date ranges
@@ -142,7 +143,7 @@ export class LazyDataLoader {
   }> {
     try {
       // For initial load, we should get the tasks for today only
-      const today = new Date().toISOString().split("T")[0];
+      const today = dayjs().format("YYYY-MM-DD");
 
       const [tasks, projects, overtime, settings] = await Promise.all([
         this.loadTasksForDateRange(today, today),
