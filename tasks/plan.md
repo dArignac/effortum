@@ -1,56 +1,58 @@
-# Implementation Plan: Invariant Guard (`invariant-guard`)
+# Implementation Plan: Issue Pipeline Skill (`issue-pipeline-skill`)
 
 ## Overview
 
-Implement the deterministic architectural invariant checker (`scripts/check-invariants.ts`), its unit test suite (`scripts/check-invariants.test.ts`),
-`package.json` script registration (`pnpm check:invariants`), and developer guidance in `AGENTS.md`.
+Implement the Antigravity workflow skill (`skills/implement-issue/SKILL.md`), the prompt contracts for the Builder and Auditor subagents, and update the
+repository documentation in `AGENTS.md` and `docs/architecture.md`.
 
 ## Dependency Graph
 
 ```
-check-invariants.ts (Rule Engine & Checks)
+skills/implement-issue/SKILL.md (Workflow, Sizing & Subagent Contracts)
           │
           ▼
-check-invariants.test.ts (Vitest Test Suite)
+AGENTS.md (Workflow Guidance & Slash Command Documentation)
           │
           ▼
-package.json ("check:invariants" script)
+docs/architecture.md (Architecture Documentation Sync)
           │
           ▼
-Verification & AGENTS.md Documentation Update
+Verification & Dry-Run Check (Invariants, Prettier, Lint)
 ```
 
 ## Implementation Order
 
-1. **Rule Engine & Rules (`scripts/check-invariants.ts`):**
-   - File traversal utility targeting `src/` and test paths.
-   - Rule 1: `no-direct-dexie-in-ui` (components/pages/routes check with whitelist for `ExportData.tsx` and `ImportData.tsx`).
-   - Rule 2: `enforce-dayjs` (flags raw `new Date()` in production code).
-   - Rule 3: `dexie-migration-immutability` (verifies historical versions 1..7 in `src/db.ts` remain intact).
-   - Rule 4: `no-suppressed-tests-or-types` (flags `@ts-ignore`, `@ts-nocheck`, `it.skip`, `test.skip`, `describe.skip`, `.only`).
-   - CLI runner with formatted terminal output and exit code management (0 = pass, 1 = violations).
+1. **Skill Definition (`skills/implement-issue/SKILL.md`):**
+   - Frontmatter, triggers, and execution lifecycle.
+   - Sizing heuristic checker and automated GitHub child issue creation.
+   - Spec, Plan, and Task generation methodology (Phases 0–3 from `spec-driven-development`) writing to `docs/specs/issue-<id>-<slug>/`.
+   - Human Gate 1 definition (Spec, Plan & Tasks Approval).
+   - Builder Subagent prompt contract embedding `incremental-implementation` (Phase 4).
+   - Independent Auditor Subagent prompt contract enforcing `pnpm check:invariants`, tests, and doc sync (Phase 5).
+   - Human Gate 2 definition (PR & Diff Approval).
 
-2. **Unit Tests (`scripts/check-invariants.test.ts`):**
-   - Unit tests covering each rule with both passing snippets and failing violations.
-   - Verify exact violation reporting (rule name, file, line, advice).
+2. **Repository Workflow Guidance (`AGENTS.md`):**
+   - Document the `/implement-issue` command under Development Commands.
+   - Add the **Autonomous Feature & Bug Implementation Workflow** section describing the Separation-of-Powers architecture and decision gates.
 
-3. **Package Script Registration (`package.json`):**
-   - Add `"check:invariants": "node --experimental-strip-types scripts/check-invariants.ts"`.
-   - Run verification across the current repository to ensure green baseline.
+3. **Architecture Documentation (`docs/architecture.md`):**
+   - Document the agentic architecture, invariant verification tooling, and spec archiving structure in `docs/architecture.md`.
 
-4. **Documentation Sync (`AGENTS.md`):**
-   - Add section on **Architectural Invariant Enforcement** to `AGENTS.md`.
-   - Document the 4 update triggers for keeping the guard synchronized with `docs/architecture.md`.
+4. **Full Verification:**
+   - Run `pnpm check:invariants`.
+   - Run `pnpm test`.
+   - Run `pnpm prettier --check .`.
 
 ## Risks & Mitigations
 
-- **Risk:** False positives on comments or documentation containing `new Date()` or `dexie`.
-  - _Mitigation:_ Strip comments prior to pattern matching or match import AST patterns.
-- **Risk:** Node 26 strip-types compatibility with complex TypeScript constructs.
-  - _Mitigation:_ Use clean TypeScript types/interfaces without unsupported runtime TypeScript features (e.g. enums/namespaces).
+- **Risk:** Auditor subagent ping-pongs endlessly with Builder subagent on minor formatting differences.
+  - _Mitigation:_ Hard circuit breaker: maximum 2 rejection round-trips before escalating to human with clear logs.
+- **Risk:** Subagent prompts become ambiguous about where to save specs.
+  - _Mitigation:_ Explicit path contracts (`docs/specs/issue-<id>-<slug>/`) in skill instructions and subagent prompts.
 
 ## Verification Checkpoints
 
-1. `pnpm test scripts/check-invariants.test.ts` passes with 100% rule coverage.
-2. `pnpm check:invariants` executes in <500ms and exits with code 0 on the repo.
-3. Prettier formats all files cleanly.
+1. `skills/implement-issue/SKILL.md` exists with valid YAML frontmatter and comprehensive instructions.
+2. `pnpm check:invariants` passes cleanly with zero violations.
+3. `pnpm test` passes 100% of tests.
+4. Prettier checks pass on all new and modified files.
