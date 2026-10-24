@@ -80,6 +80,31 @@ erDiagram
 - Tasks can be restarted from the task list actions column via a quick start button that launches a new running task for the current date with matching project
   and comment, applying 5-minute rounding if enabled, and hidden whenever any task is actively running.
 
+## Architectural Invariant Enforcement
+
+The repository enforces four non-negotiable architectural invariants via `pnpm check:invariants` (`scripts/check-invariants.ts`):
+
+1. `no-direct-dexie-in-ui`: UI components and pages must query state exclusively via Zustand store slices, never importing `dexie` or `src/db` directly
+   (whitelisted: `ExportData.tsx` and `ImportData.tsx`).
+2. `enforce-dayjs`: All date and time operations across application code in `src/` must use `dayjs` rather than raw `new Date()`.
+3. `dexie-migration-immutability`: Historical database schema versions in `src/db.ts` must never be modified in-place; schema changes must append a new
+   `version(N + 1)` block.
+4. `no-suppressed-tests-or-types`: Prohibits introducing `@ts-ignore`, `@ts-nocheck`, `it.skip`, `test.skip`, `describe.skip`, and test isolation (`.only`).
+
+## Autonomous Development Pipeline & Spec Archiving
+
+Autonomous issue implementation is driven through Antigravity CLI via `/implement-issue` (`skills/implement-issue/SKILL.md`) using a Separation-of-Powers model:
+
+- **Lead Architect (Orchestrator)**: Triages GitHub issues labeled `ready-for-implementation`, evaluates sizing heuristics, drafts the contract, and pauses for
+  Human Gate 1.
+- **Builder Subagent (`feature-implementer`)**: Defined in `agents/feature-implementer.md`. Executes vertical slices task-by-task using
+  `incremental-implementation` with up to 3 self-healing cycles.
+- **Independent Auditor Subagent (`architectural-auditor`)**: Defined in `agents/architectural-auditor.md`. Runs in a clean context to verify invariants
+  (`pnpm check:invariants`), execute test suites, update documentation, and stage the PR for Human Gate 2.
+
+All feature and bug specifications are stored immutably in issue-scoped directories under `docs/specs/issue-<id>-<slug>/` containing `spec.md`, `plan.md`,
+`tasks.md`, and `audit-report.md`. This ensures specs never overwrite each other, while `docs/architecture.md` remains the unified living source of truth.
+
 ## Documentation and Formatting
 
 - Update files in `docs` whenever architecture or entity behavior changes.

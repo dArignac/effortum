@@ -157,6 +157,25 @@ alongside `docs/architecture.md`. Update the guard upon any of these 4 triggers:
    access), register its path in the corresponding rule's whitelist.
 4. **Structural Directory Changes**: Adding or reorganizing layer directories requires updating directory traversal and scanning rules.
 
+## Autonomous Feature & Bug Implementation Workflow
+
+The repository includes a specialized Antigravity workflow skill (`skills/implement-issue/SKILL.md`) triggered via `/implement-issue`. It manages autonomous
+implementation of GitHub issues labeled `ready-for-implementation` using a Separation-of-Powers architecture:
+
+1. **Lead Architect (Orchestrator)**:
+   - Triages issues and checks sizing heuristics (suggesting splits and offering automated GitHub child issue creation if too large).
+   - Authors immutable specification, plan, and tasks in `docs/specs/issue-<id>-<slug>/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Pauses for **Human Gate 1** (Spec & Plan Approval).
+2. **Builder Subagent (`feature-implementer`)**:
+   - Explicit persona defined in `agents/feature-implementer.md`.
+   - Executes implementation task-by-task applying `incremental-implementation` (simplicity first, scope discipline, 3 self-heal cycles).
+   - Writes code and tests (`*.test.ts`, `e2e/issue-<id>.spec.ts`) leaving repository compilable and passing after each slice.
+3. **Independent Auditor Subagent (`architectural-auditor`)**:
+   - Explicit persona defined in `agents/architectural-auditor.md`.
+   - In a fresh context, verifies code against invariants via `pnpm check:invariants`, tests (`pnpm test`, `pnpm test:e2e`), and updates `docs/architecture.md`.
+   - Generates `docs/specs/issue-<id>-<slug>/audit-report.md`.
+   - Stages PR for **Human Gate 2** (Final PR & Diff Approval).
+
 ## Code Formatting
 
 All files must be formatted with Prettier except for:

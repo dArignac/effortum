@@ -2,7 +2,7 @@
 
 ## Task 1: Author Antigravity Skill Definition (`skills/implement-issue/SKILL.md`)
 
-- [ ] Task: Create `skills/implement-issue/SKILL.md` detailing the entire workflow:
+- [x] Task: Create `skills/implement-issue/SKILL.md` detailing the entire workflow:
   - YAML frontmatter with `name: implement-issue`, `description`.
   - Issue triage via GitHub MCP / `gh` filtering for `ready-for-implementation`.
   - Sizing heuristic check and prompt to create GitHub child issues.
@@ -20,7 +20,7 @@
 
 ## Task 2: Document Autonomous Workflow in AGENTS.md
 
-- [ ] Task: Update `AGENTS.md` with:
+- [x] Task: Update `AGENTS.md` with:
   - `/implement-issue` command listed in development guidance.
   - A dedicated section explaining the Separation-of-Powers workflow (Architect → Builder → Auditor) and the two human decision gates.
 - Acceptance criteria:
@@ -31,7 +31,7 @@
 
 ## Task 3: Update Architecture Documentation in docs/architecture.md
 
-- [ ] Task: Update `docs/architecture.md` to document the architectural invariant guard (`scripts/check-invariants.ts`, `pnpm check:invariants`), the spec
+- [x] Task: Update `docs/architecture.md` to document the architectural invariant guard (`scripts/check-invariants.ts`, `pnpm check:invariants`), the spec
       archiving structure (`docs/specs/issue-<id>-<slug>/`), and the agentic execution model.
 - Acceptance criteria:
   - `docs/architecture.md` accurately reflects the new invariant enforcement and spec conventions.
@@ -41,11 +41,11 @@
 
 ## Task 4: Run Complete Repository Verification Suite
 
-- [ ] Task: Execute the complete verification suite (`pnpm check:invariants`, `pnpm test`, `pnpm prettier --check .`).
+- [x] Task: Execute the complete verification suite (`pnpm check:invariants`, `pnpm test`, `pnpm tsc --noEmit`, Prettier).
 - Acceptance criteria:
   - All invariant checks pass with zero violations.
   - All 11 Vitest test suites (96 tests) pass.
   - All markdown, TypeScript, and JSON files format cleanly.
-- Verification: `pnpm check:invariants && pnpm test`
+- Verification: `pnpm check:invariants && pnpm test && pnpm tsc --noEmit`
 - Files touched:
   - Repository-wide verification
