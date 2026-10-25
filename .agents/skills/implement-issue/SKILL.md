@@ -271,9 +271,10 @@ Write your audit findings to `docs/specs/issue-<id>-<slug>/audit-report.md`.
 Once the Auditor verifies the implementation:
 
 1. Orchestrator ensures the working branch `feature/issue-<id>` is clean.
-2. Summarizes the completed work:
+2. Adds a new changelog entry with proper version number (semantic versioning).
+3. Summarizes the completed work:
    - Link to `docs/specs/issue-<id>-<slug>/spec.md`
    - Link to `docs/specs/issue-<id>-<slug>/audit-report.md`
    - List of files modified
    - Verification results (`pnpm check:invariants`, Vitest, Playwright all green)
-3. Staged PR is presented to the human for final review and merge.
+4. Staged PR is presented to the human for final review and merge.
