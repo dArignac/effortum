@@ -3,13 +3,9 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
-    version: "0.21.0",
-    description: ["Makes percentage values optional in summary view (#241)."],
-  },
-  {
     version: "0.20.0",
     description: [
-      "Shows spent time per project in percent in summary view (#129).",
+      "Shows spent time per project in percent in summary view (optional) (#241, #129).",
     ],
   },
   {
