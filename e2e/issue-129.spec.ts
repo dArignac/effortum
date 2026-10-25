@@ -20,6 +20,14 @@ test.describe("Issue #129: Show spent time per project in percent", () => {
     // Total = 510 min -> 08:30
     await expect(page.getByTestId("summary-sum-value")).toHaveText("08:30");
 
+    // Percentages are hidden by default (#241)
+    await expect(
+      page.getByTestId("summary-percentage-Project A"),
+    ).not.toBeVisible();
+
+    // Enable "Show percentages"
+    await page.getByTestId("checkbox-show-percentages").click();
+
     // Check individual percentages
     await expect(page.getByTestId("summary-percentage-Project A")).toHaveText(
       "18 %",
@@ -38,6 +46,9 @@ test.describe("Issue #129: Show spent time per project in percent", () => {
 
   test("should align cells vertically at top", async ({ page }) => {
     await addTask(page, "Project Align", "09:00", "10:00", "Alignment test");
+
+    // Enable "Show percentages"
+    await page.getByTestId("checkbox-show-percentages").click();
 
     const percentageElement = page.getByTestId(
       "summary-percentage-Project Align",
@@ -58,6 +69,9 @@ test.describe("Issue #129: Show spent time per project in percent", () => {
 
     // Switch to list by task
     await page.getByTestId("checkbox-list-by-task").click();
+
+    // Enable "Show percentages"
+    await page.getByTestId("checkbox-show-percentages").click();
 
     // 1 hour / 3 hours = 33 %
     // 2 hours / 3 hours = 67 %

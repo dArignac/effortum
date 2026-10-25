@@ -18,6 +18,7 @@ import {
  */
 export function Summary() {
   const [listByTasks, setListByTasks] = useState(false);
+  const [showPercentages, setShowPercentages] = useState(false);
   const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
   const tasks = useEffortumStore((state) => state.tasks);
   const projects = useEffortumStore((state) => state.projects);
@@ -147,9 +148,16 @@ export function Summary() {
               <Checkbox
                 data-testid="checkbox-list-by-task"
                 label="List by task"
-                mb={20}
+                mb={10}
                 checked={listByTasks}
                 onChange={() => setListByTasks((prev) => !prev)}
+              />
+              <Checkbox
+                data-testid="checkbox-show-percentages"
+                label="Show percentages"
+                mb={20}
+                checked={showPercentages}
+                onChange={() => setShowPercentages((prev) => !prev)}
               />
             </Table.Td>
           </Table.Tr>
@@ -175,9 +183,11 @@ export function Summary() {
               </Table.Td>
               <Table.Td w={50} style={{ verticalAlign: "top" }}>
                 <Box>{formatDuration(item.time)}</Box>
-                <Box data-testid={`summary-percentage-${item.label}`}>
-                  {formatPercentage(item.time, timeSum)}
-                </Box>
+                {showPercentages && (
+                  <Box data-testid={`summary-percentage-${item.label}`}>
+                    {formatPercentage(item.time, timeSum)}
+                  </Box>
+                )}
               </Table.Td>
               <Table.Td style={{ verticalAlign: "top" }}>
                 <Box>{item.label}</Box>

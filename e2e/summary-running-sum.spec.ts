@@ -1,8 +1,10 @@
 import { formatDuration } from "@/utils/time";
 import { expect, test } from "@playwright/test";
+import dayjs from "dayjs";
 
 function getMinutesSinceMidnight(date: Date): number {
-  return date.getHours() * 60 + date.getMinutes();
+  const dateStr = dayjs(date).format("YYYY-MM-DD");
+  return dayjs(date).diff(dayjs(`${dateStr} 00:00`), "minute");
 }
 
 test.describe("Summary sum including running task", () => {
