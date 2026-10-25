@@ -1,9 +1,11 @@
 import dayjs from "dayjs";
 
+const REFERENCE_DATE = "2000-01-01";
+
 export function roundTimeToNearest5Minutes(time: string): string {
   if (!time) return time;
 
-  const parsedTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${time}`);
+  const parsedTime = dayjs(`${REFERENCE_DATE} ${time}`);
   if (!parsedTime.isValid()) return time;
 
   const totalMinutes = parsedTime.hour() * 60 + parsedTime.minute();
@@ -36,16 +38,16 @@ export function roundTimeToNearest5Minutes(time: string): string {
 
 export function getDurationAsTime(start: string, end?: string): string {
   if (end === undefined || end === "") return "...";
-  const startTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${start}`);
-  const endTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${end}`);
+  const startTime = dayjs(`${REFERENCE_DATE} ${start}`);
+  const endTime = dayjs(`${REFERENCE_DATE} ${end}`);
   const diff = endTime.diff(startTime, "minute");
   return formatDuration(diff);
 }
 
 export function getDuration(start: string, end?: string): number {
   if (end === undefined || end === "") return 0;
-  const startTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${start}`);
-  const endTime = dayjs(`${dayjs().format("YYYY-MM-DD")} ${end}`);
+  const startTime = dayjs(`${REFERENCE_DATE} ${start}`);
+  const endTime = dayjs(`${REFERENCE_DATE} ${end}`);
   return endTime.diff(startTime, "minute");
 }
 
@@ -55,6 +57,25 @@ export function formatDuration(duration: number): string {
     .padStart(2, "0");
   const minutes = (duration % 60).toString().padStart(2, "0");
   return `${hours}:${minutes}`;
+}
+
+/**
+ * Calculates the percentage of a part relative to a total.
+ * Returns an integer rounded mathematically (Math.round).
+ * Returns 0 if total <= 0 or part <= 0.
+ */
+export function calculatePercentage(part: number, total: number): number {
+  if (total <= 0 || part <= 0) {
+    return 0;
+  }
+  return Math.round((part / total) * 100);
+}
+
+/**
+ * Formats the percentage as "X %" (e.g. "17 %").
+ */
+export function formatPercentage(part: number, total: number): string {
+  return `${calculatePercentage(part, total)} %`;
 }
 
 /**

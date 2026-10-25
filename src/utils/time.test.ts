@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculatePercentage,
+  formatPercentage,
   getDurationAsTime,
   getRunningDuration,
   isRunningTask,
@@ -25,6 +27,53 @@ describe("Task duration calculation", () => {
 
   it("calculates zero duration", () => {
     expect(getDurationAsTime("08:00", "08:00")).toBe("00:00");
+  });
+});
+
+describe("calculatePercentage & formatPercentage", () => {
+  it("returns 0 % when total is 0 or negative", () => {
+    expect(calculatePercentage(0, 0)).toBe(0);
+    expect(formatPercentage(0, 0)).toBe("0 %");
+    expect(calculatePercentage(50, 0)).toBe(0);
+    expect(formatPercentage(50, 0)).toBe("0 %");
+    expect(calculatePercentage(50, -10)).toBe(0);
+    expect(formatPercentage(50, -10)).toBe("0 %");
+  });
+
+  it("returns 0 % when part is 0 or negative", () => {
+    expect(calculatePercentage(0, 100)).toBe(0);
+    expect(formatPercentage(0, 100)).toBe("0 %");
+    expect(calculatePercentage(-10, 100)).toBe(0);
+    expect(formatPercentage(-10, 100)).toBe("0 %");
+  });
+
+  it("calculates 100 % for identical part and total", () => {
+    expect(calculatePercentage(60, 60)).toBe(100);
+    expect(formatPercentage(60, 60)).toBe("100 %");
+  });
+
+  it("calculates Example 1 from issue #129 (240 and 120 out of 360)", () => {
+    expect(calculatePercentage(240, 360)).toBe(67);
+    expect(formatPercentage(240, 360)).toBe("67 %");
+    expect(calculatePercentage(120, 360)).toBe(33);
+    expect(formatPercentage(120, 360)).toBe("33 %");
+    expect(calculatePercentage(240, 360) + calculatePercentage(120, 360)).toBe(
+      100,
+    );
+  });
+
+  it("calculates Example 2 from issue #129 (90, 45, 375 out of 510)", () => {
+    expect(calculatePercentage(90, 510)).toBe(18);
+    expect(formatPercentage(90, 510)).toBe("18 %");
+    expect(calculatePercentage(45, 510)).toBe(9);
+    expect(formatPercentage(45, 510)).toBe("9 %");
+    expect(calculatePercentage(375, 510)).toBe(74);
+    expect(formatPercentage(375, 510)).toBe("74 %");
+    expect(
+      calculatePercentage(90, 510) +
+        calculatePercentage(45, 510) +
+        calculatePercentage(375, 510),
+    ).toBe(101);
   });
 });
 
