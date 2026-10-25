@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.20.0",
+    description: [
+      "Shows spent time per project in percent in summary view (#129).",
+    ],
+  },
+  {
     version: "0.19.0",
     description: [
       "Adds possibility to start a task based on tasks from the currently shown list (#224).",

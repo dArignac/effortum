@@ -6,6 +6,7 @@ import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
 import {
   formatDuration,
+  formatPercentage,
   getDuration,
   getRunningDuration,
   isRunningTask,
@@ -154,7 +155,7 @@ export function Summary() {
           </Table.Tr>
           {data.map((item) => (
             <Table.Tr key={item.label}>
-              <Table.Td w={15}>
+              <Table.Td w={15} style={{ verticalAlign: "top" }}>
                 {!listByTasks ? (
                   <Box>
                     <ActionIcon
@@ -172,10 +173,13 @@ export function Summary() {
                   </Box>
                 ) : null}
               </Table.Td>
-              <Table.Td w={50}>
+              <Table.Td w={50} style={{ verticalAlign: "top" }}>
                 <Box>{formatDuration(item.time)}</Box>
+                <Box data-testid={`summary-percentage-${item.label}`}>
+                  {formatPercentage(item.time, timeSum)}
+                </Box>
               </Table.Td>
-              <Table.Td>
+              <Table.Td style={{ verticalAlign: "top" }}>
                 <Box>{item.label}</Box>
               </Table.Td>
             </Table.Tr>
