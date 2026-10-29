@@ -5,7 +5,7 @@ const changelogEntries = [
   {
     version: "0.20.0",
     description: [
-      "Shows spent time per project in percent in summary view (#129).",
+      "Shows spent time per project in percent in summary view (optional) (#241, #129).",
     ],
   },
   {
