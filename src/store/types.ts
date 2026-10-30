@@ -31,6 +31,8 @@ export interface EffortumStore {
 
   addTask: (task: TaskInput) => Promise<void>;
   updateTask: (id: string, updates: TaskUpdateInput) => Promise<void>;
+  getRecentProjectNames: () => Promise<string[]>;
+  getRecentTaskCommentsForProject: (projectId: string) => Promise<string[]>;
 
   getCommentsForProject: (projectId: string) => string[];
   getUniqueTaskCommentsForProject: (projectId: string) => Promise<string[]>;

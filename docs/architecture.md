@@ -56,7 +56,7 @@ erDiagram
   logic isolated while preserving a single Zustand store for consumers.
 - Persistence layer: `src/db.ts` defines Dexie schema versions and object stores.
 - Domain layer: `src/models` contains strongly typed entities used across store and UI.
-- Logic layer: `src/utils` contains date, time, and filtering behavior.
+- Logic layer: `src/utils` contains date, time, filtering, and usage-recency sorting behavior.
 
 ## Data Flow
 
@@ -69,6 +69,9 @@ erDiagram
 
 - Task-to-project relations are canonical by project ID.
 - Comment suggestions are derived from persisted `task.comment` values; no dedicated comment entity is used.
+- Project and comment autocomplete dropdowns in task entry and row editing (`AddEntryRow` and `TaskListRow`) are ordered by most recently used first across full
+  IndexedDB task history (with unused projects and identical-timestamp ties ordered case-insensitively alphabetically), while management views (`ProjectsPage`,
+  `TasksPage`, and `DeleteProjectModal`) retain alphabetical ordering.
 - Project deletion requires handling associated tasks: zero-task projects can be deleted directly with confirmation; task-bearing projects require choosing
   between permanently deleting associated tasks or reassigning them to a destination project.
 - Moving tasks checks for conflicting task comments between projects, warning the user and guiding them to the Task Management page if needed.

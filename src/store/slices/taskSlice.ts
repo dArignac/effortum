@@ -3,10 +3,27 @@ import { Task } from "@/models/Task";
 import { db } from "@/store/db";
 import { StoreGet, StoreSet, TaskInput, TaskUpdateInput } from "@/store/types";
 import { isRunningTask } from "../../utils/time";
+import {
+  sortCommentsByLastUsed,
+  sortProjectsByLastUsed,
+} from "../../utils/usageSort";
 import dayjs from "dayjs";
 
 export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
   tasks: [],
+
+  getRecentProjectNames: async () => {
+    const tasks = await db.tasks.toArray();
+    return sortProjectsByLastUsed(get().projects, tasks);
+  },
+
+  getRecentTaskCommentsForProject: async (projectId: string) => {
+    if (!projectId) {
+      return [];
+    }
+    const tasks = await db.tasks.where("projectId").equals(projectId).toArray();
+    return sortCommentsByLastUsed(tasks);
+  },
 
   /**
    * Calculates the total booked time in hours for a project.

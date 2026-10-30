@@ -14,12 +14,12 @@ import {
 } from "../validations";
 import { DateSelectionField } from "./DateField";
 
-export function AddEntryRow() {
+export function AddEntryRow(props: { projectNames?: string[] }) {
   const projects = useEffortumStore((state) => state.projects);
   const tasks = useEffortumStore((state) => state.tasks);
   const addTask = useEffortumStore((state) => state.addTask);
-  const getUniqueTaskCommentsForProject = useEffortumStore(
-    (state) => state.getUniqueTaskCommentsForProject,
+  const getRecentTaskCommentsForProject = useEffortumStore(
+    (state) => state.getRecentTaskCommentsForProject,
   );
   const endTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.endTimeOfLastStoppedTask,
@@ -60,8 +60,9 @@ export function AddEntryRow() {
     let isCancelled = false;
 
     const loadComments = async () => {
+      const trimmedProject = projectValue.trim();
       // only fill comments if a project is selected
-      if (projectValue.length === 0) {
+      if (trimmedProject.length === 0) {
         setAvailableComments([]);
         return;
       }
@@ -69,14 +70,14 @@ export function AddEntryRow() {
       setIsCommentLoading(true);
       try {
         // Find the project by name to get its ID
-        const project = projects.find((p) => p.name === projectValue);
+        const project = projects.find((p) => p.name === trimmedProject);
         if (!project) {
           setAvailableComments([]);
           return;
         }
 
         // Load comments for this specific project on-demand
-        const comments = await getUniqueTaskCommentsForProject(project.id);
+        const comments = await getRecentTaskCommentsForProject(project.id);
         if (!isCancelled) {
           setAvailableComments(comments);
         }
@@ -97,7 +98,7 @@ export function AddEntryRow() {
     return () => {
       isCancelled = true;
     };
-  }, [projectValue, projects, tasks, getUniqueTaskCommentsForProject]);
+  }, [projectValue, projects, tasks, getRecentTaskCommentsForProject]);
 
   const fieldDate = useField({
     initialValue: dayjs().format("YYYY-MM-DD"),
@@ -237,7 +238,7 @@ export function AddEntryRow() {
       <Table.Td>
         <Autocomplete
           {...fieldProject.getInputProps()}
-          data={projects.map((p) => p.name)}
+          data={props.projectNames ?? projects.map((p) => p.name)}
           size="xs"
           data-testid="add-entry-input-project"
           placeholder="Select or enter a project"

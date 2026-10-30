@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.21.0",
+    description: [
+      "Sorts projects and task comments by last used in task entry dropdowns (#128).",
+    ],
+  },
+  {
     version: "0.20.0",
     description: [
       "Shows spent time per project in percent in summary view (optional) (#241, #129).",
