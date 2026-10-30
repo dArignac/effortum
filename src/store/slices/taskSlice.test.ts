@@ -255,4 +255,98 @@ describe("createTaskSlice", () => {
 
     expect(mockDb.tasks.update).not.toHaveBeenCalled();
   });
+
+  it("getRecentProjectNames sorts store projects by full IndexedDB task history even when state.tasks is empty", async () => {
+    const set = vi.fn();
+    const state = {
+      projects: [
+        { id: "p1", name: "Alpha" },
+        { id: "p2", name: "Beta" },
+        { id: "p3", name: "Gamma" },
+        { id: "p4", name: "Delta" },
+      ],
+      tasks: [],
+    };
+    const get = vi.fn(() => state);
+    const slice = createTaskSlice(set as never, get as never);
+
+    mockDb.tasks.toArray.mockResolvedValue([
+      {
+        id: "t1",
+        date: "2026-08-10",
+        timeStart: "09:00",
+        timeEnd: "10:00",
+        projectId: "p1",
+      },
+      {
+        id: "t2",
+        date: "2026-09-20",
+        timeStart: "14:00",
+        timeEnd: "15:00",
+        projectId: "p3",
+      },
+    ]);
+
+    await expect(slice.getRecentProjectNames()).resolves.toEqual([
+      "Gamma",
+      "Alpha",
+      "Beta",
+      "Delta",
+    ]);
+    expect(mockDb.tasks.toArray).toHaveBeenCalledTimes(1);
+  });
+
+  it("getRecentTaskCommentsForProject queries tasks by projectId and orders comments by last used", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ projects: [], tasks: [] }));
+    const slice = createTaskSlice(set as never, get as never);
+
+    const equals = vi.fn(() => ({
+      toArray: vi.fn().mockResolvedValue([
+        {
+          id: "t1",
+          date: "2026-09-01",
+          timeStart: "09:00",
+          timeEnd: "10:00",
+          projectId: "p1",
+          comment: "Initial setup",
+        },
+        {
+          id: "t2",
+          date: "2026-09-05",
+          timeStart: "11:00",
+          timeEnd: "12:00",
+          projectId: "p1",
+          comment: "  Bug triage  ",
+        },
+        {
+          id: "t3",
+          date: "2026-09-06",
+          timeStart: "08:30",
+          timeEnd: "09:00",
+          projectId: "p1",
+          comment: "Initial setup",
+        },
+      ]),
+    }));
+    mockDb.tasks.where.mockReturnValue({ equals });
+
+    await expect(slice.getRecentTaskCommentsForProject("p1")).resolves.toEqual([
+      "Initial setup",
+      "Bug triage",
+    ]);
+    expect(mockDb.tasks.where).toHaveBeenCalledWith("projectId");
+    expect(equals).toHaveBeenCalledWith("p1");
+  });
+
+  it("getRecentTaskCommentsForProject returns empty array when projectId is empty", async () => {
+    const set = vi.fn();
+    const get = vi.fn(() => ({ projects: [], tasks: [] }));
+    const slice = createTaskSlice(set as never, get as never);
+
+    await expect(slice.getRecentTaskCommentsForProject("")).resolves.toEqual(
+      [],
+    );
+    expect(mockDb.tasks.where).not.toHaveBeenCalled();
+  });
 });

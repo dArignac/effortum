@@ -15,7 +15,7 @@ import {
   IconClockPause,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
@@ -32,6 +32,10 @@ function compareTasksByTimeStart(a: Task, b: Task) {
 
 export function TaskList() {
   const tasks = useEffortumStore((state) => state.tasks);
+  const projects = useEffortumStore((state) => state.projects);
+  const getRecentProjectNames = useEffortumStore(
+    (state) => state.getRecentProjectNames,
+  );
   const selectedDateRange = useEffortumStore(
     (state) => state.selectedDateRange,
   );
@@ -91,6 +95,31 @@ export function TaskList() {
       (task) => !task.timeEnd || task.timeEnd.length === 0,
     );
   }, [sortedTasks]);
+
+  const [recentProjectNames, setRecentProjectNames] = useState<
+    string[] | undefined
+  >(undefined);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadRecentProjects = async () => {
+      try {
+        const names = await getRecentProjectNames();
+        if (!isCancelled) {
+          setRecentProjectNames(names);
+        }
+      } catch (error) {
+        console.error("Failed to load recent projects:", error);
+      }
+    };
+
+    loadRecentProjects();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [projects, tasks, getRecentProjectNames]);
 
   // Show loading indicator when data is being fetched
   if (isDataLoading) {
@@ -217,14 +246,18 @@ export function TaskList() {
             </Table.Tr>
           )}
           {sortedTasks.map((task) => (
-            <TaskListRow key={task.id} taskId={task.id} />
+            <TaskListRow
+              key={task.id}
+              taskId={task.id}
+              projectNames={recentProjectNames}
+            />
           ))}
           <Table.Tr>
             <Table.Td colSpan={6}>
               <Space h="md" />
             </Table.Td>
           </Table.Tr>
-          {canAddTask && <AddEntryRow />}
+          {canAddTask && <AddEntryRow projectNames={recentProjectNames} />}
         </Table.Tbody>
       </Table>
     </>

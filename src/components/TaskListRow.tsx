@@ -9,6 +9,7 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
+import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
 import {
   getDurationAsTime,
@@ -23,12 +24,26 @@ import {
 } from "../validations";
 import { DateSelectionField } from "./DateField";
 
-export function TaskListRow(props: { taskId: string | null }) {
+export function TaskListRow(props: {
+  taskId: string | null;
+  projectNames?: string[];
+}) {
+  const tasks = useEffortumStore((state) => state.tasks);
+  const task = tasks.find((t) => t.id === props.taskId);
+  if (!task) {
+    return null;
+  }
+
+  return <TaskListRowContent task={task} projectNames={props.projectNames} />;
+}
+
+function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
+  const { task } = props;
   const tasks = useEffortumStore((state) => state.tasks);
   const addTask = useEffortumStore((state) => state.addTask);
   const updateTask = useEffortumStore((state) => state.updateTask);
-  const getCommentsForProject = useEffortumStore(
-    (state) => state.getCommentsForProject,
+  const getRecentTaskCommentsForProject = useEffortumStore(
+    (state) => state.getRecentTaskCommentsForProject,
   );
   const projects = useEffortumStore((state) => state.projects);
   const setEndTimeOfLastStoppedTask = useEffortumStore(
@@ -44,13 +59,9 @@ export function TaskListRow(props: { taskId: string | null }) {
   const [hasChanges, setHasChanges] = useState(false);
   const [dateValue, setDateValue] = useState<string | null>(null);
   const [canStopTask, setCanStopTask] = useState(false);
+  const [availableComments, setAvailableComments] = useState<string[]>([]);
 
   const hasRunningTask = useMemo(() => tasks.some(isRunningTask), [tasks]);
-
-  const task = tasks.find((task) => task.id === props.taskId);
-  if (!task) {
-    return null;
-  }
 
   const currentProjectName =
     projects.find((project) => project.id === task.projectId)?.name ||
@@ -106,19 +117,42 @@ export function TaskListRow(props: { taskId: string | null }) {
     },
   });
 
-  const availableComments = useMemo(() => {
-    const projectName = fieldProject.getValue().trim();
-    if (projectName.length === 0) {
-      return [];
-    }
+  const selectedProjectName = fieldProject.getValue().trim();
 
-    const project = projects.find((p) => p.name === projectName);
-    if (!project) {
-      return [];
-    }
+  useEffect(() => {
+    let isCancelled = false;
 
-    return getCommentsForProject(project.id);
-  }, [fieldProject.getValue(), projects, getCommentsForProject, tasks]);
+    const loadComments = async () => {
+      if (selectedProjectName.length === 0) {
+        setAvailableComments([]);
+        return;
+      }
+
+      const project = projects.find((p) => p.name === selectedProjectName);
+      if (!project) {
+        setAvailableComments([]);
+        return;
+      }
+
+      try {
+        const comments = await getRecentTaskCommentsForProject(project.id);
+        if (!isCancelled) {
+          setAvailableComments(comments);
+        }
+      } catch (error) {
+        console.error("Failed to load comments:", error);
+        if (!isCancelled) {
+          setAvailableComments([]);
+        }
+      }
+    };
+
+    loadComments();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedProjectName, projects, tasks, getRecentTaskCommentsForProject]);
 
   /**
    * Validates and persists row edits for the current task.
@@ -242,7 +276,7 @@ export function TaskListRow(props: { taskId: string | null }) {
   };
 
   return (
-    <Table.Tr key={task.id} data-testid={`task-row-${task.id}`}>
+    <Table.Tr data-testid={`task-row-${task.id}`}>
       <Table.Td>
         <DateSelectionField
           dataTestId={`date-selection-${task.date}`}
@@ -258,7 +292,7 @@ export function TaskListRow(props: { taskId: string | null }) {
       <Table.Td>
         <Autocomplete
           {...fieldProject.getInputProps()}
-          data={projects.map((p) => p.name)}
+          data={props.projectNames ?? projects.map((p) => p.name)}
           size="xs"
           placeholder="Select or enter a project"
         />
