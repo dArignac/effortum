@@ -281,4 +281,42 @@ test.describe("Prefill start time on manual finished task addition (#51)", () =>
     await updateButton.click();
     await expect(startInput).toHaveValue("15:00");
   });
+
+  test("does not leave a stuck loading indicator in the comment field after adding a finished task", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("task-list-table")).toBeVisible();
+
+    const startInput = page.getByTestId("add-entry-input-start-time");
+    const endInput = page.getByTestId("add-entry-input-end-time");
+    const projectInput = page.getByTestId("add-entry-input-project");
+    const commentInput = page.getByTestId("add-entry-input-comment");
+    const addButton = page.getByTestId("button-add-task");
+    const commentLoader = commentInput
+      .locator("..")
+      .locator(".mantine-Loader-root");
+
+    await startInput.fill("09:00");
+    await endInput.fill("10:00");
+    await projectInput.fill("Loader Project");
+    await commentInput.fill("Initial work");
+    await addButton.click();
+
+    await expect(page.locator('[data-testid^="task-row-"]')).toHaveCount(1);
+    await expect(startInput).toHaveValue("10:00");
+    await expect(commentInput).toHaveValue("");
+    await expect(commentLoader).toHaveCount(0);
+
+    // Also verify when adding a second task on an already-existing project
+    await endInput.fill("11:00");
+    await projectInput.fill("Loader Project");
+    await commentInput.fill("Follow-up work");
+    await addButton.click();
+
+    await expect(page.locator('[data-testid^="task-row-"]')).toHaveCount(2);
+    await expect(startInput).toHaveValue("11:00");
+    await expect(commentInput).toHaveValue("");
+    await expect(commentLoader).toHaveCount(0);
+  });
 });
