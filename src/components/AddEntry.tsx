@@ -198,8 +198,14 @@ export function AddEntryRow(props: { projectNames?: string[] }) {
         comment: selectedComment || "",
       });
 
-      setEndTimeOfLastStoppedTask(null);
+      fieldStart.reset();
+      fieldEnd.reset();
+      fieldProject.reset();
+      fieldComment.reset();
       lastPrefilledTimeRef.current = null;
+      setEndTimeOfLastStoppedTask(
+        !runningTask && roundedEndValue ? roundedEndValue : null,
+      );
     } catch (error) {
       notifications.show({
         title: "Failed to add task",
