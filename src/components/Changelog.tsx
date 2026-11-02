@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.21.1",
+    description: [
+      "Fixes start time prefill and field reset when manually adding a finished task (#51).",
+    ],
+  },
+  {
     version: "0.21.0",
     description: [
       "Sorts projects and task comments by last used in task entry dropdowns (#128).",

@@ -64,18 +64,20 @@ export function AddEntryRow(props: { projectNames?: string[] }) {
       // only fill comments if a project is selected
       if (trimmedProject.length === 0) {
         setAvailableComments([]);
+        setIsCommentLoading(false);
+        return;
+      }
+
+      // Find the project by name to get its ID
+      const project = projects.find((p) => p.name === trimmedProject);
+      if (!project) {
+        setAvailableComments([]);
+        setIsCommentLoading(false);
         return;
       }
 
       setIsCommentLoading(true);
       try {
-        // Find the project by name to get its ID
-        const project = projects.find((p) => p.name === trimmedProject);
-        if (!project) {
-          setAvailableComments([]);
-          return;
-        }
-
         // Load comments for this specific project on-demand
         const comments = await getRecentTaskCommentsForProject(project.id);
         if (!isCancelled) {
@@ -198,8 +200,14 @@ export function AddEntryRow(props: { projectNames?: string[] }) {
         comment: selectedComment || "",
       });
 
-      setEndTimeOfLastStoppedTask(null);
+      fieldStart.reset();
+      fieldEnd.reset();
+      fieldProject.reset();
+      fieldComment.reset();
       lastPrefilledTimeRef.current = null;
+      setEndTimeOfLastStoppedTask(
+        !runningTask && roundedEndValue ? roundedEndValue : null,
+      );
     } catch (error) {
       notifications.show({
         title: "Failed to add task",

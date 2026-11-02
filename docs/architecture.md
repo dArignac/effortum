@@ -82,6 +82,8 @@ erDiagram
   range, it is surfaced to the user with an alert and guidance to stop it before a new active task can be started.
 - Tasks can be restarted from the task list actions column via a quick start button that launches a new running task for the current date with matching project
   and comment, applying 5-minute rounding if enabled, and hidden whenever any task is actively running.
+- Stopping an active task or manually adding a finished task (when no active task is running) resets the task addition row (`AddEntryRow`) and prefills its
+  start time with that task's persisted end time via `endTimeOfLastStoppedTask` while keeping end, project, and comment empty and preserving the selected date.
 
 ## Architectural Invariant Enforcement
 
