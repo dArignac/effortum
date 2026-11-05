@@ -17,6 +17,49 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
+const NAV_ITEMS = [
+  {
+    testId: "nav-collect-times",
+    label: "Collect Times",
+    icon: IconCalendarStats,
+    render: () => <TimeCollectorPage />,
+  },
+  {
+    testId: "nav-import-export",
+    label: "Import & Export Data",
+    icon: IconDatabaseExport,
+    render: () => <ImportExportPage />,
+  },
+  {
+    testId: "nav-settings",
+    label: "Settings",
+    icon: IconAlarmAverage,
+    render: () => <SettingsPage />,
+  },
+  {
+    testId: "nav-projects",
+    label: "Projects",
+    icon: IconFolders,
+    render: () => <ProjectsPage />,
+  },
+  {
+    testId: "nav-tasks",
+    label: "Tasks",
+    icon: IconMessage,
+    render: () => <TasksPage />,
+  },
+  {
+    testId: "nav-changelog",
+    label: "Changelog",
+    icon: IconConfetti,
+    render: () => <Changelog />,
+  },
+] as const;
+
+const CHANGELOG_NAV_INDEX = NAV_ITEMS.findIndex(
+  (item) => item.testId === "nav-changelog",
+);
+
 export const Route = createFileRoute("/")({ ssr: false, component: App });
 
 function App() {
@@ -44,63 +87,31 @@ function App() {
           <Anchor fw={700} c="dark" pt={2} onClick={() => setActiveNavIndex(0)}>
             Effortum
           </Anchor>
-          <Anchor c="dimmed" pt={2} onClick={() => setActiveNavIndex(5)}>
+          <Anchor
+            c="dimmed"
+            pt={2}
+            onClick={() => setActiveNavIndex(CHANGELOG_NAV_INDEX)}
+          >
             v{VERSION}
           </Anchor>
         </Group>
       </AppShell.Header>
       <AppShell.Navbar>
-        <NavLink
-          data-testid="nav-collect-times"
-          active={activeNavIndex === 0}
-          onClick={() => setActiveNavIndex(0)}
-          label="Collect Times"
-          leftSection={<IconCalendarStats size={20} stroke={1.5} />}
-        />
-        <NavLink
-          data-testid="nav-import-export"
-          active={activeNavIndex === 1}
-          onClick={() => setActiveNavIndex(1)}
-          label="Import & Export Data"
-          leftSection={<IconDatabaseExport size={20} stroke={1.5} />}
-        />
-        <NavLink
-          data-testid="nav-settings"
-          active={activeNavIndex === 2}
-          onClick={() => setActiveNavIndex(2)}
-          label="Settings"
-          leftSection={<IconAlarmAverage size={20} stroke={1.5} />}
-        />
-        <NavLink
-          data-testid="nav-projects"
-          active={activeNavIndex === 3}
-          onClick={() => setActiveNavIndex(3)}
-          label="Projects"
-          leftSection={<IconFolders size={20} stroke={1.5} />}
-        />
-        <NavLink
-          data-testid="nav-tasks"
-          active={activeNavIndex === 4}
-          onClick={() => setActiveNavIndex(4)}
-          label="Tasks"
-          leftSection={<IconMessage size={20} stroke={1.5} />}
-        />
-        <NavLink
-          data-testid="nav-changelog"
-          active={activeNavIndex === 5}
-          onClick={() => setActiveNavIndex(5)}
-          label="Changelog"
-          leftSection={<IconConfetti size={20} stroke={1.5} />}
-        />
+        {NAV_ITEMS.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.testId}
+              data-testid={item.testId}
+              active={activeNavIndex === index}
+              onClick={() => setActiveNavIndex(index)}
+              label={item.label}
+              leftSection={<Icon size={20} stroke={1.5} />}
+            />
+          );
+        })}
       </AppShell.Navbar>
-      <AppShell.Main>
-        {activeNavIndex === 0 && <TimeCollectorPage />}
-        {activeNavIndex === 1 && <ImportExportPage />}
-        {activeNavIndex === 2 && <SettingsPage />}
-        {activeNavIndex === 3 && <ProjectsPage />}
-        {activeNavIndex === 4 && <TasksPage />}
-        {activeNavIndex === 5 && <Changelog />}
-      </AppShell.Main>
+      <AppShell.Main>{NAV_ITEMS[activeNavIndex]?.render()}</AppShell.Main>
     </AppShell>
   );
 }

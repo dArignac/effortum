@@ -59,12 +59,11 @@ export function TasksPage() {
       }
 
       try {
-        const comments =
-          await getUniqueTaskCommentsForProject(selectedProjectId);
-        const commentCounts =
-          await getTaskCommentCountsForProject(selectedProjectId);
-        const commentHours =
-          await getTaskCommentHoursForProject(selectedProjectId);
+        const [comments, commentCounts, commentHours] = await Promise.all([
+          getUniqueTaskCommentsForProject(selectedProjectId),
+          getTaskCommentCountsForProject(selectedProjectId),
+          getTaskCommentHoursForProject(selectedProjectId),
+        ]);
 
         setCommentRows(
           comments.map((comment) => ({
@@ -144,18 +143,17 @@ export function TasksPage() {
         "data-testid": "toast-task-comment-update-success",
       });
     } catch (error) {
-      const message =
-        error instanceof Error && error.message === "COMMENT_ALREADY_EXISTS"
-          ? "Comment already exists for this project."
-          : "Failed to update task comments. Please try again.";
+      const isDuplicate =
+        error instanceof Error && error.message === "COMMENT_ALREADY_EXISTS";
 
       notifications.show({
-        message,
+        message: isDuplicate
+          ? "Comment already exists for this project."
+          : "Failed to update task comments. Please try again.",
         color: "red",
-        "data-testid":
-          message === "Comment already exists for this project."
-            ? "toast-task-comment-update-error-duplicate"
-            : "toast-task-comment-update-error-generic",
+        "data-testid": isDuplicate
+          ? "toast-task-comment-update-error-duplicate"
+          : "toast-task-comment-update-error-generic",
       });
     } finally {
       isSavingRef.current = false;
