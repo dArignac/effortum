@@ -17,14 +17,11 @@ export function Calendar() {
   );
 
   useEffect(() => {
-    setSelectedDateRange([
-      dayjs().format("YYYY-MM-DD"),
-      dayjs().format("YYYY-MM-DD"),
-    ]);
+    const today = dayjs().format("YYYY-MM-DD");
+    setSelectedDateRange([today, today]);
   }, [setSelectedDateRange]);
 
   const handleDateChange = async (value: [string | null, string | null]) => {
-    // Update the selected date range in store
     setSelectedDateRange(value || [null, null]);
 
     if (!value || !value[0] || !value[1]) {
@@ -32,21 +29,14 @@ export function Calendar() {
     }
 
     try {
-      // Set loading state to show indicator
       useEffortumStore.setState({ isDataLoading: true });
-
-      // Load data for the selected date range - but only tasks need to be updated here
-      // Projects, overtime, and settings are typically loaded once at app startup
-      const { tasks } = await LazyDataLoader.loadDataForDateRange(
+      const tasks = await LazyDataLoader.loadTasksForDateRange(
         value[0],
         value[1],
       );
-
-      // Only update tasks in store (projects, etc. remain the same)
       useEffortumStore.setState({ tasks, isDataLoading: false });
     } catch (error) {
       console.error("Failed to load data for date range:", error);
-      // Optionally show a notification to the user
       useEffortumStore.setState({ isDataLoading: false });
     }
   };
@@ -66,19 +56,17 @@ export function Calendar() {
   };
 
   return (
-    <>
-      <DatePicker
-        type="range"
-        allowSingleDateInRange
-        value={selectedDateRange}
-        onChange={handleDateChange}
-        size="xs"
-        renderDay={dayRenderer}
-        getDayProps={(date) => ({
-          "data-testid": `summary-date-day-${dayjs(date).format("YYYY-MM-DD")}`,
-        })}
-        data-testid="summary-date-picker"
-      />
-    </>
+    <DatePicker
+      type="range"
+      allowSingleDateInRange
+      value={selectedDateRange}
+      onChange={handleDateChange}
+      size="xs"
+      renderDay={dayRenderer}
+      getDayProps={(date) => ({
+        "data-testid": `summary-date-day-${dayjs(date).format("YYYY-MM-DD")}`,
+      })}
+      data-testid="summary-date-picker"
+    />
   );
 }
