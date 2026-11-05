@@ -21,6 +21,10 @@ interface DeleteProjectModalProps {
   onDeleted?: (projectId: string) => void;
 }
 
+function formatTaskCount(count: number): string {
+  return `${count} ${count === 1 ? "task" : "tasks"}`;
+}
+
 export function DeleteProjectModal({
   project,
   onClose,
@@ -71,6 +75,13 @@ export function DeleteProjectModal({
     [availableDestinationProjects, selectedDestinationId],
   );
 
+  const resetTaskOptions = () => {
+    setTaskAction("delete");
+    setSelectedDestinationId(null);
+    setConflictingComments([]);
+    setIsCheckingConflicts(false);
+  };
+
   // Load task count when project changes
   useEffect(() => {
     let isActive = true;
@@ -87,10 +98,7 @@ export function DeleteProjectModal({
         const count = await getProjectTaskCount(project.id);
         if (isActive) {
           setTaskCount(count);
-          setTaskAction("delete");
-          setSelectedDestinationId(null);
-          setConflictingComments([]);
-          setIsCheckingConflicts(false);
+          resetTaskOptions();
         }
       } catch {
         if (isActive) {
@@ -160,10 +168,7 @@ export function DeleteProjectModal({
     if (isDeleting) return;
     setTaskCount(null);
     setIsLoadingTaskCount(false);
-    setTaskAction("delete");
-    setSelectedDestinationId(null);
-    setConflictingComments([]);
-    setIsCheckingConflicts(false);
+    resetTaskOptions();
     onClose();
   };
 
@@ -211,7 +216,7 @@ export function DeleteProjectModal({
 
   return (
     <Modal
-      opened={Boolean(project)}
+      opened
       onClose={handleClose}
       title="Delete Project"
       closeOnClickOutside={!isDeleting}
@@ -258,7 +263,7 @@ export function DeleteProjectModal({
               <Text span fw={700}>
                 "{project.name}"
               </Text>{" "}
-              has {taskCount} task{taskCount === 1 ? "" : "s"}.
+              has {formatTaskCount(taskCount)}.
             </Text>
             <Text size="sm" c="dimmed">
               Choose whether you want to delete all tasks of this project or
@@ -297,8 +302,8 @@ export function DeleteProjectModal({
                 title="Warning"
                 data-testid="alert-delete-all-tasks"
               >
-                All {taskCount} task{taskCount === 1 ? "" : "s"} of this project
-                will be permanently deleted. This action cannot be undone.
+                All {formatTaskCount(taskCount)} of this project will be
+                permanently deleted. This action cannot be undone.
               </Alert>
             )}
 
@@ -375,8 +380,8 @@ export function DeleteProjectModal({
                         c="dimmed"
                         data-testid="text-no-conflicts"
                       >
-                        All {taskCount} task{taskCount === 1 ? "" : "s"} will be
-                        moved to "{destinationProjectName}".
+                        All {formatTaskCount(taskCount)} will be moved to "
+                        {destinationProjectName}".
                       </Text>
                     )}
                   </>

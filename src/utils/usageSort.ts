@@ -50,6 +50,18 @@ function compareAlphabetically(a: string, b: string): number {
   return baseComparison !== 0 ? baseComparison : a.localeCompare(b);
 }
 
+function resolveTaskProjectId(
+  task: TaskForProjectSort,
+  projectIds: ReadonlySet<string>,
+  projectNameToId: ReadonlyMap<string, string>,
+): string | undefined {
+  const rawProjectId = task.projectId?.trim();
+  if (rawProjectId) {
+    return projectIds.has(rawProjectId) ? rawProjectId : undefined;
+  }
+  return projectNameToId.get((task.project ?? "").trim());
+}
+
 export function sortProjectsByLastUsed(
   projects: ReadonlyArray<Project>,
   tasks: ReadonlyArray<TaskForProjectSort>,
@@ -61,12 +73,11 @@ export function sortProjectsByLastUsed(
   const latestUsageByProjectId = new Map<string, TaskUsageTimestamp>();
 
   for (const task of tasks) {
-    const rawProjectId = task.projectId?.trim();
-    const matchedProjectId = rawProjectId
-      ? projectIds.has(rawProjectId)
-        ? rawProjectId
-        : undefined
-      : projectNameToId.get((task.project ?? "").trim());
+    const matchedProjectId = resolveTaskProjectId(
+      task,
+      projectIds,
+      projectNameToId,
+    );
 
     if (!matchedProjectId) {
       continue;

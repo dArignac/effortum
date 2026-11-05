@@ -55,6 +55,14 @@ export function ProjectsPage() {
     );
   }
 
+  const clearEditedName = (projectId: string) => {
+    setEditedNames((current) => {
+      const next = { ...current };
+      delete next[projectId];
+      return next;
+    });
+  };
+
   /**
    * Saves a renamed project while preventing concurrent save operations.
    */
@@ -86,25 +94,20 @@ export function ProjectsPage() {
         message: "Project renamed successfully!",
         "data-testid": "toast-project-rename-success",
       });
-      setEditedNames((current) => {
-        const next = { ...current };
-        delete next[projectId];
-        return next;
-      });
+      clearEditedName(projectId);
     } catch (error) {
-      const message =
+      const isDuplicate =
         error instanceof Error &&
-        error.message === "PROJECT_NAME_ALREADY_EXISTS"
-          ? "Project name already exists."
-          : "Failed to rename project. Please try again.";
+        error.message === "PROJECT_NAME_ALREADY_EXISTS";
 
       notifications.show({
-        message,
+        message: isDuplicate
+          ? "Project name already exists."
+          : "Failed to rename project. Please try again.",
         color: "red",
-        "data-testid":
-          message === "Project name already exists."
-            ? "toast-project-rename-error-duplicate"
-            : "toast-project-rename-error-generic",
+        "data-testid": isDuplicate
+          ? "toast-project-rename-error-duplicate"
+          : "toast-project-rename-error-generic",
       });
     } finally {
       isSavingRef.current = false;
@@ -149,16 +152,14 @@ export function ProjectsPage() {
               size="xs"
               onChange={(event) => {
                 const nextValue = event.currentTarget.value;
-                setEditedNames((current) => {
-                  const next = { ...current };
-                  if (nextValue === project.name) {
-                    delete next[project.id];
-                    return next;
-                  }
-
-                  next[project.id] = nextValue;
-                  return next;
-                });
+                if (nextValue === project.name) {
+                  clearEditedName(project.id);
+                  return;
+                }
+                setEditedNames((current) => ({
+                  ...current,
+                  [project.id]: nextValue,
+                }));
               }}
               aria-label={`Project ${index + 1}`}
             />
@@ -194,13 +195,7 @@ export function ProjectsPage() {
       <DeleteProjectModal
         project={projectToDelete}
         onClose={() => setProjectToDelete(null)}
-        onDeleted={(deletedId) => {
-          setEditedNames((current) => {
-            const next = { ...current };
-            delete next[deletedId];
-            return next;
-          });
-        }}
+        onDeleted={clearEditedName}
       />
     </Stack>
   );

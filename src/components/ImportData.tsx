@@ -228,11 +228,9 @@ function normalizeLegacyBackup(importData: any) {
   const normalizedTasks = taskRows.map((task) => {
     const projectName = (task.project || "").trim();
     const projectId =
-      typeof task.projectId === "string"
-        ? task.projectId
-        : task.projectId != null
-          ? String(task.projectId)
-          : ensureProjectId(projectName);
+      task.projectId != null
+        ? String(task.projectId)
+        : ensureProjectId(projectName);
     const taskId = toStableId(task.id);
 
     return {
@@ -265,6 +263,80 @@ function normalizeLegacyBackup(importData: any) {
   return normalized;
 }
 
+function asProject(value: Record<string, any>): Project | null {
+  if (typeof value.name !== "string") {
+    return null;
+  }
+  return { id: toStableId(value.id), name: value.name };
+}
+
+function asTask(value: Record<string, any>): Task | null {
+  if (
+    typeof value.date !== "string" ||
+    typeof value.timeStart !== "string" ||
+    !["string", "number"].includes(typeof value.projectId)
+  ) {
+    return null;
+  }
+
+  return {
+    id: toStableId(value.id),
+    date: value.date,
+    timeStart: value.timeStart,
+    timeEnd: typeof value.timeEnd === "string" ? value.timeEnd : undefined,
+    projectId: String(value.projectId),
+    project: typeof value.project === "string" ? value.project : undefined,
+    comment: typeof value.comment === "string" ? value.comment : undefined,
+  };
+}
+
+function asOvertime(value: Record<string, any>): Overtime | null {
+  if (
+    typeof value.id !== "string" ||
+    typeof value.currentBalance !== "number" ||
+    typeof value.workingHoursPerDay !== "number"
+  ) {
+    return null;
+  }
+
+  return {
+    id: value.id,
+    currentBalance: value.currentBalance,
+    workingHoursPerDay: value.workingHoursPerDay,
+  };
+}
+
+function asSettings(value: Record<string, any>): Settings | null {
+  if (
+    typeof value.id !== "string" ||
+    typeof value.roundToNearest5Minutes !== "boolean"
+  ) {
+    return null;
+  }
+
+  return {
+    id: value.id,
+    roundToNearest5Minutes: value.roundToNearest5Minutes,
+  };
+}
+
+function parseTableEntities<T>(
+  importData: any,
+  tableName: string,
+  parser: (value: Record<string, any>) => T | null,
+): T[] {
+  return getTableRowObjects(importData, tableName)
+    .map(parser)
+    .filter((row): row is T => row !== null);
+}
+
+async function clearAllTables() {
+  await db.tasks.clear();
+  await db.projects.clear();
+  await db.overtime.clear();
+  await db.settings.clear();
+}
+
 /**
  * Fallback importer for legacy payloads that cannot be processed by `importInto`.
  *
@@ -282,87 +354,10 @@ async function importTablesFallback(importData: any) {
     tables: summarizeTables(tables),
   });
 
-  /**
-   * Validates and converts a raw object into a Project entity.
-   */
-  const asProject = (value: Record<string, any>): Project | null => {
-    if (typeof value.name !== "string") {
-      return null;
-    }
-    return { id: toStableId(value.id), name: value.name };
-  };
-
-  /**
-   * Validates and converts a raw object into a Task entity.
-   */
-  const asTask = (value: Record<string, any>): Task | null => {
-    if (
-      typeof value.date !== "string" ||
-      typeof value.timeStart !== "string" ||
-      !["string", "number"].includes(typeof value.projectId)
-    ) {
-      return null;
-    }
-
-    return {
-      id: toStableId(value.id),
-      date: value.date,
-      timeStart: value.timeStart,
-      timeEnd: typeof value.timeEnd === "string" ? value.timeEnd : undefined,
-      projectId: String(value.projectId),
-      project: typeof value.project === "string" ? value.project : undefined,
-      comment: typeof value.comment === "string" ? value.comment : undefined,
-    };
-  };
-
-  /**
-   * Validates and converts a raw object into an Overtime entity.
-   */
-  const asOvertime = (value: Record<string, any>): Overtime | null => {
-    if (
-      typeof value.id !== "string" ||
-      typeof value.currentBalance !== "number" ||
-      typeof value.workingHoursPerDay !== "number"
-    ) {
-      return null;
-    }
-
-    return {
-      id: value.id,
-      currentBalance: value.currentBalance,
-      workingHoursPerDay: value.workingHoursPerDay,
-    };
-  };
-
-  /**
-   * Validates and converts a raw object into a Settings entity.
-   */
-  const asSettings = (value: Record<string, any>): Settings | null => {
-    if (
-      typeof value.id !== "string" ||
-      typeof value.roundToNearest5Minutes !== "boolean"
-    ) {
-      return null;
-    }
-
-    return {
-      id: value.id,
-      roundToNearest5Minutes: value.roundToNearest5Minutes,
-    };
-  };
-
-  const tasks = getTableRowObjects(importData, "tasks")
-    .map((row) => asTask(row))
-    .filter((row): row is Task => row !== null);
-  const projects = getTableRowObjects(importData, "projects")
-    .map((row) => asProject(row))
-    .filter((row): row is Project => row !== null);
-  const overtime = getTableRowObjects(importData, "overtime")
-    .map((row) => asOvertime(row))
-    .filter((row): row is Overtime => row !== null);
-  const settings = getTableRowObjects(importData, "settings")
-    .map((row) => asSettings(row))
-    .filter((row): row is Settings => row !== null);
+  const tasks = parseTableEntities(importData, "tasks", asTask);
+  const projects = parseTableEntities(importData, "projects", asProject);
+  const overtime = parseTableEntities(importData, "overtime", asOvertime);
+  const settings = parseTableEntities(importData, "settings", asSettings);
 
   console.info("[ImportData] Fallback parsed entity counts", {
     tasks: tasks.length,
@@ -387,13 +382,110 @@ async function importTablesFallback(importData: any) {
   await logDbCounts("After fallback import");
 }
 
+async function executeDatabaseImport(file: File) {
+  console.groupCollapsed("[ImportData] Import flow started");
+  try {
+    console.info("[ImportData] Selected file", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
+
+    const fileContent = await file.text();
+    console.info("[ImportData] File read complete", {
+      contentLength: fileContent.length,
+    });
+
+    const importData = JSON.parse(fileContent);
+    console.info("[ImportData] Parsed backup metadata", {
+      formatName: importData?.formatName,
+      formatVersion: importData?.formatVersion,
+      databaseName: importData?.data?.databaseName,
+      databaseVersion: importData?.data?.databaseVersion,
+    });
+
+    if (
+      importData.formatName !== "dexie" ||
+      !importData.data?.databaseName ||
+      !Array.isArray(importData.data?.tables) ||
+      importData.data.databaseName !== "EffortumDatabase"
+    ) {
+      throw new Error("Invalid backup file format");
+    }
+
+    const normalizedImportData = normalizeLegacyBackup(importData);
+    normalizedImportData.data.databaseVersion = db.verno;
+    const normalizedFileContent = JSON.stringify(normalizedImportData);
+    const expectedTaskCount = getTableRowObjects(
+      normalizedImportData,
+      "tasks",
+    ).length;
+    const expectedProjectCount = getTableRowObjects(
+      normalizedImportData,
+      "projects",
+    ).length;
+
+    console.info("[ImportData] Expected rows after normalization", {
+      expectedTaskCount,
+      expectedProjectCount,
+    });
+
+    await logDbCounts("Before clear");
+    await clearAllTables();
+    await logDbCounts("After clear");
+
+    const blob = new Blob([normalizedFileContent], {
+      type: "application/json",
+    });
+    try {
+      console.info("[ImportData] Attempting importInto");
+      await importInto(db, blob);
+      console.info("[ImportData] importInto completed without throwing");
+    } catch {
+      console.warn(
+        "[ImportData] importInto failed. Switching to fallback import",
+      );
+      await importTablesFallback(normalizedImportData);
+    }
+
+    await logDbCounts("After importInto/fallback attempt");
+
+    const [importedTaskCount, importedProjectCount] = await Promise.all([
+      db.tasks.count(),
+      db.projects.count(),
+    ]);
+
+    // Some legacy payloads may pass importInto without errors but still import no rows.
+    const requiresFallbackImport =
+      (expectedTaskCount > 0 && importedTaskCount === 0) ||
+      (expectedProjectCount > 0 && importedProjectCount === 0);
+
+    console.info("[ImportData] Post-import verification", {
+      importedTaskCount,
+      importedProjectCount,
+      requiresFallbackImport,
+    });
+
+    if (requiresFallbackImport) {
+      console.warn(
+        "[ImportData] Detected empty import result despite expected rows. Re-running fallback import.",
+      );
+      await clearAllTables();
+      await importTablesFallback(normalizedImportData);
+    }
+
+    await logDbCounts("Final import result");
+  } finally {
+    console.groupEnd();
+  }
+}
+
 export function ImportData() {
   const [confirmModalOpened, setConfirmModalOpened] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const selectedFileRef = useRef<File | null>(null);
 
   function handleFileSelect() {
-    // Create a hidden file input
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".json";
@@ -416,109 +508,7 @@ export function ImportData() {
     setIsImporting(true);
 
     try {
-      console.groupCollapsed("[ImportData] Import flow started");
-      console.info("[ImportData] Selected file", {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      });
-
-      // Read the file
-      const fileContent = await file.text();
-      console.info("[ImportData] File read complete", {
-        contentLength: fileContent.length,
-      });
-
-      const importData = JSON.parse(fileContent);
-      console.info("[ImportData] Parsed backup metadata", {
-        formatName: importData?.formatName,
-        formatVersion: importData?.formatVersion,
-        databaseName: importData?.data?.databaseName,
-        databaseVersion: importData?.data?.databaseVersion,
-      });
-
-      // Validate it's a Dexie export
-      if (
-        importData.formatName !== "dexie" ||
-        !importData.data?.databaseName ||
-        !Array.isArray(importData.data?.tables) ||
-        importData.data.databaseName !== "EffortumDatabase"
-      ) {
-        throw new Error("Invalid backup file format");
-      }
-
-      const normalizedImportData = normalizeLegacyBackup(importData);
-      normalizedImportData.data.databaseVersion = db.verno;
-      const normalizedFileContent = JSON.stringify(normalizedImportData);
-      const expectedTaskCount = getTableRowObjects(
-        normalizedImportData,
-        "tasks",
-      ).length;
-      const expectedProjectCount = getTableRowObjects(
-        normalizedImportData,
-        "projects",
-      ).length;
-
-      console.info("[ImportData] Expected rows after normalization", {
-        expectedTaskCount,
-        expectedProjectCount,
-      });
-
-      await logDbCounts("Before clear");
-
-      // Clear all tables instead of deleting the database
-      await db.tasks.clear();
-      await db.projects.clear();
-      await db.overtime.clear();
-      await db.settings.clear();
-
-      await logDbCounts("After clear");
-
-      // Import the data with progress tracking
-      const blob = new Blob([normalizedFileContent], {
-        type: "application/json",
-      });
-      try {
-        console.info("[ImportData] Attempting importInto");
-        await importInto(db, blob);
-        console.info("[ImportData] importInto completed without throwing");
-      } catch {
-        console.warn(
-          "[ImportData] importInto failed. Switching to fallback import",
-        );
-        await importTablesFallback(normalizedImportData);
-      }
-
-      await logDbCounts("After importInto/fallback attempt");
-
-      const [importedTaskCount, importedProjectCount] = await Promise.all([
-        db.tasks.count(),
-        db.projects.count(),
-      ]);
-
-      // Some legacy payloads may pass importInto without errors but still import no rows.
-      const requiresFallbackImport =
-        (expectedTaskCount > 0 && importedTaskCount === 0) ||
-        (expectedProjectCount > 0 && importedProjectCount === 0);
-
-      console.info("[ImportData] Post-import verification", {
-        importedTaskCount,
-        importedProjectCount,
-        requiresFallbackImport,
-      });
-
-      if (requiresFallbackImport) {
-        console.warn(
-          "[ImportData] Detected empty import result despite expected rows. Re-running fallback import.",
-        );
-        await db.tasks.clear();
-        await db.projects.clear();
-        await db.overtime.clear();
-        await db.settings.clear();
-        await importTablesFallback(normalizedImportData);
-      }
-
-      await logDbCounts("Final import result");
+      await executeDatabaseImport(file);
 
       notifications.show({
         message: "Database imported successfully! Reloading page...",
@@ -538,7 +528,6 @@ export function ImportData() {
         color: "red",
       });
     } finally {
-      console.groupEnd();
       setIsImporting(false);
       selectedFileRef.current = null;
     }
