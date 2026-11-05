@@ -2,19 +2,30 @@ import { db } from "@/store/db";
 import { StoreGet, StoreSet } from "@/store/types";
 import dayjs from "dayjs";
 
-export const createCommentSlice = (_set: StoreSet, get: StoreGet) => ({
+function extractUniqueSortedComments(
+  tasks: ReadonlyArray<{ comment?: string }>,
+): string[] {
+  const comments = new Set<string>();
+  for (const task of tasks) {
+    const trimmed = (task.comment ?? "").trim();
+    if (trimmed.length > 0) {
+      comments.add(trimmed);
+    }
+  }
+  return Array.from(comments).sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" }),
+  );
+}
+
+export const createCommentSlice = (set: StoreSet, get: StoreGet) => ({
   /**
    * Returns distinct, non-empty task comments for a project to feed autocomplete.
    */
   getCommentsForProject: (projectId: string) => {
-    const comments = get()
-      .tasks.filter((task) => task.projectId === projectId)
-      .map((task) => (task.comment ?? "").trim())
-      .filter((comment) => comment.length > 0);
-
-    return Array.from(new Set(comments)).sort((a, b) =>
-      a.localeCompare(b, undefined, { sensitivity: "base" }),
+    const projectTasks = get().tasks.filter(
+      (task) => task.projectId === projectId,
     );
+    return extractUniqueSortedComments(projectTasks);
   },
 
   /**
@@ -22,14 +33,7 @@ export const createCommentSlice = (_set: StoreSet, get: StoreGet) => ({
    */
   getUniqueTaskCommentsForProject: async (projectId: string) => {
     const tasks = await db.tasks.where("projectId").equals(projectId).toArray();
-
-    const comments = tasks
-      .map((task) => (task.comment ?? "").trim())
-      .filter((comment) => comment.length > 0);
-
-    return Array.from(new Set(comments)).sort((a, b) =>
-      a.localeCompare(b, undefined, { sensitivity: "base" }),
-    );
+    return extractUniqueSortedComments(tasks);
   },
 
   /**
@@ -38,15 +42,14 @@ export const createCommentSlice = (_set: StoreSet, get: StoreGet) => ({
   getTaskCommentCountsForProject: async (projectId: string) => {
     const tasks = await db.tasks.where("projectId").equals(projectId).toArray();
 
-    return tasks.reduce<Record<string, number>>((counts, task) => {
+    const counts: Record<string, number> = {};
+    for (const task of tasks) {
       const comment = (task.comment ?? "").trim();
-      if (!comment) {
-        return counts;
+      if (comment) {
+        counts[comment] = (counts[comment] ?? 0) + 1;
       }
-
-      counts[comment] = (counts[comment] ?? 0) + 1;
-      return counts;
-    }, {});
+    }
+    return counts;
   },
 
   /**
@@ -55,25 +58,22 @@ export const createCommentSlice = (_set: StoreSet, get: StoreGet) => ({
   getTaskCommentHoursForProject: async (projectId: string) => {
     const tasks = await db.tasks.where("projectId").equals(projectId).toArray();
 
-    const secondsByComment = tasks.reduce<Record<string, number>>(
-      (seconds, task) => {
-        const comment = (task.comment ?? "").trim();
-        if (!comment || !task.timeEnd) {
-          return seconds;
-        }
+    const secondsByComment: Record<string, number> = {};
+    for (const task of tasks) {
+      const comment = (task.comment ?? "").trim();
+      if (!comment || !task.timeEnd) {
+        continue;
+      }
 
-        const startTime = dayjs(`${task.date}T${task.timeStart}`);
-        const endTime = dayjs(`${task.date}T${task.timeEnd}`);
-        const diffInSeconds = endTime.diff(startTime, "second");
+      const startTime = dayjs(`${task.date}T${task.timeStart}`);
+      const endTime = dayjs(`${task.date}T${task.timeEnd}`);
+      const diffInSeconds = endTime.diff(startTime, "second");
 
-        if (diffInSeconds > 0) {
-          seconds[comment] = (seconds[comment] ?? 0) + diffInSeconds;
-        }
-
-        return seconds;
-      },
-      {},
-    );
+      if (diffInSeconds > 0) {
+        secondsByComment[comment] =
+          (secondsByComment[comment] ?? 0) + diffInSeconds;
+      }
+    }
 
     return Object.fromEntries(
       Object.entries(secondsByComment).map(([comment, totalSeconds]) => [
@@ -129,6 +129,6 @@ export const createCommentSlice = (_set: StoreSet, get: StoreGet) => ({
     });
 
     const tasks = await db.tasks.toArray();
-    _set({ tasks });
+    set({ tasks });
   },
 });
