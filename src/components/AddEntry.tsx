@@ -77,7 +77,7 @@ export function AddEntryRow(props: { projectNames?: string[] }) {
       fieldStart.setValue(endTimeOfLastStoppedTask);
       lastPrefilledTimeRef.current = endTimeOfLastStoppedTask;
     }
-  }, [startValue, endTimeOfLastStoppedTask, fieldStart]);
+  }, [startValue, endTimeOfLastStoppedTask]);
 
   useEffect(() => {
     runningTaskRef.current = runningTask;
