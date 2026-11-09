@@ -2,8 +2,8 @@
 name: implement-issue
 description:
   Orchestrates autonomous, human-in-the-loop feature and bug implementation for GitHub issues labeled 'ready-for-implementation'. Uses a Separation-of-Powers
-  architecture (Lead Architect → Builder → Independent Auditor), enforces non-overwriting spec-driven development, applies incremental implementation, and
-  verifies Effortum architectural invariants.
+  architecture (Lead Architect → Builder → Simplifier → Independent Auditor), enforces non-overwriting spec-driven development, applies incremental
+  implementation and post-implementation code simplification, and verifies Effortum architectural invariants.
 ---
 
 # Implement Issue
@@ -12,13 +12,16 @@ description:
 
 Automates the end-to-end implementation of GitHub issues labeled `ready-for-implementation` while keeping the human in control at high-leverage decision gates.
 
-The pipeline enforces a strict **Separation of Powers** across three distinct agents:
+The pipeline enforces a strict **Separation of Powers** across four distinct agents:
 
 1. **Lead Architect (Orchestrator):** Triages issues, evaluates sizing, authors the binding contract (`spec.md`, `plan.md`, `tasks.md`) in an isolated
    directory, and halts for **Human Gate 1**.
 2. **Builder Subagent (`feature-implementer`):** Distinct persona defined in `agents/feature-implementer.md`. Hands-free execution following
    `incremental-implementation` (task-by-task slices, simplicity first, scope discipline, 3 self-heal cycles).
-3. **Independent Auditor Subagent (`architectural-auditor`):** Distinct persona defined in `agents/architectural-auditor.md`. Runs in a clean context to execute
+3. **Simplifier Subagent (`code-simplifier`):** Distinct persona defined in `agents/code-simplifier.md`. Runs after the Builder completes all tasks to apply the
+   `code-simplification` skill to newly implemented or modified files, clarifying and flattening complex code while preserving 100% of behavior, test coverage,
+   and architectural invariants.
+4. **Independent Auditor Subagent (`architectural-auditor`):** Distinct persona defined in `agents/architectural-auditor.md`. Runs in a clean context to execute
    `pnpm check:invariants`, unit & E2E tests, verifies documentation sync in `docs/architecture.md`, and halts for **Human Gate 2**.
 
 ```
@@ -41,10 +44,16 @@ The pipeline enforces a strict **Separation of Powers** across three distinct ag
                     │
                     ▼
        ┌─────────────────────────┐
-       │  3. Auditor Subagent    │ ◄─── Persona: 'architectural-auditor' (agents/architectural-auditor.md)
+       │ 3. Simplifier Subagent  │ ◄─── Persona: 'code-simplifier' (agents/code-simplifier.md)
+       │ (code-simplification)   │ ◄─── Clarifies modified code while preserving behavior & tests
+       └────────────┬────────────┘
+                    │
+                    ▼
+       ┌─────────────────────────┐
+       │  4. Auditor Subagent    │ ◄─── Persona: 'architectural-auditor' (agents/architectural-auditor.md)
        │   (Independent Guard)   │ ◄─── Runs `pnpm check:invariants`, tests, docs sync
        └────────────┬────────────┘
-                    │ (If rejected: max 2 loops back to Builder)
+                    │ (If rejected: max 2 loops back to Builder → Simplifier)
                     ▼
        [Human Gate 2: PR & Diff Approval]
 ```
@@ -232,9 +241,46 @@ When all tasks in tasks.md are checked off and `pnpm check:invariants && pnpm te
 
 ---
 
-### Phase 5: Independent Architectural Audit (Auditor Subagent: `architectural-auditor`)
+### Phase 5: Simplify (Simplifier Subagent: `code-simplifier`)
 
-Upon receiving the Builder's completion, invoke the dedicated **Independent Auditor Subagent** via `invoke_subagent` using the `architectural-auditor` agent
+Upon receiving the Builder's completion, invoke the dedicated **Simplifier Subagent** via `invoke_subagent` using the `code-simplifier` agent definition
+([agents/code-simplifier.md](../../agents/code-simplifier.md)) so that the `code-simplification` skill runs on the completed implementation before auditing:
+
+- **Role:** `Code Simplifier`
+- **Model:** `inherit`
+- **TypeName:** `code-simplifier`
+- **Prompt:**
+
+```
+You are the Code Simplifier subagent for Effortum. Your job is to apply the `code-simplification` skill to the completed implementation of Issue #<id> while preserving exact behavior, test coverage, and architectural invariants.
+
+CONTRACT FILES:
+- Spec: docs/specs/issue-<id>-<slug>/spec.md
+- Plan: docs/specs/issue-<id>-<slug>/plan.md
+- Tasks: docs/specs/issue-<id>-<slug>/tasks.md
+
+SIMPLIFICATION DISCIPLINE (code-simplification):
+1. Read and follow the `code-simplification` skill before making any changes.
+2. Scope strictly to what changed: Review and simplify ONLY the files created or modified by Issue #<id> (as listed in spec.md, tasks.md, or `git status`). Do NOT perform drive-by refactoring of untouched files.
+3. Preserve behavior 100% (Chesterton's Fence): All inputs, outputs, side effects, error behavior, and edge cases must remain identical. Never delete, skip, or modify existing tests to force a simplification.
+4. Follow Effortum conventions: Match Mantine UI patterns, Zustand store slice boundaries, `dayjs` date handling, and Prettier formatting.
+5. Prefer clarity over cleverness & maintain balance: Flatten deep nesting (3+ levels) with guard clauses, replace nested ternaries, split overly long functions, and remove dead code or redundant abstractions. If the code is already clean and readable, leave it untouched.
+6. Incremental Verification: Apply one simplification at a time. After each change, run `pnpm test`, `pnpm tsc --noEmit`, `pnpm check:invariants`, and relevant `pnpm test:e2e` flows as separate atomic commands. If any check fails, revert the simplification immediately.
+7. Architectural Invariants & Terminal Rules:
+   - Zero direct Dexie imports in UI components/pages/routes.
+   - Use `dayjs` for all date/time logic. Never use raw `new Date()`.
+   - Never use `@ts-ignore`, `@ts-nocheck`, or `.skip` / `.only` on tests.
+   - Execute one atomic shell command per invocation (never chain with `&&`, `;`, `||`, or `|`).
+   - Format any modified files with Prettier (`pnpm prettier --write <files>`).
+
+When simplification and verification (`pnpm check:invariants`, `pnpm test`, `pnpm tsc --noEmit`, `pnpm prettier --check .`) are complete, return a summary of simplifications applied (or confirm no changes were needed) to the Lead Architect.
+```
+
+---
+
+### Phase 6: Independent Architectural Audit (Auditor Subagent: `architectural-auditor`)
+
+Upon receiving the Simplifier's completion, invoke the dedicated **Independent Auditor Subagent** via `invoke_subagent` using the `architectural-auditor` agent
 definition ([agents/architectural-auditor.md](../../agents/architectural-auditor.md)) in a clean context:
 
 - **Role:** `Architectural Auditor`

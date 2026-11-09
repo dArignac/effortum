@@ -104,6 +104,8 @@ Autonomous issue implementation is driven through Antigravity CLI via `/implemen
   Human Gate 1.
 - **Builder Subagent (`feature-implementer`)**: Defined in `agents/feature-implementer.md`. Executes vertical slices task-by-task using
   `incremental-implementation` with up to 3 self-healing cycles.
+- **Simplifier Subagent (`code-simplifier`)**: Defined in `agents/code-simplifier.md`. Applies `code-simplification` to files created or modified by the Builder
+  before auditing, reducing complexity while preserving exact behavior, test coverage, and architectural invariants.
 - **Independent Auditor Subagent (`architectural-auditor`)**: Defined in `agents/architectural-auditor.md`. Runs in a clean context to verify invariants
   (`pnpm check:invariants`), execute test suites, update documentation, and stage the PR for Human Gate 2.
 

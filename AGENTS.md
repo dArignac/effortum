@@ -170,7 +170,11 @@ implementation of GitHub issues labeled `ready-for-implementation` using a Separ
    - Explicit persona defined in `agents/feature-implementer.md`.
    - Executes implementation task-by-task applying `incremental-implementation` (simplicity first, scope discipline, 3 self-heal cycles).
    - Writes code and tests (`*.test.ts`, `e2e/issue-<id>.spec.ts`) leaving repository compilable and passing after each slice.
-3. **Independent Auditor Subagent (`architectural-auditor`)**:
+3. **Simplifier Subagent (`code-simplifier`)**:
+   - Explicit persona defined in `agents/code-simplifier.md`.
+   - Runs after implementation and before auditing to apply `code-simplification` strictly to the newly created or modified files.
+   - Clarifies and flattens complex code while preserving 100% of behavior, test coverage, and architectural invariants.
+4. **Independent Auditor Subagent (`architectural-auditor`)**:
    - Explicit persona defined in `agents/architectural-auditor.md`.
    - In a fresh context, verifies code against invariants via `pnpm check:invariants`, tests (`pnpm test`, `pnpm test:e2e`), and updates `docs/architecture.md`.
    - Generates `docs/specs/issue-<id>-<slug>/audit-report.md`.
