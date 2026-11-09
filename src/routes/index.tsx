@@ -1,4 +1,5 @@
 import { Changelog, VERSION } from "@/components/Changelog";
+import { BudgetsPage } from "@/pages/BudgetsPage";
 import { ImportExportPage } from "@/pages/ImportExportPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
 import { SettingsPage } from "@/pages/SettingsPage";
@@ -9,6 +10,7 @@ import { useDisclosure } from "@mantine/hooks";
 import {
   IconAlarmAverage,
   IconCalendarStats,
+  IconCoin,
   IconConfetti,
   IconDatabaseExport,
   IconFolders,
@@ -41,6 +43,12 @@ const NAV_ITEMS = [
     label: "Projects",
     icon: IconFolders,
     render: () => <ProjectsPage />,
+  },
+  {
+    testId: "nav-budgets",
+    label: "Budgets",
+    icon: IconCoin,
+    render: () => <BudgetsPage />,
   },
   {
     testId: "nav-tasks",

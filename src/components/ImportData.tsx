@@ -5,6 +5,7 @@ import { importInto } from "dexie-export-import";
 import { useRef, useState } from "react";
 import { Overtime } from "../models/Overtime";
 import { Project } from "../models/Project";
+import { ProjectBudget } from "../models/ProjectBudget";
 import { Settings } from "../models/Settings";
 import { Task } from "../models/Task";
 
@@ -110,11 +111,12 @@ function setTableRows(
  * Logs current persisted row counts for quick import diagnostics.
  */
 async function logDbCounts(stage: string) {
-  const [tasks, projects, overtime, settings] = await Promise.all([
+  const [tasks, projects, overtime, settings, budgets] = await Promise.all([
     db.tasks.count(),
     db.projects.count(),
     db.overtime.count(),
     db.settings.count(),
+    db.budgets.count(),
   ]);
 
   console.info(`[ImportData] ${stage} DB counts`, {
@@ -122,6 +124,7 @@ async function logDbCounts(stage: string) {
     projects,
     overtime,
     settings,
+    budgets,
   });
 }
 
@@ -320,6 +323,27 @@ function asSettings(value: Record<string, any>): Settings | null {
   };
 }
 
+function asProjectBudget(value: Record<string, any>): ProjectBudget | null {
+  if (
+    !["string", "number"].includes(typeof value.projectId) ||
+    typeof value.startDate !== "string" ||
+    typeof value.endDate !== "string" ||
+    typeof value.purpose !== "string" ||
+    typeof value.hours !== "number"
+  ) {
+    return null;
+  }
+
+  return {
+    id: toStableId(value.id),
+    projectId: String(value.projectId),
+    startDate: value.startDate,
+    endDate: value.endDate,
+    purpose: value.purpose,
+    hours: value.hours,
+  };
+}
+
 function parseTableEntities<T>(
   importData: any,
   tableName: string,
@@ -335,6 +359,7 @@ async function clearAllTables() {
   await db.projects.clear();
   await db.overtime.clear();
   await db.settings.clear();
+  await db.budgets.clear();
 }
 
 /**
@@ -358,12 +383,14 @@ async function importTablesFallback(importData: any) {
   const projects = parseTableEntities(importData, "projects", asProject);
   const overtime = parseTableEntities(importData, "overtime", asOvertime);
   const settings = parseTableEntities(importData, "settings", asSettings);
+  const budgets = parseTableEntities(importData, "budgets", asProjectBudget);
 
   console.info("[ImportData] Fallback parsed entity counts", {
     tasks: tasks.length,
     projects: projects.length,
     overtime: overtime.length,
     settings: settings.length,
+    budgets: budgets.length,
   });
 
   if (projects.length > 0) {
@@ -377,6 +404,9 @@ async function importTablesFallback(importData: any) {
   }
   if (settings.length > 0) {
     await db.settings.bulkPut(settings);
+  }
+  if (budgets.length > 0) {
+    await db.budgets.bulkPut(budgets);
   }
 
   await logDbCounts("After fallback import");

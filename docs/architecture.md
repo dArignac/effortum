@@ -18,6 +18,7 @@ Effortum is a local-first time tracker. User data is persisted in IndexedDB via 
 ```mermaid
 erDiagram
   PROJECT ||--o{ TASK : "project id"
+  PROJECT ||--o{ PROJECT_BUDGET : "project id"
 
   PROJECT {
     string id PK
@@ -32,6 +33,15 @@ erDiagram
     string projectId FK
     string project
     string comment
+  }
+
+  PROJECT_BUDGET {
+    string id PK
+    string projectId FK
+    string startDate
+    string endDate
+    string purpose
+    number hours
   }
 
   OVERTIME {
@@ -50,13 +60,14 @@ erDiagram
 
 - UI layer: routes (`src/routes`) render pages (`src/pages`) composed from reusable components (`src/components`), including the Projects page for
   alphabetically ordered project renaming with per-row save controls and project deletion (supporting zero-task deletion or modal-based task deletion/migration
-  with comment conflict checks), and the Tasks page for per-project task-comment management.
+  with comment conflict checks), the Budgets page (`BudgetsPage`) for per-project time-bounded budget management, and the Tasks page for per-project
+  task-comment management.
 - State layer: `src/store.ts` is a thin facade that re-exports the composed store from `src/store/index.ts`. The composed store is organized into focused slices
-  under `src/store/slices`: `taskSlice`, `projectSlice`, `commentSlice`, `settingsOvertimeSlice`, `uiSlice`, and `loadingMigrationSlice`. This keeps domain
-  logic isolated while preserving a single Zustand store for consumers.
+  under `src/store/slices`: `taskSlice`, `projectSlice`, `budgetSlice`, `commentSlice`, `settingsOvertimeSlice`, `uiSlice`, and `loadingMigrationSlice`. This
+  keeps domain logic isolated while preserving a single Zustand store for consumers.
 - Persistence layer: `src/db.ts` defines Dexie schema versions and object stores.
 - Domain layer: `src/models` contains strongly typed entities used across store and UI.
-- Logic layer: `src/utils` contains date, time, filtering, and usage-recency sorting behavior.
+- Logic layer: `src/utils` contains date, time, budget metrics/sorting, filtering, and usage-recency sorting behavior.
 
 ## Data Flow
 
@@ -73,7 +84,11 @@ erDiagram
   IndexedDB task history (with unused projects and identical-timestamp ties ordered case-insensitively alphabetically), while management views (`ProjectsPage`,
   `TasksPage`, and `DeleteProjectModal`) retain alphabetical ordering.
 - Project deletion requires handling associated tasks: zero-task projects can be deleted directly with confirmation; task-bearing projects require choosing
-  between permanently deleting associated tasks or reassigning them to a destination project.
+  between permanently deleting associated tasks or reassigning them to a destination project. Project budgets belonging to the deleted project follow the same
+  action (deleted when tasks are deleted or when the project has no tasks, and moved to the destination project when tasks are moved).
+- Each project can have multiple time-bounded budgets (`startDate`, `endDate`, `purpose` up to 50 characters, and `hours > 0`), sorted by `startDate` descending
+  (newest first). Both overall project budget summaries and per-budget rows display spent vs. budgeted hours, days in brackets based on `workingHoursPerDay`,
+  and depletion percentage.
 - Moving tasks checks for conflicting task comments between projects, warning the user and guiding them to the Task Management page if needed.
 - Legacy project-name fields are kept during rollout for import/export compatibility and recovery.
 - Overtime and settings are single-record entities identified by fixed IDs.

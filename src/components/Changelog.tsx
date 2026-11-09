@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.22.0",
+    description: [
+      "Adds project budget management page to track budgeted vs. spent hours (#264, #258).",
+    ],
+  },
+  {
     version: "0.21.2",
     description: ["Adds internal code improvements."],
   },

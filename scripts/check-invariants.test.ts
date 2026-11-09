@@ -128,7 +128,7 @@ describe("check-invariants", () => {
       expect(violations).toHaveLength(0);
     });
 
-    it("flags an error if any historical version (1..7) is missing", () => {
+    it("flags an error if any historical version (1..8) is missing", () => {
       const dummyDbPath = path.join(tempDir, "db.ts");
       fs.writeFileSync(
         dummyDbPath,

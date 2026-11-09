@@ -159,13 +159,13 @@ export function checkDayjsUsage(
 }
 
 /**
- * Baseline signatures for historical Dexie schema versions in src/db.ts (versions 1..7).
+ * Baseline signatures for historical Dexie schema versions in src/db.ts (versions 1..8).
  */
-export const FROZEN_DEXIE_VERSIONS = [1, 2, 3, 4, 5, 6, 7];
+export const FROZEN_DEXIE_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 /**
  * Rule 3: dexie-migration-immutability
- * Historical versions 1..7 in src/db.ts must never be modified in-place.
+ * Historical versions 1..8 in src/db.ts must never be modified in-place.
  * Any schema updates must add a new version(N + 1).
  */
 export function checkDexieMigrations(

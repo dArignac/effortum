@@ -14,6 +14,11 @@ const { mockDb } = vi.hoisted(() => ({
       update: vi.fn(),
       where: vi.fn(),
     },
+    budgets: {
+      toArray: vi.fn(),
+      update: vi.fn(),
+      where: vi.fn(),
+    },
     transaction: vi.fn(),
   },
 }));
@@ -25,6 +30,13 @@ vi.mock("@/store/db", () => ({
 describe("createProjectSlice", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDb.budgets.toArray.mockResolvedValue([]);
+    mockDb.budgets.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({
+        delete: vi.fn().mockResolvedValue(0),
+        toArray: vi.fn().mockResolvedValue([]),
+      }),
+    });
   });
 
   it("adds a project and refreshes projects state", async () => {
@@ -84,14 +96,10 @@ describe("createProjectSlice", () => {
 
     const slice = createProjectSlice(set as never, get as never);
 
-    mockDb.transaction.mockImplementation(
-      async (
-        _mode: string,
-        _projects: unknown,
-        _tasks: unknown,
-        fn: () => Promise<void>,
-      ) => fn(),
-    );
+    mockDb.transaction.mockImplementation(async (...args: unknown[]) => {
+      const fn = args[args.length - 1] as () => Promise<void>;
+      return fn();
+    });
     mockDb.projects.toArray.mockResolvedValue([{ id: "p1", name: "Beta" }]);
     mockDb.tasks.toArray.mockResolvedValue([{ id: "t1", projectId: "p1" }]);
 
@@ -145,48 +153,56 @@ describe("createProjectSlice", () => {
     );
   });
 
-  it("deleteProject deletes an empty project directly", async () => {
+  it("deleteProject deletes an empty project and its budgets directly", async () => {
     const set = vi.fn();
     const get = vi.fn(() => ({ projects: [{ id: "p1", name: "Alpha" }] }));
     const count = vi.fn().mockResolvedValue(0);
     mockDb.tasks.where.mockReturnValue({
       equals: vi.fn().mockReturnValue({ count }),
     });
+    const deleteBudgets = vi.fn().mockResolvedValue(1);
+    mockDb.budgets.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ delete: deleteBudgets }),
+    });
     mockDb.projects.toArray.mockResolvedValue([]);
     mockDb.tasks.toArray.mockResolvedValue([]);
+    mockDb.budgets.toArray.mockResolvedValue([]);
 
     const slice = createProjectSlice(set as never, get as never);
     await slice.deleteProject("p1");
 
+    expect(deleteBudgets).toHaveBeenCalled();
     expect(mockDb.projects.delete).toHaveBeenCalledWith("p1");
-    expect(set).toHaveBeenCalledWith({ projects: [], tasks: [] });
+    expect(set).toHaveBeenCalledWith({ projects: [], tasks: [], budgets: [] });
   });
 
-  it("deleteProject deletes project and its tasks when taskAction is delete", async () => {
+  it("deleteProject deletes project, its tasks, and its budgets when taskAction is delete", async () => {
     const set = vi.fn();
     const get = vi.fn(() => ({ projects: [{ id: "p1", name: "Alpha" }] }));
     const count = vi.fn().mockResolvedValue(3);
     const deleteTasks = vi.fn().mockResolvedValue(3);
+    const deleteBudgets = vi.fn().mockResolvedValue(2);
     mockDb.tasks.where.mockReturnValue({
       equals: vi.fn().mockReturnValue({ count, delete: deleteTasks }),
     });
-    mockDb.transaction.mockImplementation(
-      async (
-        _mode: string,
-        _projects: unknown,
-        _tasks: unknown,
-        fn: () => Promise<void>,
-      ) => fn(),
-    );
+    mockDb.budgets.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({ delete: deleteBudgets }),
+    });
+    mockDb.transaction.mockImplementation(async (...args: unknown[]) => {
+      const fn = args[args.length - 1] as () => Promise<void>;
+      return fn();
+    });
     mockDb.projects.toArray.mockResolvedValue([]);
     mockDb.tasks.toArray.mockResolvedValue([]);
+    mockDb.budgets.toArray.mockResolvedValue([]);
 
     const slice = createProjectSlice(set as never, get as never);
     await slice.deleteProject("p1", { taskAction: "delete" });
 
     expect(deleteTasks).toHaveBeenCalled();
+    expect(deleteBudgets).toHaveBeenCalled();
     expect(mockDb.projects.delete).toHaveBeenCalledWith("p1");
-    expect(set).toHaveBeenCalledWith({ projects: [], tasks: [] });
+    expect(set).toHaveBeenCalledWith({ projects: [], tasks: [], budgets: [] });
   });
 
   it("deleteProject throws CANNOT_MOVE_TO_SAME_PROJECT when destination is same", async () => {
@@ -223,7 +239,7 @@ describe("createProjectSlice", () => {
     ).rejects.toThrow("DESTINATION_PROJECT_NOT_FOUND");
   });
 
-  it("deleteProject moves tasks to destination project and deletes project", async () => {
+  it("deleteProject moves tasks and budgets to destination project and deletes project", async () => {
     const set = vi.fn();
     const get = vi.fn(() => ({
       projects: [
@@ -236,22 +252,43 @@ describe("createProjectSlice", () => {
       { id: "t1", projectId: "p1", project: "Alpha" },
       { id: "t2", projectId: "p1", project: "Alpha" },
     ];
+    const budgetsToMove = [
+      {
+        id: "b1",
+        projectId: "p1",
+        startDate: "2026-01-01",
+        endDate: "2026-03-31",
+        purpose: "Q1",
+        hours: 80,
+      },
+    ];
     const toArray = vi.fn().mockResolvedValue(tasksToMove);
     mockDb.tasks.where.mockReturnValue({
       equals: vi.fn().mockReturnValue({ count, toArray }),
     });
-    mockDb.transaction.mockImplementation(
-      async (
-        _mode: string,
-        _projects: unknown,
-        _tasks: unknown,
-        fn: () => Promise<void>,
-      ) => fn(),
-    );
+    mockDb.budgets.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(budgetsToMove),
+      }),
+    });
+    mockDb.transaction.mockImplementation(async (...args: unknown[]) => {
+      const fn = args[args.length - 1] as () => Promise<void>;
+      return fn();
+    });
     mockDb.projects.toArray.mockResolvedValue([{ id: "p2", name: "Beta" }]);
     mockDb.tasks.toArray.mockResolvedValue([
       { id: "t1", projectId: "p2", project: "Beta" },
       { id: "t2", projectId: "p2", project: "Beta" },
+    ]);
+    mockDb.budgets.toArray.mockResolvedValue([
+      {
+        id: "b1",
+        projectId: "p2",
+        startDate: "2026-01-01",
+        endDate: "2026-03-31",
+        purpose: "Q1",
+        hours: 80,
+      },
     ]);
 
     const slice = createProjectSlice(set as never, get as never);
@@ -268,12 +305,25 @@ describe("createProjectSlice", () => {
       projectId: "p2",
       project: "Beta",
     });
+    expect(mockDb.budgets.update).toHaveBeenCalledWith("b1", {
+      projectId: "p2",
+    });
     expect(mockDb.projects.delete).toHaveBeenCalledWith("p1");
     expect(set).toHaveBeenCalledWith({
       projects: [{ id: "p2", name: "Beta" }],
       tasks: [
         { id: "t1", projectId: "p2", project: "Beta" },
         { id: "t2", projectId: "p2", project: "Beta" },
+      ],
+      budgets: [
+        {
+          id: "b1",
+          projectId: "p2",
+          startDate: "2026-01-01",
+          endDate: "2026-03-31",
+          purpose: "Q1",
+          hours: 80,
+        },
       ],
     });
   });
@@ -295,16 +345,13 @@ describe("createProjectSlice", () => {
     mockDb.tasks.where.mockReturnValue({
       equals: vi.fn().mockReturnValue({ count, toArray }),
     });
-    mockDb.transaction.mockImplementation(
-      async (
-        _mode: string,
-        _projects: unknown,
-        _tasks: unknown,
-        fn: () => Promise<void>,
-      ) => fn(),
-    );
+    mockDb.transaction.mockImplementation(async (...args: unknown[]) => {
+      const fn = args[args.length - 1] as () => Promise<void>;
+      return fn();
+    });
     mockDb.projects.toArray.mockResolvedValue([{ id: "p2", name: "Beta" }]);
     mockDb.tasks.toArray.mockResolvedValue([]);
+    mockDb.budgets.toArray.mockResolvedValue([]);
 
     let resolveTask1: () => void = () => {};
     const task1Promise = new Promise<void>((resolve) => {
