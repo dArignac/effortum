@@ -9,6 +9,7 @@ import {
 import {
   Button,
   Group,
+  Modal,
   NumberInput,
   Paper,
   Select,
@@ -99,9 +100,6 @@ export function BudgetsPage() {
   const deleteProjectBudget = useEffortumStore(
     (state) => state.deleteProjectBudget,
   );
-  const getProjectBookedTimeHours = useEffortumStore(
-    (state) => state.getProjectBookedTimeHours,
-  );
   const getProjectBookedTimeHoursInRange = useEffortumStore(
     (state) => state.getProjectBookedTimeHoursInRange,
   );
@@ -124,7 +122,9 @@ export function BudgetsPage() {
   >({});
   const [savingBudgetId, setSavingBudgetId] = useState<string | null>(null);
   const [deletingBudgetId, setDeletingBudgetId] = useState<string | null>(null);
-  const [overallSpentHours, setOverallSpentHours] = useState(0);
+  const [budgetToDelete, setBudgetToDelete] = useState<ProjectBudget | null>(
+    null,
+  );
   const [spentHoursByBudgetId, setSpentHoursByBudgetId] = useState<
     Record<string, number>
   >({});
@@ -150,11 +150,6 @@ export function BudgetsPage() {
     );
   }, [budgets, selectedProjectId]);
 
-  const overallBudgetedHours = useMemo(
-    () => sortedProjectBudgets.reduce((sum, budget) => sum + budget.hours, 0),
-    [sortedProjectBudgets],
-  );
-
   useEffect(() => {
     if (projects.length === 0) {
       void loadFromIndexedDb();
@@ -166,30 +161,25 @@ export function BudgetsPage() {
 
     const loadSpentMetrics = async () => {
       if (!selectedProjectId) {
-        setOverallSpentHours(0);
         setSpentHoursByBudgetId({});
         return;
       }
 
-      const [projectTotalSpent, perBudgetEntries] = await Promise.all([
-        getProjectBookedTimeHours(selectedProjectId),
-        Promise.all(
-          sortedProjectBudgets.map(async (budget) => {
-            const spent = await getProjectBookedTimeHoursInRange(
-              selectedProjectId,
-              budget.startDate,
-              budget.endDate,
-            );
-            return [budget.id, spent] as const;
-          }),
-        ),
-      ]);
+      const perBudgetEntries = await Promise.all(
+        sortedProjectBudgets.map(async (budget) => {
+          const spent = await getProjectBookedTimeHoursInRange(
+            selectedProjectId,
+            budget.startDate,
+            budget.endDate,
+          );
+          return [budget.id, spent] as const;
+        }),
+      );
 
       if (isCancelled) {
         return;
       }
 
-      setOverallSpentHours(projectTotalSpent);
       setSpentHoursByBudgetId(Object.fromEntries(perBudgetEntries));
     };
 
@@ -202,7 +192,6 @@ export function BudgetsPage() {
     selectedProjectId,
     sortedProjectBudgets,
     tasks,
-    getProjectBookedTimeHours,
     getProjectBookedTimeHoursInRange,
   ]);
 
@@ -304,7 +293,7 @@ export function BudgetsPage() {
     }
   };
 
-  const handleDeleteBudget = async (budgetId: string) => {
+  const handleConfirmDeleteBudget = async (budgetId: string) => {
     if (isMutatingRef.current) {
       return;
     }
@@ -315,6 +304,7 @@ export function BudgetsPage() {
     try {
       await deleteProjectBudget(budgetId);
       clearDraft(budgetId);
+      setBudgetToDelete(null);
       notifications.show({
         message: "Budget deleted successfully!",
         color: "green",
@@ -355,26 +345,6 @@ export function BudgetsPage() {
 
       {selectedProjectId && (
         <>
-          <Paper withBorder p="sm" radius="sm">
-            <Group justify="space-between" wrap="nowrap">
-              <Text fw={600} size="sm">
-                Overall Project Budget
-              </Text>
-              <Text
-                fw={600}
-                size="sm"
-                style={{ fontVariantNumeric: "tabular-nums" }}
-                data-testid="project-budget-overall-summary"
-              >
-                {formatBudgetMetrics(
-                  overallSpentHours,
-                  overallBudgetedHours,
-                  workingHoursPerDay,
-                )}
-              </Text>
-            </Group>
-          </Paper>
-
           <Paper withBorder p="sm" radius="sm">
             <Stack gap="xs">
               <Text fw={600} size="sm">
@@ -532,8 +502,9 @@ export function BudgetsPage() {
                     size="xs"
                     color="red"
                     variant="light"
+                    disabled={isBusy}
                     loading={deletingBudgetId === budget.id}
-                    onClick={() => handleDeleteBudget(budget.id)}
+                    onClick={() => setBudgetToDelete(budget)}
                     data-testid={`button-delete-budget-${budget.id}`}
                   >
                     Delete
@@ -544,6 +515,45 @@ export function BudgetsPage() {
           )}
         </>
       )}
+
+      <Modal
+        opened={budgetToDelete !== null}
+        onClose={() => !deletingBudgetId && setBudgetToDelete(null)}
+        title="Delete Budget"
+        closeOnClickOutside={!deletingBudgetId}
+        closeOnEscape={!deletingBudgetId}
+      >
+        {budgetToDelete && (
+          <Stack gap="md" data-testid="modal-delete-budget">
+            <Text size="sm">
+              Are you sure you want to delete budget{" "}
+              <Text span fw={700}>
+                "{budgetToDelete.purpose}"
+              </Text>{" "}
+              ({budgetToDelete.startDate} – {budgetToDelete.endDate})? This
+              action cannot be undone.
+            </Text>
+            <Group justify="flex-end" gap="sm">
+              <Button
+                variant="default"
+                onClick={() => setBudgetToDelete(null)}
+                disabled={deletingBudgetId !== null}
+                data-testid="button-cancel-delete-budget"
+              >
+                Cancel
+              </Button>
+              <Button
+                color="red"
+                onClick={() => handleConfirmDeleteBudget(budgetToDelete.id)}
+                loading={deletingBudgetId === budgetToDelete.id}
+                data-testid="button-confirm-delete-budget"
+              >
+                Delete Budget
+              </Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
     </Stack>
   );
 }

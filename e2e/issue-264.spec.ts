@@ -25,7 +25,7 @@ test.describe("Issue #264: Project Budget Management", () => {
     await expect(page.getByTestId("task-list-table")).toBeVisible();
   });
 
-  test("adds multiple budgets, sorts newest first, displays overall and per-budget metrics, and supports editing and deletion", async ({
+  test("adds multiple budgets, sorts newest first, displays per-budget metrics without overall summary, and supports editing and confirmed deletion", async ({
     page,
   }) => {
     const projectName = "Budget Alpha";
@@ -39,9 +39,9 @@ test.describe("Issue #264: Project Budget Management", () => {
 
     await selectProjectOnBudgetsPage(page, projectName);
     await expect(page.getByTestId("budgets-empty-state")).toBeVisible();
-    await expect(page.getByTestId("project-budget-overall-summary")).toHaveText(
-      "4/0 h (0.5/0 days) · 0%",
-    );
+    await expect(
+      page.getByTestId("project-budget-overall-summary"),
+    ).toHaveCount(0);
 
     // 1. Add an older budget (outside today's range): 2020-01-01 .. 2020-03-31, 40h
     await page.getByTestId("add-budget-start-date").fill("2020-01-01");
@@ -60,6 +60,9 @@ test.describe("Issue #264: Project Budget Management", () => {
 
     const budgetRows = page.locator('[data-testid^="budget-row-"]');
     await expect(budgetRows).toHaveCount(2);
+    await expect(
+      page.getByTestId("project-budget-overall-summary"),
+    ).toHaveCount(0);
 
     // Verify newest-first sorting by startDate:
     // Row 0 should be "Current Sprint" (today), Row 1 should be "Legacy Phase" (2020-01-01)
@@ -68,11 +71,6 @@ test.describe("Issue #264: Project Budget Management", () => {
     );
     await expect(purposeInputs.nth(0)).toHaveValue("Current Sprint");
     await expect(purposeInputs.nth(1)).toHaveValue("Legacy Phase");
-
-    // Verify overall summary: 4h spent out of (16 + 40 = 56h) budgeted -> 4/56 h (0.5/7 days) · 7%
-    await expect(page.getByTestId("project-budget-overall-summary")).toHaveText(
-      "4/56 h (0.5/7 days) · 7%",
-    );
 
     // Verify per-row metrics:
     // Row 0 (Current Sprint, covers today): 4/16 h (0.5/2 days) · 25%
@@ -95,11 +93,7 @@ test.describe("Issue #264: Project Budget Management", () => {
     await expect(saveButtons.nth(0)).toBeDisabled();
 
     // Updated Row 0 metrics: 4/8 h (0.5/1 days) · 50%
-    // Updated Overall metrics: 4/48 h (0.5/6 days) · 8%
     await expect(rowMetrics.nth(0)).toHaveText("4/8 h (0.5/1 days) · 50%");
-    await expect(page.getByTestId("project-budget-overall-summary")).toHaveText(
-      "4/48 h (0.5/6 days) · 8%",
-    );
 
     // 4. Reload and verify persistence
     await page.reload();
@@ -111,16 +105,23 @@ test.describe("Issue #264: Project Budget Management", () => {
     await expect(purposeInputs.nth(0)).toHaveValue("Current Sprint Updated");
     await expect(rowMetrics.nth(0)).toHaveText("4/8 h (0.5/1 days) · 50%");
 
-    // 5. Delete the older budget (Row 1)
+    // 5. Delete the older budget (Row 1) with confirmation modal (first cancel, then confirm)
     const deleteButtons = page.locator(
       '[data-testid^="button-delete-budget-"]',
     );
     await deleteButtons.nth(1).click();
+    await expect(page.getByTestId("modal-delete-budget")).toBeVisible();
+
+    await page.getByTestId("button-cancel-delete-budget").click();
+    await expect(page.getByTestId("modal-delete-budget")).toBeHidden();
+    await expect(budgetRows).toHaveCount(2);
+
+    await deleteButtons.nth(1).click();
+    await expect(page.getByTestId("modal-delete-budget")).toBeVisible();
+    await page.getByTestId("button-confirm-delete-budget").click();
     await expect(page.getByTestId("toast-budget-delete-success")).toBeVisible();
 
     await expect(budgetRows).toHaveCount(1);
-    await expect(page.getByTestId("project-budget-overall-summary")).toHaveText(
-      "4/8 h (0.5/1 days) · 50%",
-    );
+    await expect(purposeInputs.nth(0)).toHaveValue("Current Sprint Updated");
   });
 });

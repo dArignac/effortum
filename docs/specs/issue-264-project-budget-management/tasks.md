@@ -26,17 +26,33 @@
     `src/store/slices/loadingMigrationSlice.ts`, `src/store/slices/projectSlice.ts`, `src/store/slices/projectSlice.test.ts`
 
 - [x] Task 4: Build `BudgetsPage` and add `Budgets` sidebar navigation item
-  - Description: Create `src/pages/BudgetsPage.tsx` supporting project selection, overall project budget summary, adding budgets (start date, end date, purpose
-    max 50 chars, hours), newest-first budget list, per-row metrics (`spent/budgeted h (X/Y days) · Z%`), inline editing (`Save`), and removal (`Delete`).
-    Register `Budgets` (`nav-budgets`) in `src/routes/index.tsx`.
+  - Description: Create `src/pages/BudgetsPage.tsx` supporting project selection, adding budgets (start date, end date, purpose max 50 chars, hours),
+    newest-first budget list, per-row metrics (`spent/budgeted h (X/Y days) · Z%`), inline editing (`Save`), and removal (`Delete`). Register `Budgets`
+    (`nav-budgets`) in `src/routes/index.tsx`.
   - Acceptance: TypeScript compilation and architectural invariants pass with zero errors.
   - Verify: `pnpm tsc --noEmit`
   - Files: `src/pages/BudgetsPage.tsx`, `src/routes/index.tsx`
 
 - [x] Task 5: Add Playwright E2E tests and update architecture documentation
-  - Description: Create `e2e/issue-264.spec.ts` testing end-to-end budget creation, newest-first sorting, spent vs. budgeted hours/days/percent display (overall
-    and per-budget), editing a budget, and deleting a budget. Update `docs/architecture.md`.
+  - Description: Create `e2e/issue-264.spec.ts` testing end-to-end budget creation, newest-first sorting, spent vs. budgeted hours/days/percent display, editing
+    a budget, and deleting a budget. Update `docs/architecture.md`.
   - Acceptance: Playwright E2E test suite `e2e/issue-264.spec.ts` passes headless and `docs/architecture.md` reflects the new `PROJECT_BUDGET` table,
     `budgetSlice`, and `BudgetsPage`.
+  - Verify: `pnpm test:e2e e2e/issue-264.spec.ts`
+  - Files: `e2e/issue-264.spec.ts`, `docs/architecture.md`
+
+- [x] Task 6: Remove overall project budget line and add delete confirmation modal in `BudgetsPage`
+  - Description: In `src/pages/BudgetsPage.tsx`, remove the `Overall Project Budget` summary box (`project-budget-overall-summary`) and unused overall
+    spent/budgeted state, and add a Mantine `<Modal>` (`data-testid="modal-delete-budget"`) triggered when clicking `Delete` (`button-delete-budget-<id>`) with
+    `Cancel` (`button-cancel-delete-budget`) and `Delete Budget` (`button-confirm-delete-budget`) buttons.
+  - Acceptance: `project-budget-overall-summary` is no longer rendered, clicking `Delete` opens `modal-delete-budget`, and `pnpm tsc --noEmit` and
+    `pnpm check:invariants` pass.
+  - Verify: `pnpm tsc --noEmit`
+  - Files: `src/pages/BudgetsPage.tsx`
+
+- [x] Task 7: Update Playwright E2E test and architecture documentation for delete confirmation and removed overall budget line
+  - Description: Update `e2e/issue-264.spec.ts` to assert that `project-budget-overall-summary` is not present and to verify canceling and confirming budget
+    deletion via `modal-delete-budget`. Update `docs/architecture.md` to reflect per-budget metrics and delete confirmation.
+  - Acceptance: `pnpm test:e2e e2e/issue-264.spec.ts` passes headless.
   - Verify: `pnpm test:e2e e2e/issue-264.spec.ts`
   - Files: `e2e/issue-264.spec.ts`, `docs/architecture.md`

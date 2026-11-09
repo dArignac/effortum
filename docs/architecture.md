@@ -87,8 +87,8 @@ erDiagram
   between permanently deleting associated tasks or reassigning them to a destination project. Project budgets belonging to the deleted project follow the same
   action (deleted when tasks are deleted or when the project has no tasks, and moved to the destination project when tasks are moved).
 - Each project can have multiple time-bounded budgets (`startDate`, `endDate`, `purpose` up to 50 characters, and `hours > 0`), sorted by `startDate` descending
-  (newest first). Both overall project budget summaries and per-budget rows display spent vs. budgeted hours, days in brackets based on `workingHoursPerDay`,
-  and depletion percentage.
+  (newest first). Per-budget rows display spent vs. budgeted hours, days in brackets based on `workingHoursPerDay`, and depletion percentage, and budget
+  deletion is guarded by a confirmation modal.
 - Moving tasks checks for conflicting task comments between projects, warning the user and guiding them to the Task Management page if needed.
 - Legacy project-name fields are kept during rollout for import/export compatibility and recovery.
 - Overtime and settings are single-record entities identified by fixed IDs.

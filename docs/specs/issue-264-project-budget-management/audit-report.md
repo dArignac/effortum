@@ -22,10 +22,14 @@
      `scripts/check-invariants.test.ts`.
    - Verified `src/components/ImportData.tsx` includes `db.budgets` in database count logging, table clearing, and fallback import.
 
-2. **UI Layer & State Store Boundaries (`src/pages/BudgetsPage.tsx`, `src/routes/index.tsx`, `src/store/slices/budgetSlice.ts`,
+2. **UI Layer, Delete Confirmation Modal & State Store Boundaries (`src/pages/BudgetsPage.tsx`, `src/routes/index.tsx`, `src/store/slices/budgetSlice.ts`,
    `src/store/slices/projectSlice.ts`, `src/store/slices/loadingMigrationSlice.ts`):**
    - Verified `src/pages/BudgetsPage.tsx` and `src/routes/index.tsx` access state and actions exclusively through `useEffortumStore` without importing `dexie`
      or `src/db` directly.
+   - Verified `src/pages/BudgetsPage.tsx` does not render an overall project budget summary (`project-budget-overall-summary` removed) and displays only
+     per-budget metrics (`budget-metrics-<id>`).
+   - Verified budget deletion in `src/pages/BudgetsPage.tsx` is guarded by a Mantine confirmation `<Modal>` (`data-testid="modal-delete-budget"`) with `Cancel`
+     (`data-testid="button-cancel-delete-budget"`) and `Delete Budget` (`data-testid="button-confirm-delete-budget"`) actions.
    - Verified `loadFromIndexedDb` loads `budgets` on startup and `deleteProject` deletes or moves project budgets alongside project tasks.
 
 3. **Date & Time Operations (`src/store/slices/budgetSlice.ts`, `src/pages/BudgetsPage.tsx`):**
@@ -37,9 +41,9 @@
    - Verified no existing tests were deleted, skipped, or had assertions weakened.
    - Verified unit tests cover newest-first budget sorting, metric formatting (`spent/budgeted h (X/Y days) · Z%`), store slice CRUD validation (including max
      50-character `purpose` and `hours > 0`), date-range task hour summation, and project deletion budget cleanup/migration.
-   - Verified E2E test `e2e/issue-264.spec.ts` covers adding multiple budgets, newest-first sorting, overall and per-budget metrics, editing, persistence across
-     reload, and deletion.
+   - Verified E2E test `e2e/issue-264.spec.ts` covers adding multiple budgets, newest-first sorting, absence of the overall budget summary line, per-budget
+     metrics, editing, persistence across reload, and budget deletion via the confirmation modal (testing both cancel and confirm flows).
 
 5. **Architecture Synchronization (`docs/architecture.md`):**
    - Verified `docs/architecture.md` is updated with the `PROJECT_BUDGET` entity in the ER diagram, `budgetSlice` in the state layer, `BudgetsPage` in the UI
-     layer, and budget constraints in Key Constraints.
+     layer, and per-budget metrics and confirmation-guarded deletion in Key Constraints.

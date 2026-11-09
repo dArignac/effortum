@@ -4,8 +4,7 @@
 
 Parent issue: #258 (Part 1).
 
-Enable users to define and manage time-bounded budgets for projects so they can track how much of each project's budget and overall project budget has been
-spent.
+Enable users to define and manage time-bounded budgets for projects so they can track how much of each project budget has been spent.
 
 ### Acceptance Criteria
 
@@ -21,14 +20,15 @@ spent.
 3. **Dedicated Budget Management Page (`BudgetsPage`):**
    - Accessible via a top-level `Budgets` item (`data-testid="nav-budgets"`) in the sidebar navigation.
    - Displays a searchable, clearable project selector dropdown (`data-testid="budget-project-select"`), ordered alphabetically.
+   - Does **not** display an overall project budget summary line (only individual budgets are shown).
    - Allows adding a new budget for the selected project with `startDate`, `endDate`, `purpose` (max 50 characters), and `hours`.
    - Allows changing any existing budget (`startDate`, `endDate`, `purpose`, `hours`) at any time via per-row `Save`.
-   - Allows removing any existing budget at any time via per-row `Delete`.
+   - Allows removing any existing budget at any time via per-row `Delete` (`data-testid="button-delete-budget-<id>"`), guarded by a confirmation modal
+     (`data-testid="modal-delete-budget"`) with `Cancel` (`data-testid="button-cancel-delete-budget"`) and `Delete Budget`
+     (`data-testid="button-confirm-delete-budget"`) actions to prevent accidental deletion.
    - Sorts the project's budgets by their `startDate`, newest first (descending).
-   - Displays spent hours vs. budgeted hours, with amounts in days in brackets using `workingHoursPerDay` from Overtime settings (default `8`), and depletion in
-     percent (`X%`):
-     - **Overall project summary** at the top (`data-testid="project-budget-overall-summary"`): total booked hours on the project vs. total budgeted hours
-       across all budgets for the project, e.g. `75/100 h (9.38/12.5 days) · 75%`.
+   - Displays per-budget spent hours vs. budgeted hours, with amounts in days in brackets using `workingHoursPerDay` from Overtime settings (default `8`), and
+     depletion in percent (`X%`):
      - **Per-budget row metrics** (`data-testid="budget-metrics-<id>"`): booked hours on the project within that budget's `[startDate, endDate]` range vs. that
        budget's hours, e.g. `36/88 h (4.5/11 days) · 41%`.
 
@@ -61,9 +61,11 @@ spent.
 - `src/store/slices/projectSlice.ts` & `src/store/slices/projectSlice.test.ts` (modified): Delete or move project budgets when deleting a project.
 - `src/store/index.ts` (modified): Compose `createBudgetSlice` into `storeCreator`.
 - `src/components/ImportData.tsx` (modified): Include `budgets` table in database clear/fallback import.
-- `src/pages/BudgetsPage.tsx` (new): Dedicated Budget Management page component.
+- `src/pages/BudgetsPage.tsx` (new): Dedicated Budget Management page component (per-row metrics and delete confirmation modal, without overall budget summary
+  line).
 - `src/routes/index.tsx` (modified): Add `Budgets` navigation item (`nav-budgets`).
-- `e2e/issue-264.spec.ts` (new): End-to-end Playwright verification of project budget management.
+- `e2e/issue-264.spec.ts` (new): End-to-end Playwright verification of project budget management, including delete confirmation modal (cancel + confirm) and
+  absence of overall budget summary line.
 - `docs/architecture.md` (modified): Document `PROJECT_BUDGET` entity, `budgetSlice`, and `BudgetsPage`.
 
 ## Effortum Architectural Guard
@@ -88,8 +90,9 @@ spent.
 
 - Users can navigate to `Budgets` via the sidebar (`nav-budgets`), select a project, and add multiple budgets with start date, end date, purpose (max 50 chars),
   and hours.
-- Existing budgets are sorted by `startDate` descending (newest first) and can be edited and saved or deleted at any time.
-- Both the overall project budget summary and each budget row display spent vs. budgeted hours, days in brackets `(X/Y days)` based on `workingHoursPerDay`, and
-  depletion percentage (`Z%`).
+- Existing budgets are sorted by `startDate` descending (newest first) and can be edited and saved at any time.
+- Clicking `Delete` on a budget opens a confirmation modal; canceling keeps the budget intact, and confirming permanently deletes the budget.
+- Each budget row displays spent vs. budgeted hours, days in brackets `(X/Y days)` based on `workingHoursPerDay`, and depletion percentage (`Z%`), with no
+  misleading overall project budget summary line.
 - Deleting a project deletes or moves its budgets matching the selected task action.
 - `pnpm check:invariants`, `pnpm tsc --noEmit`, `pnpm test`, and `pnpm test:e2e e2e/issue-264.spec.ts` all pass with zero errors.
