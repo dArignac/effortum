@@ -142,14 +142,19 @@ export function AddEntryRow(props: { projectNames?: string[] }) {
         comment: selectedComment || "",
       });
 
-      fieldStart.reset();
-      fieldEnd.reset();
-      fieldProject.reset();
-      fieldComment.reset();
-      lastPrefilledTimeRef.current = null;
-      setEndTimeOfLastStoppedTask(
-        !runningTask && roundedEndValue ? roundedEndValue : null,
-      );
+      const isFormUnchanged =
+        fieldStart.getValue() === selectedStart &&
+        fieldEnd.getValue() === selectedEnd;
+      if (isFormUnchanged) {
+        fieldStart.reset();
+        fieldEnd.reset();
+        fieldProject.reset();
+        fieldComment.reset();
+        lastPrefilledTimeRef.current = null;
+        setEndTimeOfLastStoppedTask(
+          !runningTask && roundedEndValue ? roundedEndValue : null,
+        );
+      }
     } catch (error) {
       notifications.show({
         title: "Failed to add task",

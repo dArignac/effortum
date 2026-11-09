@@ -28,35 +28,19 @@ async function ensureNoOtherActiveTask(
   }
 }
 
-async function resolveOrCreateProject(
-  set: StoreSet,
-  get: StoreGet,
+function findExistingProject(
+  projects: ReadonlyArray<Project>,
   projectId: string | undefined,
   normalizedProjectName: string,
-): Promise<Project> {
-  const existingById = get().projects.find(
-    (project) => project.id === projectId,
-  );
+): Project | undefined {
+  const existingById = projects.find((project) => project.id === projectId);
   if (existingById) {
     return existingById;
   }
-
   if (normalizedProjectName) {
-    const existingByName = get().projects.find(
-      (project) => project.name === normalizedProjectName,
-    );
-    if (existingByName) {
-      return existingByName;
-    }
+    return projects.find((project) => project.name === normalizedProjectName);
   }
-
-  const createdProject: Project = {
-    id: projectId || crypto.randomUUID(),
-    name: normalizedProjectName,
-  };
-  await db.projects.add(createdProject);
-  set({ projects: [...get().projects, createdProject] });
-  return createdProject;
+  return undefined;
 }
 
 export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
@@ -113,12 +97,19 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
       return;
     }
 
-    const projectInstance = await resolveOrCreateProject(
-      set,
-      get,
+    let projectInstance = findExistingProject(
+      get().projects,
       task.projectId,
       normalizedProjectName,
     );
+    if (!projectInstance) {
+      projectInstance = {
+        id: task.projectId || crypto.randomUUID(),
+        name: normalizedProjectName,
+      };
+      await db.projects.add(projectInstance);
+      set({ projects: [...get().projects, projectInstance] });
+    }
 
     await db.tasks.add({
       id: task.id,
@@ -152,12 +143,19 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
       ""
     ).trim();
 
-    const projectInstance = await resolveOrCreateProject(
-      set,
-      get,
+    let projectInstance = findExistingProject(
+      get().projects,
       updates.projectId,
       normalizedProjectName,
     );
+    if (!projectInstance) {
+      projectInstance = {
+        id: updates.projectId || crypto.randomUUID(),
+        name: normalizedProjectName,
+      };
+      await db.projects.add(projectInstance);
+      set({ projects: [...get().projects, projectInstance] });
+    }
 
     const taskUpdates: Partial<Task> = {
       projectId: projectInstance.id,
