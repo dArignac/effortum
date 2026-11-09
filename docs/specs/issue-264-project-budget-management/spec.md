@@ -10,7 +10,7 @@ Enable users to define and manage time-bounded budgets for projects so they can 
 
 1. **Multiple Budgets per Project:**
    - Each budget belongs to a project (`projectId`) and stores a `startDate` (`YYYY-MM-DD`), `endDate` (`YYYY-MM-DD`), `purpose` (max. 50 characters), and
-     budgeted `hours` (`> 0`).
+     budgeted `hours` (`0 < hours <= 17520`, corresponding to at most 2 years).
 2. **Persistence & State Management:**
    - Budgets are persisted in IndexedDB via a new Dexie `version(8)` table (`budgets`) and managed through the Zustand store (`budgetSlice`).
    - Budgets are loaded on application startup in `loadFromIndexedDb`.
@@ -21,8 +21,8 @@ Enable users to define and manage time-bounded budgets for projects so they can 
    - Accessible via a top-level `Budgets` item (`data-testid="nav-budgets"`) in the sidebar navigation.
    - Displays a searchable, clearable project selector dropdown (`data-testid="budget-project-select"`), ordered alphabetically.
    - Does **not** display an overall project budget summary line (only individual budgets are shown).
-   - Allows adding a new budget for the selected project with `startDate`, `endDate`, `purpose` (max 50 characters), and `hours`.
-   - Allows changing any existing budget (`startDate`, `endDate`, `purpose`, `hours`) at any time via per-row `Save`.
+   - Allows adding a new budget for the selected project with `startDate`, `endDate`, `purpose` (max 50 characters), and `hours` (max `17520`).
+   - Allows changing any existing budget (`startDate`, `endDate`, `purpose`, `hours` up to `17520`) at any time via per-row `Save`.
    - Allows removing any existing budget at any time via per-row `Delete` (`data-testid="button-delete-budget-<id>"`), guarded by a confirmation modal
      (`data-testid="modal-delete-budget"`) with `Cancel` (`data-testid="button-cancel-delete-budget"`) and `Delete Budget`
      (`data-testid="button-confirm-delete-budget"`) actions to prevent accidental deletion.
@@ -31,6 +31,8 @@ Enable users to define and manage time-bounded budgets for projects so they can 
      depletion in percent (`X%`):
      - **Per-budget row metrics** (`data-testid="budget-metrics-<id>"`): booked hours on the project within that budget's `[startDate, endDate]` range vs. that
        budget's hours, e.g. `36/88 h (4.5/11 days) · 41%`.
+   - **Uniform Column Widths Across Budget Rows:** In the project budget listing, each column (`startDate`, `endDate`, `purpose`, `hours`, state/metrics,
+     `Save`, and `Delete`) must maintain identical widths across all budget rows regardless of the magnitude of the budget hours or spent metrics.
 
 ## Tech Stack
 
@@ -53,19 +55,20 @@ Enable users to define and manage time-bounded budgets for projects so they can 
 - `src/models/ProjectBudget.ts` (new): `ProjectBudget` domain model type.
 - `src/db.ts` (modified): Add `budgets!: Table<ProjectBudget>` and `this.version(8)` schema definition.
 - `scripts/check-invariants.ts` & `scripts/check-invariants.test.ts` (modified): Add `8` to `FROZEN_DEXIE_VERSIONS`.
-- `src/utils/budget.ts` & `src/utils/budget.test.ts` (new): Pure helpers for sorting budgets newest-first and formatting spent/budgeted hours, days in brackets,
-  and depletion percentage.
+- `src/utils/budget.ts` & `src/utils/budget.test.ts` (new): Constants (`MAX_BUDGET_PURPOSE_LENGTH = 50`, `MAX_BUDGET_HOURS = 17520`) and pure helpers for
+  sorting budgets newest-first and formatting spent/budgeted hours, days in brackets, and depletion percentage.
 - `src/store/types.ts` (modified): Add `ProjectBudgetInput`, `ProjectBudgetUpdateInput`, and budget store state/actions to `EffortumStore`.
-- `src/store/slices/budgetSlice.ts` & `src/store/slices/budgetSlice.test.ts` (new): Budget CRUD actions and date-range booked hours query.
+- `src/store/slices/budgetSlice.ts` & `src/store/slices/budgetSlice.test.ts` (new): Budget CRUD actions (including `hours <= 17520` validation) and date-range
+  booked hours query.
 - `src/store/slices/loadingMigrationSlice.ts` (modified): Load `budgets` on startup.
 - `src/store/slices/projectSlice.ts` & `src/store/slices/projectSlice.test.ts` (modified): Delete or move project budgets when deleting a project.
 - `src/store/index.ts` (modified): Compose `createBudgetSlice` into `storeCreator`.
 - `src/components/ImportData.tsx` (modified): Include `budgets` table in database clear/fallback import.
-- `src/pages/BudgetsPage.tsx` (new): Dedicated Budget Management page component (per-row metrics and delete confirmation modal, without overall budget summary
-  line).
+- `src/pages/BudgetsPage.tsx` (new): Dedicated Budget Management page component (max 17520 hours enforcement, uniform column widths across rows, per-row
+  metrics, and delete confirmation modal).
 - `src/routes/index.tsx` (modified): Add `Budgets` navigation item (`nav-budgets`).
-- `e2e/issue-264.spec.ts` (new): End-to-end Playwright verification of project budget management, including delete confirmation modal (cancel + confirm) and
-  absence of overall budget summary line.
+- `e2e/issue-264.spec.ts` (new): End-to-end Playwright verification of project budget management, including max 17520 hours validation, uniform column widths
+  across rows with different budget sizes, delete confirmation modal, and absence of overall budget summary line.
 - `docs/architecture.md` (modified): Document `PROJECT_BUDGET` entity, `budgetSlice`, and `BudgetsPage`.
 
 ## Effortum Architectural Guard
@@ -89,10 +92,11 @@ Enable users to define and manage time-bounded budgets for projects so they can 
 ## Success Criteria
 
 - Users can navigate to `Budgets` via the sidebar (`nav-budgets`), select a project, and add multiple budgets with start date, end date, purpose (max 50 chars),
-  and hours.
+  and hours (`0 < hours <= 17520`).
+- Budgets exceeding `17520` hours are rejected by both the store (`BUDGET_HOURS_TOO_HIGH`) and the UI.
 - Existing budgets are sorted by `startDate` descending (newest first) and can be edited and saved at any time.
 - Clicking `Delete` on a budget opens a confirmation modal; canceling keeps the budget intact, and confirming permanently deletes the budget.
-- Each budget row displays spent vs. budgeted hours, days in brackets `(X/Y days)` based on `workingHoursPerDay`, and depletion percentage (`Z%`), with no
-  misleading overall project budget summary line.
+- Each budget row displays spent vs. budgeted hours, days in brackets `(X/Y days)` based on `workingHoursPerDay`, and depletion percentage (`Z%`), with uniform
+  column widths across all rows regardless of budget size.
 - Deleting a project deletes or moves its budgets matching the selected task action.
 - `pnpm check:invariants`, `pnpm tsc --noEmit`, `pnpm test`, and `pnpm test:e2e e2e/issue-264.spec.ts` all pass with zero errors.

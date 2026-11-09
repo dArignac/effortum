@@ -44,7 +44,7 @@
 - [x] Task 6: Remove overall project budget line and add delete confirmation modal in `BudgetsPage`
   - Description: In `src/pages/BudgetsPage.tsx`, remove the `Overall Project Budget` summary box (`project-budget-overall-summary`) and unused overall
     spent/budgeted state, and add a Mantine `<Modal>` (`data-testid="modal-delete-budget"`) triggered when clicking `Delete` (`button-delete-budget-<id>`) with
-    `Cancel` (`button-cancel-delete-budget`) and `Delete Budget` (`button-confirm-delete-budget`) buttons.
+    `Cancel` (`data-testid="button-cancel-delete-budget"`) and `Delete Budget` (`button-confirm-delete-budget`) buttons.
   - Acceptance: `project-budget-overall-summary` is no longer rendered, clicking `Delete` opens `modal-delete-budget`, and `pnpm tsc --noEmit` and
     `pnpm check:invariants` pass.
   - Verify: `pnpm tsc --noEmit`
@@ -53,6 +53,23 @@
 - [x] Task 7: Update Playwright E2E test and architecture documentation for delete confirmation and removed overall budget line
   - Description: Update `e2e/issue-264.spec.ts` to assert that `project-budget-overall-summary` is not present and to verify canceling and confirming budget
     deletion via `modal-delete-budget`. Update `docs/architecture.md` to reflect per-budget metrics and delete confirmation.
+  - Acceptance: `pnpm test:e2e e2e/issue-264.spec.ts` passes headless.
+  - Verify: `pnpm test:e2e e2e/issue-264.spec.ts`
+  - Files: `e2e/issue-264.spec.ts`, `docs/architecture.md`
+
+- [x] Task 8: Enforce maximum budget hours (`17520`) and uniform column widths in `BudgetsPage`
+  - Description: Export `MAX_BUDGET_HOURS = 17520` in `src/utils/budget.ts`, validate `hours <= MAX_BUDGET_HOURS` (`BUDGET_HOURS_TOO_HIGH`) in
+    `src/store/slices/budgetSlice.ts` with unit tests in `src/store/slices/budgetSlice.test.ts`, and update `src/pages/BudgetsPage.tsx` to enforce
+    `MAX_BUDGET_HOURS` and apply fixed flex column widths (`startDate`, `endDate`, `hours`, `budget-metrics-<id>`, `Save`, `Delete` with `flex: "0 0 ..."` and
+    `purpose` with `flex: "1 1 0", minWidth: 0`) so all columns have identical widths across rows regardless of budget size.
+  - Acceptance: Unit tests in `src/store/slices/budgetSlice.test.ts` and `pnpm tsc --noEmit` pass.
+  - Verify: `pnpm test src/store/slices/budgetSlice.test.ts`
+  - Files: `src/utils/budget.ts`, `src/store/slices/budgetSlice.ts`, `src/store/slices/budgetSlice.test.ts`, `src/pages/BudgetsPage.tsx`
+
+- [x] Task 9: Verify uniform column widths and max budget hours in E2E tests and update architecture docs
+  - Description: Update `e2e/issue-264.spec.ts` to verify that budget rows with different budget sizes (e.g. `8` vs `17520` hours) have identical column widths
+    across all columns (`startDate`, `endDate`, `purpose`, `hours`, `metrics`, `Save`, `Delete`) and that budgets `> 17520` hours are rejected. Update
+    `docs/architecture.md`.
   - Acceptance: `pnpm test:e2e e2e/issue-264.spec.ts` passes headless.
   - Verify: `pnpm test:e2e e2e/issue-264.spec.ts`
   - Files: `e2e/issue-264.spec.ts`, `docs/architecture.md`

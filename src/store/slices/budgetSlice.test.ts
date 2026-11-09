@@ -135,6 +135,16 @@ describe("createBudgetSlice", () => {
         hours: 0,
       }),
     ).rejects.toThrow("BUDGET_HOURS_INVALID");
+
+    await expect(
+      slice.addProjectBudget({
+        projectId: "p1",
+        startDate: "2026-01-01",
+        endDate: "2026-01-31",
+        purpose: "Valid",
+        hours: 17521,
+      }),
+    ).rejects.toThrow("BUDGET_HOURS_TOO_HIGH");
   });
 
   it("updates an existing budget and validates updated fields", async () => {
@@ -162,23 +172,27 @@ describe("createBudgetSlice", () => {
       slice.updateProjectBudget("b1", { purpose: "y".repeat(51) }),
     ).rejects.toThrow("BUDGET_PURPOSE_TOO_LONG");
 
+    await expect(
+      slice.updateProjectBudget("b1", { hours: 17521 }),
+    ).rejects.toThrow("BUDGET_HOURS_TOO_HIGH");
+
     const updatedBudget = {
       ...existingBudget,
       purpose: "Q1 Revised",
-      hours: 96,
+      hours: 17520,
     };
     mockDb.budgets.toArray.mockResolvedValue([updatedBudget]);
 
     await slice.updateProjectBudget("b1", {
       purpose: " Q1 Revised ",
-      hours: 96,
+      hours: 17520,
     });
 
     expect(mockDb.budgets.update).toHaveBeenCalledWith("b1", {
       startDate: "2026-01-01",
       endDate: "2026-03-31",
       purpose: "Q1 Revised",
-      hours: 96,
+      hours: 17520,
     });
     expect(set).toHaveBeenCalledWith({ budgets: [updatedBudget] });
   });

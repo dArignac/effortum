@@ -3,6 +3,7 @@ import { useEffortumStore } from "@/store";
 import {
   DEFAULT_WORKING_HOURS_PER_DAY,
   formatBudgetMetrics,
+  MAX_BUDGET_HOURS,
   MAX_BUDGET_PURPOSE_LENGTH,
   sortProjectBudgetsNewestFirst,
 } from "@/utils/budget";
@@ -56,7 +57,8 @@ function canSaveBudgetDraft(
     trimmedPurpose.length > 0 &&
     trimmedPurpose.length <= MAX_BUDGET_PURPOSE_LENGTH &&
     Number.isFinite(parsedHours) &&
-    parsedHours > 0;
+    parsedHours > 0 &&
+    parsedHours <= MAX_BUDGET_HOURS;
 
   return hasChanges && isValid;
 }
@@ -77,6 +79,8 @@ function getBudgetErrorMessage(error: unknown, fallback: string): string {
       return `Purpose must be at most ${MAX_BUDGET_PURPOSE_LENGTH} characters.`;
     case "BUDGET_HOURS_INVALID":
       return "Budget hours must be greater than 0.";
+    case "BUDGET_HOURS_TOO_HIGH":
+      return `Budget hours must be at most ${MAX_BUDGET_HOURS}.`;
     default:
       return fallback;
   }
@@ -382,6 +386,8 @@ export function BudgetsPage() {
                   label="Hours"
                   placeholder="0"
                   min={0.25}
+                  max={MAX_BUDGET_HOURS}
+                  clampBehavior="none"
                   step={1}
                   allowNegative={false}
                   value={newHours}
@@ -435,6 +441,7 @@ export function BudgetsPage() {
                     }
                     data-testid={`budget-start-date-input-${budget.id}`}
                     w={135}
+                    style={{ flex: "0 0 135px" }}
                   />
                   <TextInput
                     type="date"
@@ -448,6 +455,7 @@ export function BudgetsPage() {
                     }
                     data-testid={`budget-end-date-input-${budget.id}`}
                     w={135}
+                    style={{ flex: "0 0 135px" }}
                   />
                   <TextInput
                     size="xs"
@@ -460,24 +468,29 @@ export function BudgetsPage() {
                       })
                     }
                     data-testid={`budget-purpose-input-${budget.id}`}
-                    style={{ flex: "1 1 0", minWidth: 120 }}
+                    style={{ flex: "1 1 0", minWidth: 0 }}
                   />
                   <NumberInput
                     size="xs"
                     aria-label="Hours"
                     min={0.25}
+                    max={MAX_BUDGET_HOURS}
+                    clampBehavior="none"
                     step={1}
                     allowNegative={false}
                     value={draft.hours}
                     onChange={(value) => updateDraft(budget, { hours: value })}
                     data-testid={`budget-hours-input-${budget.id}`}
                     w={100}
+                    style={{ flex: "0 0 100px" }}
                   />
                   <Text
                     c="dimmed"
                     size="sm"
                     ta="right"
+                    w={260}
                     style={{
+                      flex: "0 0 260px",
                       whiteSpace: "nowrap",
                       fontVariantNumeric: "tabular-nums",
                     }}
@@ -491,6 +504,8 @@ export function BudgetsPage() {
                   </Text>
                   <Button
                     size="xs"
+                    w={72}
+                    style={{ flex: "0 0 72px" }}
                     disabled={isSaveDisabled}
                     loading={savingBudgetId === budget.id}
                     onClick={() => handleSaveBudget(budget)}
@@ -500,6 +515,8 @@ export function BudgetsPage() {
                   </Button>
                   <Button
                     size="xs"
+                    w={72}
+                    style={{ flex: "0 0 72px" }}
                     color="red"
                     variant="light"
                     disabled={isBusy}

@@ -6,7 +6,10 @@ import {
   StoreGet,
   StoreSet,
 } from "@/store/types";
-import { MAX_BUDGET_PURPOSE_LENGTH } from "../../utils/budget";
+import {
+  MAX_BUDGET_HOURS,
+  MAX_BUDGET_PURPOSE_LENGTH,
+} from "../../utils/budget";
 import { normalizeDate } from "../../utils/date";
 import dayjs from "dayjs";
 
@@ -48,6 +51,9 @@ function validateAndNormalizeBudgetFields(fields: {
   const hours = Number(fields.hours);
   if (!Number.isFinite(hours) || hours <= 0) {
     throw new Error("BUDGET_HOURS_INVALID");
+  }
+  if (hours > MAX_BUDGET_HOURS) {
+    throw new Error("BUDGET_HOURS_TOO_HIGH");
   }
 
   return {

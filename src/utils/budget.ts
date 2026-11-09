@@ -2,6 +2,7 @@ import { ProjectBudget } from "@/models/ProjectBudget";
 import { calculatePercentage } from "./time";
 
 export const MAX_BUDGET_PURPOSE_LENGTH = 50;
+export const MAX_BUDGET_HOURS = 17520;
 export const DEFAULT_WORKING_HOURS_PER_DAY = 8;
 
 /**
