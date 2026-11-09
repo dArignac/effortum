@@ -3,6 +3,10 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.21.2",
+    description: ["Adds internal code improvements."],
+  },
+  {
     version: "0.21.1",
     description: [
       "Fixes start time prefill and field reset when manually adding a finished task (#51).",

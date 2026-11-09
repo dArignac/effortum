@@ -8,13 +8,13 @@ import {
   IconPlayerPlay,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
 import {
+  applyTimeRounding,
   getDurationAsTime,
   isRunningTask,
-  roundTimeToNearest5Minutes,
 } from "../utils/time";
 import {
   validateDate,
@@ -23,6 +23,7 @@ import {
   validateStart,
 } from "../validations";
 import { DateSelectionField } from "./DateField";
+import { useProjectComments } from "./useProjectComments";
 
 export function TaskListRow(props: {
   taskId: string | null;
@@ -42,9 +43,6 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
   const tasks = useEffortumStore((state) => state.tasks);
   const addTask = useEffortumStore((state) => state.addTask);
   const updateTask = useEffortumStore((state) => state.updateTask);
-  const getRecentTaskCommentsForProject = useEffortumStore(
-    (state) => state.getRecentTaskCommentsForProject,
-  );
   const projects = useEffortumStore((state) => state.projects);
   const setEndTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.setEndTimeOfLastStoppedTask,
@@ -57,10 +55,8 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
   );
 
   const [hasChanges, setHasChanges] = useState(false);
-  const [dateValue, setDateValue] = useState<string | null>(null);
-  const [canStopTask, setCanStopTask] = useState(false);
-  const [availableComments, setAvailableComments] = useState<string[]>([]);
 
+  const canStopTask = isRunningTask(task);
   const hasRunningTask = useMemo(() => tasks.some(isRunningTask), [tasks]);
 
   const currentProjectName =
@@ -68,20 +64,11 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
     task.project ||
     "";
 
-  useEffect(() => {
-    setDateValue(task.date);
-  }, [task.date]);
-
-  useEffect(() => {
-    setCanStopTask(!task.timeEnd || task.timeEnd.length === 0);
-  }, [task.timeEnd]);
-
   // FYI cant use form due to table
   const fieldDate = useField({
     initialValue: task.date,
     validate: validateDate,
     onValueChange: (value) => {
-      setDateValue(value);
       setHasChanges(value !== task.date);
     },
   });
@@ -104,7 +91,7 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
 
   const fieldProject = useField({
     initialValue: currentProjectName,
-    validate: (value) => validateProject(value),
+    validate: validateProject,
     onValueChange: (value) => {
       setHasChanges(value.trim() !== currentProjectName);
     },
@@ -117,48 +104,12 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
     },
   });
 
-  const selectedProjectName = fieldProject.getValue().trim();
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const loadComments = async () => {
-      if (selectedProjectName.length === 0) {
-        setAvailableComments([]);
-        return;
-      }
-
-      const project = projects.find((p) => p.name === selectedProjectName);
-      if (!project) {
-        setAvailableComments([]);
-        return;
-      }
-
-      try {
-        const comments = await getRecentTaskCommentsForProject(project.id);
-        if (!isCancelled) {
-          setAvailableComments(comments);
-        }
-      } catch (error) {
-        console.error("Failed to load comments:", error);
-        if (!isCancelled) {
-          setAvailableComments([]);
-        }
-      }
-    };
-
-    loadComments();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [selectedProjectName, projects, tasks, getRecentTaskCommentsForProject]);
+  const { availableComments } = useProjectComments(fieldProject.getValue());
 
   /**
    * Validates and persists row edits for the current task.
    */
   const updateEntry = async () => {
-    // Validate all fields
     const dateError = await fieldDate.validate();
     const startError = await fieldStart.validate();
     const endError = await fieldEnd.validate();
@@ -173,14 +124,14 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
       return;
     }
 
-    const startTime = roundToNearest5Minutes
-      ? roundTimeToNearest5Minutes(fieldStart.getValue())
-      : fieldStart.getValue();
-    const endTime = fieldEnd.getValue()
-      ? roundToNearest5Minutes
-        ? roundTimeToNearest5Minutes(fieldEnd.getValue())
-        : fieldEnd.getValue()
-      : "";
+    const startTime = applyTimeRounding(
+      fieldStart.getValue(),
+      roundToNearest5Minutes,
+    );
+    const endTime = applyTimeRounding(
+      fieldEnd.getValue(),
+      roundToNearest5Minutes,
+    );
 
     try {
       if (
@@ -193,7 +144,7 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
       }
 
       await updateTask(task.id, {
-        date: dateValue || dayjs().format("YYYY-MM-DD"),
+        date: fieldDate.getValue() || dayjs().format("YYYY-MM-DD"),
         timeStart: startTime,
         timeEnd: endTime,
         projectName: fieldProject.getValue(),
@@ -217,10 +168,10 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
    * Stops an in-progress task by setting its end time to now.
    */
   const stopTask = async () => {
-    const nowAsTime = dayjs().format("HH:mm");
-    const endTime = roundToNearest5Minutes
-      ? roundTimeToNearest5Minutes(nowAsTime)
-      : nowAsTime;
+    const endTime = applyTimeRounding(
+      dayjs().format("HH:mm"),
+      roundToNearest5Minutes,
+    );
 
     try {
       // Store the end time to be able to set it as new start time before updateTask
@@ -246,10 +197,10 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
    * Starts a new running task with this task's project and comment at the current time.
    */
   const restartTask = async () => {
-    const nowAsTime = dayjs().format("HH:mm");
-    const startTime = roundToNearest5Minutes
-      ? roundTimeToNearest5Minutes(nowAsTime)
-      : nowAsTime;
+    const startTime = applyTimeRounding(
+      dayjs().format("HH:mm"),
+      roundToNearest5Minutes,
+    );
     const today = dayjs().format("YYYY-MM-DD");
     const projectToUse = fieldProject.getValue().trim() || currentProjectName;
     const commentToUse = fieldComment.getValue() || task.comment || "";

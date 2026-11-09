@@ -8,40 +8,36 @@ export function roundTimeToNearest5Minutes(time: string): string {
   const parsedTime = dayjs(`${REFERENCE_DATE} ${time}`);
   if (!parsedTime.isValid()) return time;
 
-  const totalMinutes = parsedTime.hour() * 60 + parsedTime.minute();
-  const minuteWithinHour = totalMinutes % 60;
-  const tens = Math.floor(minuteWithinHour / 10) * 10;
-  const ones = minuteWithinHour % 10;
+  const minute = parsedTime.minute();
+  const tens = Math.floor(minute / 10) * 10;
+  const ones = minute % 10;
 
-  let roundedMinuteWithinHour = tens;
-  if (ones <= 2) {
-    roundedMinuteWithinHour = tens;
-  } else if (ones <= 6) {
-    roundedMinuteWithinHour = tens + 5;
-  } else {
-    roundedMinuteWithinHour = tens + 10;
+  let roundedMinute = tens;
+  if (ones > 6) {
+    roundedMinute = tens + 10;
+  } else if (ones > 2) {
+    roundedMinute = tens + 5;
   }
 
-  const roundedTotalMinutes =
-    Math.floor(totalMinutes / 60) * 60 + roundedMinuteWithinHour;
   const minutesInDay = 24 * 60;
+  const roundedTotalMinutes = parsedTime.hour() * 60 + roundedMinute;
   const normalizedMinutes =
     ((roundedTotalMinutes % minutesInDay) + minutesInDay) % minutesInDay;
 
-  const hours = Math.floor(normalizedMinutes / 60)
-    .toString()
-    .padStart(2, "0");
-  const minutes = (normalizedMinutes % 60).toString().padStart(2, "0");
+  return formatDuration(normalizedMinutes);
+}
 
-  return `${hours}:${minutes}`;
+export function applyTimeRounding(
+  time: string,
+  roundToNearest5Minutes: boolean,
+): string {
+  if (!time) return "";
+  return roundToNearest5Minutes ? roundTimeToNearest5Minutes(time) : time;
 }
 
 export function getDurationAsTime(start: string, end?: string): string {
   if (end === undefined || end === "") return "...";
-  const startTime = dayjs(`${REFERENCE_DATE} ${start}`);
-  const endTime = dayjs(`${REFERENCE_DATE} ${end}`);
-  const diff = endTime.diff(startTime, "minute");
-  return formatDuration(diff);
+  return formatDuration(getDuration(start, end));
 }
 
 export function getDuration(start: string, end?: string): number {

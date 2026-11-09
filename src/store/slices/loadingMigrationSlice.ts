@@ -1,40 +1,24 @@
 import { db } from "@/store/db";
 import { StoreGet, StoreSet } from "@/store/types";
+import { isRunningTask } from "../../utils/time";
 import dayjs from "dayjs";
 
 export const createLoadingMigrationSlice = (set: StoreSet, get: StoreGet) => ({
   backfillProjectRelationsIfMissing: async () => {
     // This is called by loadFromIndexedDb only when there are tasks without project IDs
-    // Optimization: Check if we need to do any backfill at all
     const projects = await db.projects.toArray();
 
     const nameToId = new Map(
       projects.map((project) => [project.name, project.id]),
     );
 
-    const resolveProject = async (projectName?: string, projectId?: string) => {
-      const projectsInState = get().projects;
-
-      if (projectId) {
-        const projectFromState = projectsInState.find(
-          (p) => p.id === projectId,
-        );
-        if (projectFromState) {
-          return projectFromState;
-        }
-
-        const projectFromDb = await db.projects.get(projectId);
-        if (projectFromDb) {
-          return projectFromDb;
-        }
-      }
-
+    const resolveProject = async (projectName?: string) => {
       const normalizedName = (projectName ?? "").trim();
       if (!normalizedName) {
         return null;
       }
 
-      const existingFromState = projectsInState.find(
+      const existingFromState = get().projects.find(
         (p) => p.name === normalizedName,
       );
       if (existingFromState) {
@@ -101,13 +85,12 @@ export const createLoadingMigrationSlice = (set: StoreSet, get: StoreGet) => ({
       ]);
 
       // Query any active running tasks (unclosed tasks with no timeEnd)
-      const activeTasks = await db.tasks
-        .filter((task) => !task.timeEnd || task.timeEnd.length === 0)
-        .toArray();
+      const activeTasks = await db.tasks.filter(isRunningTask).toArray();
 
       const tasks = [...todayTasks];
+      const existingTaskIds = new Set(tasks.map((task) => task.id));
       for (const activeTask of activeTasks) {
-        if (!tasks.some((t) => t.id === activeTask.id)) {
+        if (!existingTaskIds.has(activeTask.id)) {
           tasks.push(activeTask);
         }
       }

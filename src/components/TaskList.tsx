@@ -19,7 +19,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
 import { filterTasksByDateRange } from "../utils/filters";
-import { isRunningTask, roundTimeToNearest5Minutes } from "../utils/time";
+import { applyTimeRounding, isRunningTask } from "../utils/time";
 import { AddEntryRow } from "./AddEntry";
 import { LoadingIndicator } from "./LoadingIndicator";
 import { TaskListRow } from "./TaskListRow";
@@ -58,10 +58,10 @@ export function TaskList() {
   }, [runningTask, selectedDateRange]);
 
   const handleStopRunningTask = async (taskToStop: Task) => {
-    const nowAsTime = dayjs().format("HH:mm");
-    const endTime = roundToNearest5Minutes
-      ? roundTimeToNearest5Minutes(nowAsTime)
-      : nowAsTime;
+    const endTime = applyTimeRounding(
+      dayjs().format("HH:mm"),
+      roundToNearest5Minutes,
+    );
 
     try {
       setEndTimeOfLastStoppedTask(endTime);
@@ -90,11 +90,10 @@ export function TaskList() {
       .sort(compareTasksByTimeStart);
   }, [tasks, selectedDateRange]);
 
-  const canAddTask = useMemo(() => {
-    return !sortedTasks.some(
-      (task) => !task.timeEnd || task.timeEnd.length === 0,
-    );
-  }, [sortedTasks]);
+  const canAddTask = useMemo(
+    () => !sortedTasks.some(isRunningTask),
+    [sortedTasks],
+  );
 
   const [recentProjectNames, setRecentProjectNames] = useState<
     string[] | undefined
@@ -114,42 +113,16 @@ export function TaskList() {
       }
     };
 
-    loadRecentProjects();
+    void loadRecentProjects();
 
     return () => {
       isCancelled = true;
     };
   }, [projects, tasks, getRecentProjectNames]);
 
-  // Show loading indicator when data is being fetched
-  if (isDataLoading) {
-    return (
-      <Table stickyHeader stickyHeaderOffset={0} data-testid="task-list-table">
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th w={125}>Date</Table.Th>
-            <Table.Th w={80}>Start</Table.Th>
-            <Table.Th w={80}>End</Table.Th>
-            <Table.Th>Project</Table.Th>
-            <Table.Th>Comment</Table.Th>
-            <Table.Th w={50}>Duration</Table.Th>
-            <Table.Th w={90}>Actions</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          <Table.Tr>
-            <Table.Td colSpan={7}>
-              <LoadingIndicator />
-            </Table.Td>
-          </Table.Tr>
-        </Table.Tbody>
-      </Table>
-    );
-  }
-
   return (
     <>
-      {isRunningOutsideDateRange && runningTask && (
+      {!isDataLoading && isRunningOutsideDateRange && runningTask && (
         <Alert
           variant="light"
           color="orange"
@@ -205,59 +178,69 @@ export function TaskList() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {isRunningOutsideDateRange && runningTask && (
-            <Table.Tr
-              key={`active-external-${runningTask.id}`}
-              data-testid="active-running-task-row"
-              bg="var(--mantine-color-orange-light)"
-            >
-              <Table.Td>
-                <Text size="xs">{runningTask.date}</Text>
-              </Table.Td>
-              <Table.Td>
-                <Text size="xs">{runningTask.timeStart}</Text>
-              </Table.Td>
-              <Table.Td>
-                <Text size="xs" c="dimmed">
-                  —
-                </Text>
-              </Table.Td>
-              <Table.Td>
-                <Text size="xs">{runningTask.project}</Text>
-              </Table.Td>
-              <Table.Td>
-                <Text size="xs">{runningTask.comment || ""}</Text>
-              </Table.Td>
-              <Table.Td>
-                <Text size="xs">...</Text>
-              </Table.Td>
-              <Table.Td>
-                <ActionIcon
-                  variant="light"
-                  color="orange"
-                  size="md"
-                  aria-label="Stop Task"
-                  onClick={() => handleStopRunningTask(runningTask)}
-                  data-testid="button-stop-external-active-task"
-                >
-                  <IconClockPause />
-                </ActionIcon>
+          {isDataLoading ? (
+            <Table.Tr>
+              <Table.Td colSpan={7}>
+                <LoadingIndicator />
               </Table.Td>
             </Table.Tr>
+          ) : (
+            <>
+              {isRunningOutsideDateRange && runningTask && (
+                <Table.Tr
+                  key={`active-external-${runningTask.id}`}
+                  data-testid="active-running-task-row"
+                  bg="var(--mantine-color-orange-light)"
+                >
+                  <Table.Td>
+                    <Text size="xs">{runningTask.date}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="xs">{runningTask.timeStart}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="xs" c="dimmed">
+                      —
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="xs">{runningTask.project}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="xs">{runningTask.comment || ""}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="xs">...</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <ActionIcon
+                      variant="light"
+                      color="orange"
+                      size="md"
+                      aria-label="Stop Task"
+                      onClick={() => handleStopRunningTask(runningTask)}
+                      data-testid="button-stop-external-active-task"
+                    >
+                      <IconClockPause />
+                    </ActionIcon>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+              {sortedTasks.map((task) => (
+                <TaskListRow
+                  key={task.id}
+                  taskId={task.id}
+                  projectNames={recentProjectNames}
+                />
+              ))}
+              <Table.Tr>
+                <Table.Td colSpan={6}>
+                  <Space h="md" />
+                </Table.Td>
+              </Table.Tr>
+              {canAddTask && <AddEntryRow projectNames={recentProjectNames} />}
+            </>
           )}
-          {sortedTasks.map((task) => (
-            <TaskListRow
-              key={task.id}
-              taskId={task.id}
-              projectNames={recentProjectNames}
-            />
-          ))}
-          <Table.Tr>
-            <Table.Td colSpan={6}>
-              <Space h="md" />
-            </Table.Td>
-          </Table.Tr>
-          {canAddTask && <AddEntryRow projectNames={recentProjectNames} />}
         </Table.Tbody>
       </Table>
     </>

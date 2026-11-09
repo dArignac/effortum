@@ -1,10 +1,7 @@
 import { db } from "@/store/db";
 import { StoreGet, StoreSet } from "@/store/types";
 
-export const createSettingsOvertimeSlice = (
-  _set: StoreSet,
-  _get: StoreGet,
-) => ({
+export const createSettingsOvertimeSlice = (set: StoreSet, _get: StoreGet) => ({
   overtime: [],
   settings: [],
 
@@ -20,7 +17,7 @@ export const createSettingsOvertimeSlice = (
 
     await db.overtime.put(overtimeValue);
 
-    _set({
+    set({
       overtime: [overtimeValue],
     });
   },
@@ -33,7 +30,7 @@ export const createSettingsOvertimeSlice = (
 
     await db.settings.put(settingsValue);
 
-    _set({
+    set({
       settings: [settingsValue],
     });
   },

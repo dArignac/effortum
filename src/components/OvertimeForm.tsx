@@ -12,17 +12,20 @@ export function OvertimeForm() {
   const form = useForm({
     mode: "controlled",
     initialValues: {
-      currentBalance: overtime ? overtime.currentBalance : 0,
-      workingHoursPerDay: overtime ? overtime.workingHoursPerDay : 8,
+      currentBalance: overtime?.currentBalance ?? 0,
+      workingHoursPerDay: overtime?.workingHoursPerDay ?? 8,
     },
     validate: {
       currentBalance: (value) => (isNaN(value) ? "Must be a number" : null),
-      workingHoursPerDay: (value) =>
-        isNaN(value) || value <= 0
-          ? "Must be a positive number"
-          : value > 24
-            ? "A day has only 24 hours"
-            : null,
+      workingHoursPerDay: (value) => {
+        if (isNaN(value) || value <= 0) {
+          return "Must be a positive number";
+        }
+        if (value > 24) {
+          return "A day has only 24 hours";
+        }
+        return null;
+      },
     },
   });
 

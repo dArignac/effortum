@@ -3,9 +3,9 @@ import { TimeInput } from "@mantine/dates";
 import { useField } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useEffortumStore } from "../store";
-import { isRunningTask, roundTimeToNearest5Minutes } from "../utils/time";
+import { applyTimeRounding, isRunningTask } from "../utils/time";
 import {
   validateDate,
   validateEnd,
@@ -13,14 +13,12 @@ import {
   validateStart,
 } from "../validations";
 import { DateSelectionField } from "./DateField";
+import { useProjectComments } from "./useProjectComments";
 
 export function AddEntryRow(props: { projectNames?: string[] }) {
   const projects = useEffortumStore((state) => state.projects);
   const tasks = useEffortumStore((state) => state.tasks);
   const addTask = useEffortumStore((state) => state.addTask);
-  const getRecentTaskCommentsForProject = useEffortumStore(
-    (state) => state.getRecentTaskCommentsForProject,
-  );
   const endTimeOfLastStoppedTask = useEffortumStore(
     (state) => state.endTimeOfLastStoppedTask,
   );
@@ -31,87 +29,18 @@ export function AddEntryRow(props: { projectNames?: string[] }) {
     (state) => state.settings.at(0)?.roundToNearest5Minutes ?? false,
   );
 
-  const [, setDateValue] = useState<string | null>(null);
-  const [startValue, setStartValue] = useState<string>("");
-  const [, setEndValue] = useState<string>("");
-  const [projectValue, setProjectValue] = useState<string>("");
-  const [, setCommentValue] = useState<string>("");
-  const [availableComments, setAvailableComments] = useState<string[]>([]);
-  const [isCommentLoading, setIsCommentLoading] = useState(false);
   const lastPrefilledTimeRef = useRef<string | null>(null);
-
   const runningTask = useMemo(() => tasks.find(isRunningTask), [tasks]);
   const runningTaskRef = useRef(runningTask);
-
-  useEffect(() => {
-    if (endTimeOfLastStoppedTask != null) {
-      if (
-        (startValue.length === 0 ||
-          startValue === lastPrefilledTimeRef.current) &&
-        fieldStart.getValue() !== endTimeOfLastStoppedTask
-      ) {
-        fieldStart.setValue(endTimeOfLastStoppedTask);
-        lastPrefilledTimeRef.current = endTimeOfLastStoppedTask;
-      }
-    }
-  }, [startValue, endTimeOfLastStoppedTask]);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const loadComments = async () => {
-      const trimmedProject = projectValue.trim();
-      // only fill comments if a project is selected
-      if (trimmedProject.length === 0) {
-        setAvailableComments([]);
-        setIsCommentLoading(false);
-        return;
-      }
-
-      // Find the project by name to get its ID
-      const project = projects.find((p) => p.name === trimmedProject);
-      if (!project) {
-        setAvailableComments([]);
-        setIsCommentLoading(false);
-        return;
-      }
-
-      setIsCommentLoading(true);
-      try {
-        // Load comments for this specific project on-demand
-        const comments = await getRecentTaskCommentsForProject(project.id);
-        if (!isCancelled) {
-          setAvailableComments(comments);
-        }
-      } catch (error) {
-        console.error("Failed to load comments:", error);
-        if (!isCancelled) {
-          setAvailableComments([]);
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsCommentLoading(false);
-        }
-      }
-    };
-
-    loadComments();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [projectValue, projects, tasks, getRecentTaskCommentsForProject]);
 
   const fieldDate = useField({
     initialValue: dayjs().format("YYYY-MM-DD"),
     validate: validateDate,
-    onValueChange: (value) => setDateValue(value),
   });
 
   const fieldStart = useField({
     initialValue: "",
     validate: validateStart,
-    onValueChange: (value) => setStartValue(value),
   });
 
   const fieldEnd = useField({
@@ -122,8 +51,33 @@ export function AddEntryRow(props: { projectNames?: string[] }) {
       }
       return validateEnd(value, fieldStart.getValue());
     },
-    onValueChange: (value) => setEndValue(value),
   });
+
+  const fieldProject = useField({
+    initialValue: "",
+    validate: validateProject,
+  });
+
+  const fieldComment = useField({
+    initialValue: "",
+  });
+
+  const startValue = fieldStart.getValue();
+  const { availableComments, isCommentLoading } = useProjectComments(
+    fieldProject.getValue(),
+  );
+
+  useEffect(() => {
+    if (
+      endTimeOfLastStoppedTask != null &&
+      (startValue.length === 0 ||
+        startValue === lastPrefilledTimeRef.current) &&
+      startValue !== endTimeOfLastStoppedTask
+    ) {
+      fieldStart.setValue(endTimeOfLastStoppedTask);
+      lastPrefilledTimeRef.current = endTimeOfLastStoppedTask;
+    }
+  }, [startValue, endTimeOfLastStoppedTask]);
 
   useEffect(() => {
     runningTaskRef.current = runningTask;
@@ -135,19 +89,7 @@ export function AddEntryRow(props: { projectNames?: string[] }) {
     }
   }, [runningTask, fieldEnd]);
 
-  const fieldProject = useField({
-    initialValue: "",
-    validate: (value) => validateProject(value),
-    onValueChange: (value) => setProjectValue(value),
-  });
-
-  const fieldComment = useField({
-    initialValue: "",
-    onValueChange: (value) => setCommentValue(value),
-  });
-
   const addEntry = async () => {
-    // Validate all fields
     const dateError = await fieldDate.validate();
     const startError = await fieldStart.validate();
     const endError = await fieldEnd.validate();
@@ -172,14 +114,14 @@ export function AddEntryRow(props: { projectNames?: string[] }) {
     }
     const selectedComment = fieldComment.getValue();
 
-    const roundedStartValue = roundToNearest5Minutes
-      ? roundTimeToNearest5Minutes(selectedStart)
-      : selectedStart;
-    const roundedEndValue = selectedEnd
-      ? roundToNearest5Minutes
-        ? roundTimeToNearest5Minutes(selectedEnd)
-        : selectedEnd
-      : "";
+    const roundedStartValue = applyTimeRounding(
+      selectedStart,
+      roundToNearest5Minutes,
+    );
+    const roundedEndValue = applyTimeRounding(
+      selectedEnd,
+      roundToNearest5Minutes,
+    );
 
     if (runningTask && !selectedEnd.trim()) {
       notifications.show({
@@ -200,14 +142,19 @@ export function AddEntryRow(props: { projectNames?: string[] }) {
         comment: selectedComment || "",
       });
 
-      fieldStart.reset();
-      fieldEnd.reset();
-      fieldProject.reset();
-      fieldComment.reset();
-      lastPrefilledTimeRef.current = null;
-      setEndTimeOfLastStoppedTask(
-        !runningTask && roundedEndValue ? roundedEndValue : null,
-      );
+      const isFormUnchanged =
+        fieldStart.getValue() === selectedStart &&
+        fieldEnd.getValue() === selectedEnd;
+      if (isFormUnchanged) {
+        fieldStart.reset();
+        fieldEnd.reset();
+        fieldProject.reset();
+        fieldComment.reset();
+        lastPrefilledTimeRef.current = null;
+        setEndTimeOfLastStoppedTask(
+          !runningTask && roundedEndValue ? roundedEndValue : null,
+        );
+      }
     } catch (error) {
       notifications.show({
         title: "Failed to add task",

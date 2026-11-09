@@ -9,6 +9,40 @@ import {
 } from "../../utils/usageSort";
 import dayjs from "dayjs";
 
+async function ensureNoOtherActiveTask(
+  get: StoreGet,
+  excludeTaskId?: string,
+): Promise<void> {
+  const isOtherActive = (task: Task) =>
+    (excludeTaskId === undefined || task.id !== excludeTaskId) &&
+    isRunningTask(task);
+
+  let existingActiveTask = get().tasks.find(isOtherActive);
+  if (!existingActiveTask && typeof db.tasks?.filter === "function") {
+    existingActiveTask = await db.tasks.filter(isOtherActive).first();
+  }
+  if (existingActiveTask) {
+    throw new Error(
+      "Only one active task is allowed. Please stop the running task first.",
+    );
+  }
+}
+
+function findExistingProject(
+  projects: ReadonlyArray<Project>,
+  projectId: string | undefined,
+  normalizedProjectName: string,
+): Project | undefined {
+  const existingById = projects.find((project) => project.id === projectId);
+  if (existingById) {
+    return existingById;
+  }
+  if (normalizedProjectName) {
+    return projects.find((project) => project.name === normalizedProjectName);
+  }
+  return undefined;
+}
+
 export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
   tasks: [],
 
@@ -33,33 +67,25 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
   getProjectBookedTimeHours: async (projectId: string) => {
     const tasks = await db.tasks.where("projectId").equals(projectId).toArray();
 
-    const totalSeconds = tasks
-      .filter((task) => task.timeEnd)
-      .reduce((sum, task) => {
-        const startTime = dayjs(`${task.date}T${task.timeStart}`);
-        const endTime = dayjs(`${task.date}T${task.timeEnd}`);
-        const diffInSeconds = endTime.diff(startTime, "second");
-
-        return diffInSeconds > 0 ? sum + diffInSeconds : sum;
-      }, 0);
+    let totalSeconds = 0;
+    for (const task of tasks) {
+      if (!task.timeEnd) {
+        continue;
+      }
+      const startTime = dayjs(`${task.date}T${task.timeStart}`);
+      const endTime = dayjs(`${task.date}T${task.timeEnd}`);
+      const diffInSeconds = endTime.diff(startTime, "second");
+      if (diffInSeconds > 0) {
+        totalSeconds += diffInSeconds;
+      }
+    }
 
     return totalSeconds / 3600;
   },
 
   addTask: async (task: TaskInput) => {
-    const isNewTaskActive = isRunningTask(task);
-    if (isNewTaskActive) {
-      let existingActiveTask = get().tasks.find(isRunningTask);
-      if (!existingActiveTask && typeof db.tasks?.filter === "function") {
-        existingActiveTask = await db.tasks
-          .filter((t) => !t.timeEnd || t.timeEnd.length === 0)
-          .first();
-      }
-      if (existingActiveTask) {
-        throw new Error(
-          "Only one active task is allowed. Please stop the running task first.",
-        );
-      }
+    if (isRunningTask(task)) {
+      await ensureNoOtherActiveTask(get);
     }
 
     const normalizedProjectName = (
@@ -71,15 +97,11 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
       return;
     }
 
-    let projectInstance = get().projects.find(
-      (project) => project.id === task.projectId,
+    let projectInstance = findExistingProject(
+      get().projects,
+      task.projectId,
+      normalizedProjectName,
     );
-    if (!projectInstance) {
-      projectInstance = get().projects.find(
-        (project) => project.name === normalizedProjectName,
-      );
-    }
-
     if (!projectInstance) {
       projectInstance = {
         id: task.projectId || crypto.randomUUID(),
@@ -110,23 +132,8 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
       return;
     }
 
-    if (
-      updates.timeEnd !== undefined &&
-      (!updates.timeEnd || updates.timeEnd.trim().length === 0)
-    ) {
-      let existingActiveTask = get().tasks.find(
-        (t) => t.id !== id && isRunningTask(t),
-      );
-      if (!existingActiveTask && typeof db.tasks?.filter === "function") {
-        existingActiveTask = await db.tasks
-          .filter((t) => t.id !== id && (!t.timeEnd || t.timeEnd.length === 0))
-          .first();
-      }
-      if (existingActiveTask) {
-        throw new Error(
-          "Only one active task is allowed. Please stop the running task first.",
-        );
-      }
+    if (updates.timeEnd !== undefined && updates.timeEnd.trim().length === 0) {
+      await ensureNoOtherActiveTask(get, id);
     }
 
     const normalizedProjectName = (
@@ -136,14 +143,11 @@ export const createTaskSlice = (set: StoreSet, get: StoreGet) => ({
       ""
     ).trim();
 
-    let projectInstance: Project | undefined = get().projects.find(
-      (project) => project.id === updates.projectId,
+    let projectInstance = findExistingProject(
+      get().projects,
+      updates.projectId,
+      normalizedProjectName,
     );
-    if (!projectInstance && normalizedProjectName) {
-      projectInstance = get().projects.find(
-        (project) => project.name === normalizedProjectName,
-      );
-    }
     if (!projectInstance) {
       projectInstance = {
         id: updates.projectId || crypto.randomUUID(),
