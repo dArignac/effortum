@@ -204,3 +204,12 @@ When working on this codebase:
 4. Understand that all data is persisted locally using IndexedDB through Dexie.js
 5. Be aware that this is a single-page application built with TanStack Start and React 19
 6. Consider that the project uses Mantine UI components for consistent styling
+
+## Terminal Execution Rules
+
+- Never chain or combine shell commands into a single execution line.
+- Do NOT use command separators or chaining operators such as `&&`, `;`, `||`, or `|`.
+- Do NOT use nested execution techniques such as `$(...)`, `` `...` ``, or multi-line command blocks (`\`).
+- Run exactly one atomic command per terminal tool invocation.
+- For multi-step workflows (e.g., git checkout, add, commit), invoke the shell execution tool separately for each command, waiting for the output of each before
+  calling the next.
