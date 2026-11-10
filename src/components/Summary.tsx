@@ -1,9 +1,13 @@
-import { ActionIcon, Box, Checkbox, Table } from "@mantine/core";
+import { ActionIcon, Box, Checkbox, Table, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconClipboardList } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
+import {
+  formatSummaryBudgetDepletion,
+  getOverlappingBudgetHours,
+} from "../utils/budget";
 import { filterTasksByDateRange } from "../utils/filters";
 import {
   formatDuration,
@@ -81,6 +85,7 @@ export function Summary() {
   const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
   const tasks = useEffortumStore((state) => state.tasks);
   const projects = useEffortumStore((state) => state.projects);
+  const budgets = useEffortumStore((state) => state.budgets);
   const selectedDateRange = useEffortumStore(
     (state) => state.selectedDateRange,
   );
@@ -167,39 +172,64 @@ export function Summary() {
             />
           </Table.Td>
         </Table.Tr>
-        {data.map((item) => (
-          <Table.Tr key={item.label}>
-            <Table.Td w={15} style={{ verticalAlign: "top" }}>
-              {!listByTasks ? (
-                <Box>
-                  <ActionIcon
-                    variant="filled"
-                    aria-label="Copy comments of project"
-                    size={20}
-                    onClick={() =>
-                      item.projectId &&
-                      copyTasksOfProjectToClipboard(item.projectId)
-                    }
-                    data-testid={`button-copy-comments-${item.label}`}
-                  >
-                    <IconClipboardList size={16} />
-                  </ActionIcon>
-                </Box>
-              ) : null}
-            </Table.Td>
-            <Table.Td w={50} style={{ verticalAlign: "top" }}>
-              <Box>{formatDuration(item.time)}</Box>
-              {showPercentages && (
-                <Box data-testid={`summary-percentage-${item.label}`}>
-                  {formatPercentage(item.time, timeSum)}
-                </Box>
-              )}
-            </Table.Td>
-            <Table.Td style={{ verticalAlign: "top" }}>
-              <Box>{item.label}</Box>
-            </Table.Td>
-          </Table.Tr>
-        ))}
+        {data.map((item) => {
+          const budgetHours =
+            !listByTasks && item.projectId
+              ? getOverlappingBudgetHours(
+                  budgets,
+                  item.projectId,
+                  selectedDateRange,
+                )
+              : 0;
+          const budgetDepletion =
+            budgetHours > 0
+              ? formatSummaryBudgetDepletion(item.time / 60, budgetHours)
+              : null;
+
+          return (
+            <Table.Tr key={item.label}>
+              <Table.Td w={15} style={{ verticalAlign: "top" }}>
+                {!listByTasks ? (
+                  <Box>
+                    <ActionIcon
+                      variant="filled"
+                      aria-label="Copy comments of project"
+                      size={20}
+                      onClick={() =>
+                        item.projectId &&
+                        copyTasksOfProjectToClipboard(item.projectId)
+                      }
+                      data-testid={`button-copy-comments-${item.label}`}
+                    >
+                      <IconClipboardList size={16} />
+                    </ActionIcon>
+                  </Box>
+                ) : null}
+              </Table.Td>
+              <Table.Td w={50} style={{ verticalAlign: "top" }}>
+                <Box>{formatDuration(item.time)}</Box>
+                {showPercentages && (
+                  <Box data-testid={`summary-percentage-${item.label}`}>
+                    {formatPercentage(item.time, timeSum)}
+                  </Box>
+                )}
+              </Table.Td>
+              <Table.Td style={{ verticalAlign: "top" }}>
+                <Box>{item.label}</Box>
+                {budgetDepletion && (
+                  <Tooltip label={budgetDepletion.tooltip}>
+                    <Box
+                      data-testid={`summary-budget-depletion-${item.label}`}
+                      style={{ width: "fit-content" }}
+                    >
+                      {budgetDepletion.label}
+                    </Box>
+                  </Tooltip>
+                )}
+              </Table.Td>
+            </Table.Tr>
+          );
+        })}
       </Table.Tbody>
       <Table.Tfoot h={60}>
         <Table.Tr data-testid="summary-sum-row">

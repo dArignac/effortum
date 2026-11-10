@@ -1,4 +1,5 @@
 import { ProjectBudget } from "@/models/ProjectBudget";
+import { normalizeDate } from "./date";
 import { calculatePercentage } from "./time";
 
 export const MAX_BUDGET_PURPOSE_LENGTH = 50;
@@ -66,4 +67,91 @@ export function formatBudgetMetrics(
   const percentage = calculatePercentage(safeSpentHours, safeBudgetedHours);
 
   return `${formatBudgetMetricNumber(safeSpentHours)}/${formatBudgetMetricNumber(safeBudgetedHours)} h (${formatBudgetMetricNumber(spentDays)}/${formatBudgetMetricNumber(budgetedDays)} days) · ${percentage}%`;
+}
+
+/**
+ * Calculates the sum of budget hours for a project whose date intervals overlap
+ * with the selected date range [startDate, endDate] (at day precision).
+ */
+export function getOverlappingBudgetHours(
+  budgets: ProjectBudget[],
+  projectId: string,
+  selectedDateRange: [string | null, string | null],
+): number {
+  if (!projectId || !budgets || budgets.length === 0) {
+    return 0;
+  }
+
+  const [rawStart, rawEnd] = selectedDateRange;
+  const startDay = rawStart ? normalizeDate(rawStart) : null;
+  const endDay = normalizeDate(rawEnd ?? rawStart);
+
+  const hasDateFilter = Boolean(startDay?.isValid() && endDay?.isValid());
+  const rangeStart = hasDateFilter
+    ? startDay!.isAfter(endDay!, "day")
+      ? endDay
+      : startDay
+    : null;
+  const rangeEnd = hasDateFilter
+    ? startDay!.isAfter(endDay!, "day")
+      ? startDay
+      : endDay
+    : null;
+
+  let totalHours = 0;
+  for (const budget of budgets) {
+    if (budget.projectId !== projectId) {
+      continue;
+    }
+
+    const budgetStart = normalizeDate(budget.startDate);
+    const budgetEnd = normalizeDate(budget.endDate);
+
+    if (!budgetStart?.isValid() || !budgetEnd?.isValid()) {
+      continue;
+    }
+
+    if (rangeStart && rangeEnd) {
+      const overlaps =
+        !budgetStart.isAfter(rangeEnd, "day") &&
+        !budgetEnd.isBefore(rangeStart, "day");
+
+      if (!overlaps) {
+        continue;
+      }
+    }
+
+    if (Number.isFinite(budget.hours) && budget.hours > 0) {
+      totalHours += budget.hours;
+    }
+  }
+
+  return totalHours;
+}
+
+export interface SummaryBudgetDepletion {
+  label: string;
+  tooltip: string;
+}
+
+/**
+ * Formats project budget depletion percentage label and detailed hover tooltip.
+ * Example label: "Spent: 75%"
+ * Example tooltip: "22.5/30 hours"
+ */
+export function formatSummaryBudgetDepletion(
+  spentHours: number,
+  budgetHours: number,
+): SummaryBudgetDepletion {
+  const safeSpentHours =
+    Number.isFinite(spentHours) && spentHours > 0 ? spentHours : 0;
+  const safeBudgetHours =
+    Number.isFinite(budgetHours) && budgetHours > 0 ? budgetHours : 0;
+
+  const percentage = calculatePercentage(safeSpentHours, safeBudgetHours);
+
+  return {
+    label: `Spent: ${percentage}%`,
+    tooltip: `${formatBudgetMetricNumber(safeSpentHours)}/${formatBudgetMetricNumber(safeBudgetHours)} hours`,
+  };
 }

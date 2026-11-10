@@ -3,6 +3,8 @@ import { ProjectBudget } from "@/models/ProjectBudget";
 import {
   formatBudgetMetricNumber,
   formatBudgetMetrics,
+  formatSummaryBudgetDepletion,
+  getOverlappingBudgetHours,
   sortProjectBudgetsNewestFirst,
 } from "./budget";
 
@@ -99,6 +101,160 @@ describe("budget utilities", () => {
     it("defaults workingHoursPerDay to 8 when non-positive and handles 0 budgeted hours safely", () => {
       expect(formatBudgetMetrics(16, 32, 0)).toBe("16/32 h (2/4 days) · 50%");
       expect(formatBudgetMetrics(0, 0, 8)).toBe("0/0 h (0/0 days) · 0%");
+    });
+  });
+
+  describe("getOverlappingBudgetHours", () => {
+    const projectABudgets: ProjectBudget[] = [
+      {
+        id: "b1",
+        projectId: "proj-a",
+        startDate: "2026-10-01",
+        endDate: "2026-12-31",
+        purpose: "Q4 Budget",
+        hours: 100,
+      },
+      {
+        id: "b2",
+        projectId: "proj-a",
+        startDate: "2026-09-15",
+        endDate: "2026-11-01",
+        purpose: "Autumn Transition",
+        hours: 30,
+      },
+      {
+        id: "b3",
+        projectId: "proj-other",
+        startDate: "2026-09-01",
+        endDate: "2026-12-31",
+        purpose: "Other Project Budget",
+        hours: 500,
+      },
+    ];
+
+    it("returns 0 for range before any budget starts (Example 1: 14.09.26 - 14.09.26)", () => {
+      expect(
+        getOverlappingBudgetHours(projectABudgets, "proj-a", [
+          "2026-09-14",
+          "2026-09-14",
+        ]),
+      ).toBe(0);
+    });
+
+    it("returns 30 for single-day range overlapping only second budget (Example 2: 15.09.26 - 15.09.26)", () => {
+      expect(
+        getOverlappingBudgetHours(projectABudgets, "proj-a", [
+          "2026-09-15",
+          "2026-09-15",
+        ]),
+      ).toBe(30);
+    });
+
+    it("returns 30 when end date is null in single-day selection", () => {
+      expect(
+        getOverlappingBudgetHours(projectABudgets, "proj-a", [
+          "2026-09-15",
+          null,
+        ]),
+      ).toBe(30);
+    });
+
+    it("returns 130 for range overlapping both budgets (Example 3: 01.10.26 - 07.10.26)", () => {
+      expect(
+        getOverlappingBudgetHours(projectABudgets, "proj-a", [
+          "2026-10-01",
+          "2026-10-07",
+        ]),
+      ).toBe(130);
+    });
+
+    it("returns 100 for range overlapping only first budget (Example 4: 02.11.26 - 31.12.26)", () => {
+      expect(
+        getOverlappingBudgetHours(projectABudgets, "proj-a", [
+          "2026-11-02",
+          "2026-12-31",
+        ]),
+      ).toBe(100);
+    });
+
+    it("sums all project budgets when date range is null", () => {
+      expect(
+        getOverlappingBudgetHours(projectABudgets, "proj-a", [null, null]),
+      ).toBe(130);
+    });
+
+    it("handles reversed start and end dates gracefully", () => {
+      expect(
+        getOverlappingBudgetHours(projectABudgets, "proj-a", [
+          "2026-10-07",
+          "2026-10-01",
+        ]),
+      ).toBe(130);
+    });
+
+    it("returns 0 when projectId does not match or budgets array is empty", () => {
+      expect(
+        getOverlappingBudgetHours(projectABudgets, "unknown-project", [
+          "2026-10-01",
+          "2026-10-07",
+        ]),
+      ).toBe(0);
+      expect(
+        getOverlappingBudgetHours([], "proj-a", ["2026-10-01", "2026-10-07"]),
+      ).toBe(0);
+    });
+  });
+
+  describe("formatSummaryBudgetDepletion", () => {
+    it("formats spent percentage and hover tooltip matching requirements", () => {
+      expect(formatSummaryBudgetDepletion(22.5, 30)).toEqual({
+        label: "Spent: 75%",
+        tooltip: "22.5/30 hours",
+      });
+      expect(formatSummaryBudgetDepletion(75, 100)).toEqual({
+        label: "Spent: 75%",
+        tooltip: "75/100 hours",
+      });
+      expect(formatSummaryBudgetDepletion(36, 88)).toEqual({
+        label: "Spent: 41%",
+        tooltip: "36/88 hours",
+      });
+    });
+
+    it("formats 0% when spent is 0 or negative", () => {
+      expect(formatSummaryBudgetDepletion(0, 30)).toEqual({
+        label: "Spent: 0%",
+        tooltip: "0/30 hours",
+      });
+      expect(formatSummaryBudgetDepletion(-5, 30)).toEqual({
+        label: "Spent: 0%",
+        tooltip: "0/30 hours",
+      });
+    });
+
+    it("formats depletion when spent exceeds budget (>100%)", () => {
+      expect(formatSummaryBudgetDepletion(150, 100)).toEqual({
+        label: "Spent: 150%",
+        tooltip: "150/100 hours",
+      });
+    });
+
+    it("handles 0 budget gracefully", () => {
+      expect(formatSummaryBudgetDepletion(10, 0)).toEqual({
+        label: "Spent: 0%",
+        tooltip: "10/0 hours",
+      });
+    });
+
+    it("formats decimals up to 2 places without trailing zeroes", () => {
+      expect(formatSummaryBudgetDepletion(1.5, 30)).toEqual({
+        label: "Spent: 5%",
+        tooltip: "1.5/30 hours",
+      });
+      expect(formatSummaryBudgetDepletion(3.3333, 10)).toEqual({
+        label: "Spent: 33%",
+        tooltip: "3.33/10 hours",
+      });
     });
   });
 });

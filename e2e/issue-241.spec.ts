@@ -63,10 +63,10 @@ test.describe("Issue #241: Make percentage value optional", () => {
     ).toBeVisible();
     await expect(
       page.getByTestId("summary-percentage-Project Alpha"),
-    ).toHaveText("33 %");
+    ).toHaveText("33%");
     await expect(
       page.getByTestId("summary-percentage-Project Beta"),
-    ).toHaveText("67 %");
+    ).toHaveText("67%");
 
     // Uncheck: hides percentages
     await checkbox.click();
@@ -100,10 +100,10 @@ test.describe("Issue #241: Make percentage value optional", () => {
     await page.getByTestId("checkbox-show-percentages").click();
     await expect(page.getByTestId("summary-percentage-Task One")).toBeVisible();
     await expect(page.getByTestId("summary-percentage-Task One")).toHaveText(
-      "33 %",
+      "33%",
     );
     await expect(page.getByTestId("summary-percentage-Task Two")).toHaveText(
-      "67 %",
+      "67%",
     );
 
     // Disable percentages
