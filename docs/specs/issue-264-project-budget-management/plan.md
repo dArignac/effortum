@@ -12,7 +12,7 @@ flowchart TD
   Store --> Page["src/pages/BudgetsPage.tsx"]
   Utils --> Page
   Page --> Route["src/routes/index.tsx"]
-  Route --> E2E["e2e/issue-264.spec.ts"]
+  Route --> E2E["e2e/budgets.spec.ts"]
 ```
 
 ## 2. Implementation Order
@@ -41,8 +41,8 @@ flowchart TD
      - Delete Budget Confirmation `<Modal>` (`data-testid="modal-delete-budget"`).
    - Add `Budgets` (`data-testid="nav-budgets"`) to `NAV_ITEMS` in `src/routes/index.tsx`.
 5. **End-to-End Verification & Architecture Docs:**
-   - Update `e2e/issue-264.spec.ts` to verify `MAX_BUDGET_HOURS` (`17520`) validation, uniform column widths across rows with small vs. large budgets,
-     per-budget metrics, editing, and delete confirmation modal.
+   - Update `e2e/budgets.spec.ts` to verify `MAX_BUDGET_HOURS` (`17520`) validation, uniform column widths across rows with small vs. large budgets, per-budget
+     metrics, editing, and delete confirmation modal.
    - Update `docs/architecture.md` to document the `17520` hours maximum and fixed-width row columns.
 
 ## 3. Risks and Mitigations
@@ -56,4 +56,4 @@ flowchart TD
 ## 4. Verification Checkpoints
 
 - After Task 8: `pnpm test src/store/slices/budgetSlice.test.ts` and `pnpm tsc --noEmit` pass.
-- After Task 9: `pnpm test:e2e e2e/issue-264.spec.ts` passes headless.
+- After Task 9: `pnpm test:e2e e2e/budgets.spec.ts` passes headless.

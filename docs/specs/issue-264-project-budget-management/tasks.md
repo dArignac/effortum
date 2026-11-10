@@ -34,12 +34,12 @@
   - Files: `src/pages/BudgetsPage.tsx`, `src/routes/index.tsx`
 
 - [x] Task 5: Add Playwright E2E tests and update architecture documentation
-  - Description: Create `e2e/issue-264.spec.ts` testing end-to-end budget creation, newest-first sorting, spent vs. budgeted hours/days/percent display, editing
-    a budget, and deleting a budget. Update `docs/architecture.md`.
-  - Acceptance: Playwright E2E test suite `e2e/issue-264.spec.ts` passes headless and `docs/architecture.md` reflects the new `PROJECT_BUDGET` table,
+  - Description: Create `e2e/budgets.spec.ts` testing end-to-end budget creation, newest-first sorting, spent vs. budgeted hours/days/percent display, editing a
+    budget, and deleting a budget. Update `docs/architecture.md`.
+  - Acceptance: Playwright E2E test suite `e2e/budgets.spec.ts` passes headless and `docs/architecture.md` reflects the new `PROJECT_BUDGET` table,
     `budgetSlice`, and `BudgetsPage`.
-  - Verify: `pnpm test:e2e e2e/issue-264.spec.ts`
-  - Files: `e2e/issue-264.spec.ts`, `docs/architecture.md`
+  - Verify: `pnpm test:e2e e2e/budgets.spec.ts`
+  - Files: `e2e/budgets.spec.ts`, `docs/architecture.md`
 
 - [x] Task 6: Remove overall project budget line and add delete confirmation modal in `BudgetsPage`
   - Description: In `src/pages/BudgetsPage.tsx`, remove the `Overall Project Budget` summary box (`project-budget-overall-summary`) and unused overall
@@ -51,11 +51,11 @@
   - Files: `src/pages/BudgetsPage.tsx`
 
 - [x] Task 7: Update Playwright E2E test and architecture documentation for delete confirmation and removed overall budget line
-  - Description: Update `e2e/issue-264.spec.ts` to assert that `project-budget-overall-summary` is not present and to verify canceling and confirming budget
+  - Description: Update `e2e/budgets.spec.ts` to assert that `project-budget-overall-summary` is not present and to verify canceling and confirming budget
     deletion via `modal-delete-budget`. Update `docs/architecture.md` to reflect per-budget metrics and delete confirmation.
-  - Acceptance: `pnpm test:e2e e2e/issue-264.spec.ts` passes headless.
-  - Verify: `pnpm test:e2e e2e/issue-264.spec.ts`
-  - Files: `e2e/issue-264.spec.ts`, `docs/architecture.md`
+  - Acceptance: `pnpm test:e2e e2e/budgets.spec.ts` passes headless.
+  - Verify: `pnpm test:e2e e2e/budgets.spec.ts`
+  - Files: `e2e/budgets.spec.ts`, `docs/architecture.md`
 
 - [x] Task 8: Enforce maximum budget hours (`17520`) and uniform column widths in `BudgetsPage`
   - Description: Export `MAX_BUDGET_HOURS = 17520` in `src/utils/budget.ts`, validate `hours <= MAX_BUDGET_HOURS` (`BUDGET_HOURS_TOO_HIGH`) in
@@ -67,9 +67,9 @@
   - Files: `src/utils/budget.ts`, `src/store/slices/budgetSlice.ts`, `src/store/slices/budgetSlice.test.ts`, `src/pages/BudgetsPage.tsx`
 
 - [x] Task 9: Verify uniform column widths and max budget hours in E2E tests and update architecture docs
-  - Description: Update `e2e/issue-264.spec.ts` to verify that budget rows with different budget sizes (e.g. `8` vs `17520` hours) have identical column widths
+  - Description: Update `e2e/budgets.spec.ts` to verify that budget rows with different budget sizes (e.g. `8` vs `17520` hours) have identical column widths
     across all columns (`startDate`, `endDate`, `purpose`, `hours`, `metrics`, `Save`, `Delete`) and that budgets `> 17520` hours are rejected. Update
     `docs/architecture.md`.
-  - Acceptance: `pnpm test:e2e e2e/issue-264.spec.ts` passes headless.
-  - Verify: `pnpm test:e2e e2e/issue-264.spec.ts`
-  - Files: `e2e/issue-264.spec.ts`, `docs/architecture.md`
+  - Acceptance: `pnpm test:e2e e2e/budgets.spec.ts` passes headless.
+  - Verify: `pnpm test:e2e e2e/budgets.spec.ts`
+  - Files: `e2e/budgets.spec.ts`, `docs/architecture.md`

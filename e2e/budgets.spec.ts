@@ -19,7 +19,7 @@ async function selectProjectOnBudgetsPage(page: Page, projectName: string) {
   await page.getByRole("option", { name: projectName }).click();
 }
 
-test.describe("Issue #264: Project Budget Management", () => {
+test.describe("Budgets Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();

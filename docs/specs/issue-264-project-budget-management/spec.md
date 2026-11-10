@@ -67,7 +67,7 @@ Enable users to define and manage time-bounded budgets for projects so they can 
 - `src/pages/BudgetsPage.tsx` (new): Dedicated Budget Management page component (max 17520 hours enforcement, uniform column widths across rows, per-row
   metrics, and delete confirmation modal).
 - `src/routes/index.tsx` (modified): Add `Budgets` navigation item (`nav-budgets`).
-- `e2e/issue-264.spec.ts` (new): End-to-end Playwright verification of project budget management, including max 17520 hours validation, uniform column widths
+- `e2e/budgets.spec.ts` (new): End-to-end Playwright verification of project budget management, including max 17520 hours validation, uniform column widths
   across rows with different budget sizes, delete confirmation modal, and absence of overall budget summary line.
 - `docs/architecture.md` (modified): Document `PROJECT_BUDGET` entity, `budgetSlice`, and `BudgetsPage`.
 
@@ -81,7 +81,7 @@ Enable users to define and manage time-bounded budgets for projects so they can 
 - **Single Running Task Invariant:** Untouched; task start/stop behavior is not modified, and only completed tasks (`Boolean(task.timeEnd)`) count toward spent
   hours.
 - **Testing Requirements:** Unit tests in `src/utils/budget.test.ts`, `src/store/slices/budgetSlice.test.ts`, `src/store/slices/projectSlice.test.ts`,
-  `scripts/check-invariants.test.ts`, and Playwright E2E tests in `e2e/issue-264.spec.ts`.
+  `scripts/check-invariants.test.ts`, and Playwright E2E tests in `e2e/budgets.spec.ts`.
 
 ## Boundaries
 
@@ -99,4 +99,4 @@ Enable users to define and manage time-bounded budgets for projects so they can 
 - Each budget row displays spent vs. budgeted hours, days in brackets `(X/Y days)` based on `workingHoursPerDay`, and depletion percentage (`Z%`), with uniform
   column widths across all rows regardless of budget size.
 - Deleting a project deletes or moves its budgets matching the selected task action.
-- `pnpm check:invariants`, `pnpm tsc --noEmit`, `pnpm test`, and `pnpm test:e2e e2e/issue-264.spec.ts` all pass with zero errors.
+- `pnpm check:invariants`, `pnpm tsc --noEmit`, `pnpm test`, and `pnpm test:e2e e2e/budgets.spec.ts` all pass with zero errors.

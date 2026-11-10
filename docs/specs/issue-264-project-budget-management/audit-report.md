@@ -8,7 +8,7 @@
 | ------------------------ | -------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------- |
 | Architectural Invariants | `pnpm check:invariants`                | `0`       | Passed (`no-direct-dexie-in-ui`, `enforce-dayjs`, `dexie-migration-immutability`, `no-suppressed-tests-or-types`) |
 | Unit Tests               | `pnpm test`                            | `0`       | Passed (14 test files, 125 tests)                                                                                 |
-| Issue #264 E2E Tests     | `pnpm test:e2e e2e/issue-264.spec.ts`  | `0`       | Passed (1 test)                                                                                                   |
+| Issue #264 E2E Tests     | `pnpm test:e2e e2e/budgets.spec.ts`    | `0`       | Passed (1 test)                                                                                                   |
 | Navigation E2E Tests     | `pnpm test:e2e e2e/navigation.spec.ts` | `0`       | Passed (5 tests)                                                                                                  |
 | TypeScript Typecheck     | `pnpm tsc --noEmit`                    | `0`       | Passed (0 errors)                                                                                                 |
 | Code Formatting          | `pnpm prettier --check .`              | `0`       | Passed                                                                                                            |
@@ -41,11 +41,11 @@
      calls were introduced.
 
 4. **Test Integrity & Coverage (`src/utils/budget.test.ts`, `src/store/slices/budgetSlice.test.ts`, `src/store/slices/projectSlice.test.ts`,
-   `e2e/issue-264.spec.ts`):**
+   `e2e/budgets.spec.ts`):**
    - Verified no existing tests were deleted, skipped, or had assertions weakened.
    - Verified unit tests cover newest-first budget sorting, metric formatting (`spent/budgeted h (X/Y days) · Z%`), store slice CRUD validation (including max
      50-character `purpose` and `0 < hours <= 17520`), date-range task hour summation, and project deletion budget cleanup/migration.
-   - Verified E2E test `e2e/issue-264.spec.ts` covers rejecting `> 17520` hours on add and edit, adding multiple budgets (`17520h` and `16h`), newest-first
+   - Verified E2E test `e2e/budgets.spec.ts` covers rejecting `> 17520` hours on add and edit, adding multiple budgets (`17520h` and `16h`), newest-first
      sorting, uniform column widths across rows of different budget sizes, absence of the overall budget summary line, per-budget metrics, editing, persistence
      across reload, and budget deletion via the confirmation modal (testing both cancel and confirm flows).
 
