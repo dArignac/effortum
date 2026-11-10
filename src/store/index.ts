@@ -1,4 +1,5 @@
 import { db } from "@/store/db";
+import { createBudgetSlice } from "@/store/slices/budgetSlice";
 import { createCommentSlice } from "@/store/slices/commentSlice";
 import { createLoadingMigrationSlice } from "@/store/slices/loadingMigrationSlice";
 import { createProjectSlice } from "@/store/slices/projectSlice";
@@ -15,6 +16,7 @@ export const storeCreator = (set: StoreSet, get: StoreGet): EffortumStore => ({
   ...createUiSlice(set, get),
   ...createSettingsOvertimeSlice(set, get),
   ...createProjectSlice(set, get),
+  ...createBudgetSlice(set, get),
   ...createTaskSlice(set, get),
   ...createCommentSlice(set, get),
   ...createLoadingMigrationSlice(set, get),

@@ -1,5 +1,6 @@
 import { Overtime } from "@/models/Overtime";
 import { Project } from "@/models/Project";
+import { ProjectBudget } from "@/models/ProjectBudget";
 import { Settings } from "@/models/Settings";
 import { Task } from "@/models/Task";
 
@@ -13,6 +14,14 @@ export type TaskUpdateInput = Partial<Omit<Task, "projectId">> & {
   projectName?: string;
 };
 
+export type ProjectBudgetInput = Omit<ProjectBudget, "id"> & {
+  id?: string;
+};
+
+export type ProjectBudgetUpdateInput = Partial<
+  Omit<ProjectBudget, "id" | "projectId">
+>;
+
 export type DeleteProjectOptions =
   | { taskAction: "delete" }
   | { taskAction: "move"; destinationProjectId: string };
@@ -22,6 +31,7 @@ export interface EffortumStore {
   projects: Project[];
   overtime: Overtime[];
   settings: Settings[];
+  budgets: ProjectBudget[];
   selectedDateRange: [string | null, string | null];
   endTimeOfLastStoppedTask: string | null;
   isDataLoading: boolean;
@@ -68,6 +78,18 @@ export interface EffortumStore {
   updateSettings: (roundToNearest5Minutes: boolean) => Promise<void>;
 
   getProjectBookedTimeHours: (projectId: string) => Promise<number>;
+
+  addProjectBudget: (budget: ProjectBudgetInput) => Promise<void>;
+  updateProjectBudget: (
+    id: string,
+    updates: ProjectBudgetUpdateInput,
+  ) => Promise<void>;
+  deleteProjectBudget: (id: string) => Promise<void>;
+  getProjectBookedTimeHoursInRange: (
+    projectId: string,
+    startDate: string,
+    endDate: string,
+  ) => Promise<number>;
 }
 
 export interface StoreSet {

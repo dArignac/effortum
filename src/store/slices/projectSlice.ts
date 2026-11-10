@@ -90,36 +90,56 @@ export const createProjectSlice = (set: StoreSet, get: StoreGet) => ({
         throw new Error("DESTINATION_PROJECT_NOT_FOUND");
       }
 
-      await db.transaction("rw", db.projects, db.tasks, async () => {
-        const tasksToMove = await db.tasks
-          .where("projectId")
-          .equals(id)
-          .toArray();
+      await db.transaction(
+        "rw",
+        db.projects,
+        db.tasks,
+        db.budgets,
+        async () => {
+          const [tasksToMove, budgetsToMove] = await Promise.all([
+            db.tasks.where("projectId").equals(id).toArray(),
+            db.budgets.where("projectId").equals(id).toArray(),
+          ]);
 
-        await Promise.all(
-          tasksToMove.map((task) =>
-            db.tasks.update(task.id, {
-              projectId: destinationProject.id,
-              project: destinationProject.name,
-            }),
-          ),
-        );
+          await Promise.all([
+            ...tasksToMove.map((task) =>
+              db.tasks.update(task.id, {
+                projectId: destinationProject.id,
+                project: destinationProject.name,
+              }),
+            ),
+            ...budgetsToMove.map((budget) =>
+              db.budgets.update(budget.id, {
+                projectId: destinationProject.id,
+              }),
+            ),
+          ]);
 
-        await db.projects.delete(id);
-      });
+          await db.projects.delete(id);
+        },
+      );
     } else if (options?.taskAction === "delete") {
-      await db.transaction("rw", db.projects, db.tasks, async () => {
-        await db.tasks.where("projectId").equals(id).delete();
-        await db.projects.delete(id);
-      });
+      await db.transaction(
+        "rw",
+        db.projects,
+        db.tasks,
+        db.budgets,
+        async () => {
+          await db.tasks.where("projectId").equals(id).delete();
+          await db.budgets.where("projectId").equals(id).delete();
+          await db.projects.delete(id);
+        },
+      );
     } else {
+      await db.budgets.where("projectId").equals(id).delete();
       await db.projects.delete(id);
     }
 
-    const [projects, tasks] = await Promise.all([
+    const [projects, tasks, budgets] = await Promise.all([
       db.projects.toArray(),
       db.tasks.toArray(),
+      db.budgets.toArray(),
     ]);
-    set({ projects, tasks });
+    set({ projects, tasks, budgets });
   },
 });

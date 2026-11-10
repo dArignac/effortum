@@ -1,6 +1,7 @@
 import Dexie, { Table, Transaction } from "dexie";
 import { Overtime } from "./models/Overtime";
 import { Project } from "./models/Project";
+import { ProjectBudget } from "./models/ProjectBudget";
 import { Settings } from "./models/Settings";
 import { Task } from "./models/Task";
 
@@ -9,6 +10,7 @@ export class EffortumDB extends Dexie {
   projects!: Table<Project>;
   overtime!: Table<Overtime>;
   settings!: Table<Settings>;
+  budgets!: Table<ProjectBudget>;
 
   private async backfillProjectRelations(tx: Transaction) {
     const projectsTable = tx.table("projects");
@@ -106,6 +108,14 @@ export class EffortumDB extends Dexie {
       projects: "++id, &name",
       overtime: "&id, currentBalance, workingHoursPerDay",
       settings: "&id, roundToNearest5Minutes",
+    });
+
+    this.version(8).stores({
+      tasks: "++id, date, timeStart, timeEnd, projectId, project",
+      projects: "++id, &name",
+      overtime: "&id, currentBalance, workingHoursPerDay",
+      settings: "&id, roundToNearest5Minutes",
+      budgets: "&id, projectId, startDate, endDate, purpose, hours",
     });
   }
 }

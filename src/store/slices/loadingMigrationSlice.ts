@@ -77,12 +77,14 @@ export const createLoadingMigrationSlice = (set: StoreSet, get: StoreGet) => ({
 
       // Load only initial data for today's date
       const today = dayjs().format("YYYY-MM-DD");
-      const [todayTasks, projects, overtime, settings] = await Promise.all([
-        db.tasks.where("date").between(today, today, true, true).toArray(),
-        db.projects.orderBy("name").toArray(),
-        db.overtime.toArray(),
-        db.settings.toArray(),
-      ]);
+      const [todayTasks, projects, overtime, settings, budgets] =
+        await Promise.all([
+          db.tasks.where("date").between(today, today, true, true).toArray(),
+          db.projects.orderBy("name").toArray(),
+          db.overtime.toArray(),
+          db.settings.toArray(),
+          db.budgets ? db.budgets.toArray() : Promise.resolve(undefined),
+        ]);
 
       // Query any active running tasks (unclosed tasks with no timeEnd)
       const activeTasks = await db.tasks.filter(isRunningTask).toArray();
@@ -100,6 +102,7 @@ export const createLoadingMigrationSlice = (set: StoreSet, get: StoreGet) => ({
         projects,
         overtime,
         settings,
+        ...(budgets !== undefined ? { budgets } : {}),
       });
     } finally {
       set({ isDataLoading: false });
