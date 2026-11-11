@@ -281,6 +281,68 @@ describe("createBudgetSlice", () => {
     expect(hours).toBe(4.5);
   });
 
+  it("getProjectBudgetSpentHours queries tasks from db and calculates overlapping spent hours", async () => {
+    const set = vi.fn();
+    const projectBudgets = [
+      {
+        id: "b1",
+        projectId: "p1",
+        startDate: "2026-10-01",
+        endDate: "2026-10-30",
+        purpose: "B-1",
+        hours: 100,
+      },
+      {
+        id: "b2",
+        projectId: "p1",
+        startDate: "2026-08-01",
+        endDate: "2026-10-15",
+        purpose: "B-2",
+        hours: 50,
+      },
+    ];
+    const get = vi.fn(() => ({
+      projects: [{ id: "p1", name: "Alpha" }],
+      budgets: projectBudgets,
+    }));
+    const slice = createBudgetSlice(set as never, get as never);
+
+    mockDb.tasks.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([
+          {
+            id: "t1",
+            projectId: "p1",
+            date: "2026-08-10",
+            timeStart: "08:00",
+            timeEnd: "13:00",
+          },
+          {
+            id: "t2",
+            projectId: "p1",
+            date: "2026-09-25",
+            timeStart: "08:00",
+            timeEnd: "18:00",
+          },
+          {
+            id: "t3",
+            projectId: "p1",
+            date: "2026-10-01",
+            timeStart: "09:00",
+            timeEnd: "11:00",
+          },
+        ]),
+      }),
+    });
+
+    const spent = await slice.getProjectBudgetSpentHours("p1", [
+      "2026-10-01",
+      "2026-10-01",
+    ]);
+
+    expect(spent).toBe(17);
+  });
+
   it("loads budgets in loadFromIndexedDb on startup", async () => {
     const set = vi.fn();
     const state = {

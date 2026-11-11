@@ -90,6 +90,10 @@ export interface EffortumStore {
     startDate: string,
     endDate: string,
   ) => Promise<number>;
+  getProjectBudgetSpentHours: (
+    projectId: string,
+    selectedDateRange: [string | null, string | null],
+  ) => Promise<number>;
 }
 
 export interface StoreSet {

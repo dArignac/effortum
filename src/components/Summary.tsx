@@ -1,10 +1,11 @@
 import { ActionIcon, Box, Checkbox, Table, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconClipboardList } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
 import {
+  calculateOverlappingBudgetSpentHours,
   formatSummaryBudgetDepletion,
   getOverlappingBudgetHours,
 } from "../utils/budget";
@@ -83,19 +84,32 @@ export function Summary() {
   const [listByTasks, setListByTasks] = useState(false);
   const [showPercentages, setShowPercentages] = useState(false);
   const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
+  const [spentHoursByProject, setSpentHoursByProject] = useState<
+    Record<string, number>
+  >({});
   const tasks = useEffortumStore((state) => state.tasks);
   const projects = useEffortumStore((state) => state.projects);
   const budgets = useEffortumStore((state) => state.budgets);
   const selectedDateRange = useEffortumStore(
     (state) => state.selectedDateRange,
   );
-
-  const filteredTasks = tasks.filter(filterTasksByDateRange(selectedDateRange));
-  const projectNameById = new Map(
-    projects.map((project) => [project.id, project.name]),
+  const getProjectBudgetSpentHours = useEffortumStore(
+    (state) => state.getProjectBudgetSpentHours,
   );
 
-  const data = buildSummaryItems(filteredTasks, projectNameById, listByTasks);
+  const filteredTasks = useMemo(
+    () => tasks.filter(filterTasksByDateRange(selectedDateRange)),
+    [tasks, selectedDateRange],
+  );
+  const projectNameById = useMemo(
+    () => new Map(projects.map((project) => [project.id, project.name])),
+    [projects],
+  );
+
+  const data = useMemo(
+    () => buildSummaryItems(filteredTasks, projectNameById, listByTasks),
+    [filteredTasks, projectNameById, listByTasks],
+  );
 
   const timeSum = data.reduce((sum, item) => sum + item.time, 0);
   const runningTasks = filteredTasks.filter(isRunningTask);
@@ -131,6 +145,44 @@ export function Summary() {
       )
     : 0;
   const timeSumIncludingRunning = timeSum + runningDuration;
+
+  useEffect(() => {
+    let isMounted = true;
+    const projectIds = Array.from(
+      new Set(
+        data
+          .map((item) => item.projectId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
+
+    if (projectIds.length === 0) {
+      return;
+    }
+
+    for (const projectId of projectIds) {
+      getProjectBudgetSpentHours(projectId, selectedDateRange)
+        .then((spentHours) => {
+          if (!isMounted) return;
+          setSpentHoursByProject((prev) => {
+            if (prev[projectId] === spentHours) {
+              return prev;
+            }
+            return {
+              ...prev,
+              [projectId]: spentHours,
+            };
+          });
+        })
+        .catch((error) => {
+          console.error("Failed to load budget spent hours:", error);
+        });
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [data, selectedDateRange, budgets, tasks, getProjectBudgetSpentHours]);
 
   const copyTasksOfProjectToClipboard = (projectId: string) => {
     const comments = new Set<string>();
@@ -181,9 +233,25 @@ export function Summary() {
                   selectedDateRange,
                 )
               : 0;
+
+          const inMemorySpent =
+            !listByTasks && item.projectId && budgetHours > 0
+              ? calculateOverlappingBudgetSpentHours(
+                  budgets,
+                  tasks,
+                  item.projectId,
+                  selectedDateRange,
+                )
+              : 0;
+
+          const spentHours =
+            item.projectId && item.projectId in spentHoursByProject
+              ? spentHoursByProject[item.projectId]
+              : inMemorySpent;
+
           const budgetDepletion =
             budgetHours > 0
-              ? formatSummaryBudgetDepletion(item.time / 60, budgetHours)
+              ? formatSummaryBudgetDepletion(spentHours, budgetHours)
               : null;
 
           return (
