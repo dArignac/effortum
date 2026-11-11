@@ -135,8 +135,27 @@ export interface SummaryBudgetDepletion {
 }
 
 /**
+ * Formats a percentage with at most 1 decimal place (e.g. "1.5%" or "17%").
+ * Returns "0%" when total <= 0 or part <= 0.
+ */
+export function formatDepletionPercentage(part: number, total: number): string {
+  if (
+    !Number.isFinite(total) ||
+    !Number.isFinite(part) ||
+    total <= 0 ||
+    part <= 0
+  ) {
+    return "0%";
+  }
+
+  const percentage = (part / total) * 100;
+  const rounded = Math.round((percentage + Number.EPSILON) * 10) / 10;
+  return `${rounded}%`;
+}
+
+/**
  * Formats project budget depletion percentage label and detailed hover tooltip.
- * Example label: "Spent: 75%"
+ * Example label: "Budget: 75%"
  * Example tooltip: "22.5/30 hours"
  */
 export function formatSummaryBudgetDepletion(
@@ -148,10 +167,10 @@ export function formatSummaryBudgetDepletion(
   const safeBudgetHours =
     Number.isFinite(budgetHours) && budgetHours > 0 ? budgetHours : 0;
 
-  const percentage = calculatePercentage(safeSpentHours, safeBudgetHours);
+  const percentage = formatDepletionPercentage(safeSpentHours, safeBudgetHours);
 
   return {
-    label: `Spent: ${percentage}%`,
+    label: `Budget: ${percentage}`,
     tooltip: `${formatBudgetMetricNumber(safeSpentHours)}/${formatBudgetMetricNumber(safeBudgetHours)} hours`,
   };
 }

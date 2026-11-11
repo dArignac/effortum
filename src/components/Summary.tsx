@@ -165,7 +165,7 @@ export function Summary() {
             />
             <Checkbox
               data-testid="checkbox-show-percentages"
-              label="Show percentages"
+              label="Project allocation (%)"
               mb={20}
               checked={showPercentages}
               onChange={() => setShowPercentages((prev) => !prev)}

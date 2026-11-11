@@ -3,6 +3,7 @@ import { ProjectBudget } from "@/models/ProjectBudget";
 import {
   formatBudgetMetricNumber,
   formatBudgetMetrics,
+  formatDepletionPercentage,
   formatSummaryBudgetDepletion,
   getOverlappingBudgetHours,
   sortProjectBudgetsNewestFirst,
@@ -205,54 +206,87 @@ describe("budget utilities", () => {
     });
   });
 
+  describe("formatDepletionPercentage", () => {
+    it("formats 0% when total is 0 or negative", () => {
+      expect(formatDepletionPercentage(0, 0)).toBe("0%");
+      expect(formatDepletionPercentage(50, 0)).toBe("0%");
+      expect(formatDepletionPercentage(50, -10)).toBe("0%");
+    });
+
+    it("formats 0% when part is 0 or negative", () => {
+      expect(formatDepletionPercentage(0, 100)).toBe("0%");
+      expect(formatDepletionPercentage(-10, 100)).toBe("0%");
+    });
+
+    it("formats exact integers without decimal places", () => {
+      expect(formatDepletionPercentage(17, 100)).toBe("17%");
+      expect(formatDepletionPercentage(75, 100)).toBe("75%");
+      expect(formatDepletionPercentage(100, 100)).toBe("100%");
+    });
+
+    it("formats at most 1 decimal place when needed", () => {
+      expect(formatDepletionPercentage(1.5, 100)).toBe("1.5%");
+      expect(formatDepletionPercentage(1, 3)).toBe("33.3%");
+      expect(formatDepletionPercentage(36, 88)).toBe("40.9%");
+    });
+  });
+
   describe("formatSummaryBudgetDepletion", () => {
-    it("formats spent percentage and hover tooltip matching requirements", () => {
+    it("formats budget depletion percentage and hover tooltip matching requirements", () => {
       expect(formatSummaryBudgetDepletion(22.5, 30)).toEqual({
-        label: "Spent: 75%",
+        label: "Budget: 75%",
         tooltip: "22.5/30 hours",
       });
       expect(formatSummaryBudgetDepletion(75, 100)).toEqual({
-        label: "Spent: 75%",
+        label: "Budget: 75%",
         tooltip: "75/100 hours",
       });
       expect(formatSummaryBudgetDepletion(36, 88)).toEqual({
-        label: "Spent: 41%",
+        label: "Budget: 40.9%",
         tooltip: "36/88 hours",
+      });
+      expect(formatSummaryBudgetDepletion(1.5, 100)).toEqual({
+        label: "Budget: 1.5%",
+        tooltip: "1.5/100 hours",
+      });
+      expect(formatSummaryBudgetDepletion(17, 100)).toEqual({
+        label: "Budget: 17%",
+        tooltip: "17/100 hours",
       });
     });
 
     it("formats 0% when spent is 0 or negative", () => {
       expect(formatSummaryBudgetDepletion(0, 30)).toEqual({
-        label: "Spent: 0%",
+        label: "Budget: 0%",
         tooltip: "0/30 hours",
       });
       expect(formatSummaryBudgetDepletion(-5, 30)).toEqual({
-        label: "Spent: 0%",
+        label: "Budget: 0%",
         tooltip: "0/30 hours",
       });
     });
 
     it("formats depletion when spent exceeds budget (>100%)", () => {
       expect(formatSummaryBudgetDepletion(150, 100)).toEqual({
-        label: "Spent: 150%",
+        label: "Budget: 150%",
         tooltip: "150/100 hours",
       });
     });
 
     it("handles 0 budget gracefully", () => {
       expect(formatSummaryBudgetDepletion(10, 0)).toEqual({
-        label: "Spent: 0%",
+        label: "Budget: 0%",
         tooltip: "10/0 hours",
       });
     });
 
-    it("formats decimals up to 2 places without trailing zeroes", () => {
+    it("formats decimals up to 2 places without trailing zeroes in tooltip and 1 decimal in label", () => {
       expect(formatSummaryBudgetDepletion(1.5, 30)).toEqual({
-        label: "Spent: 5%",
+        label: "Budget: 5%",
         tooltip: "1.5/30 hours",
       });
       expect(formatSummaryBudgetDepletion(3.3333, 10)).toEqual({
-        label: "Spent: 33%",
+        label: "Budget: 33.3%",
         tooltip: "3.33/10 hours",
       });
     });

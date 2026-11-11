@@ -18,10 +18,12 @@ flowchart TD
 2. **Date-Range Overlapping Budget Calculation & Formatting (`src/utils/budget.ts`):**
    - Implement `getOverlappingBudgetHours(budgets, projectId, selectedDateRange)` using `normalizeDate` (`dayjs`) to sum `budget.hours` for all budgets of
      `projectId` where `budgetStart <= rangeEnd` and `budgetEnd >= rangeStart` (at day granularity).
-   - Implement `formatSummaryBudgetDepletion(spentHours, budgetHours)` returning `{ label: "Spent: X%", tooltip: "X/Y hours" }`.
-   - Add unit tests in `src/utils/budget.test.ts` covering all 4 date-range examples from #258/#265.
+   - Implement `formatSummaryBudgetDepletion(spentHours, budgetHours)` returning `{ label: "Budget: X%", tooltip: "X/Y hours" }` using
+     `formatDepletionPercentage` (at most 1 decimal place, e.g. `1.5%` or `17%`).
+   - Add unit tests in `src/utils/budget.test.ts` covering all 4 date-range examples from #258/#265 and decimal rounding.
 3. **Summary Panel Depletion Display & Tooltip (`src/components/Summary.tsx`):**
    - Subscribe to `budgets` from `useEffortumStore`.
+   - Rename checkbox label "Show percentages" to "Project allocation (%)".
    - For each summary item when `!listByTasks && item.projectId`:
      - Compute `budgetHours = getOverlappingBudgetHours(budgets, item.projectId, selectedDateRange)`.
      - When `budgetHours > 0`, render
@@ -30,9 +32,10 @@ flowchart TD
 4. **End-to-End Verification & Architecture Documentation:**
    - Add `e2e/summary-budget-depletion.spec.ts` verifying:
      - Overlapping budget summation across different date ranges (`Sum = 0`, single budget, overlapping budgets).
-     - `Spent: X%` layout with and without `Show percentages` checked.
+     - `Budget: X%` layout with and without `Project allocation (%)` checked.
      - `X/Y hours` tooltip on hover.
-     - Hiding `Spent: X%` when `List by task` is checked.
+     - Hiding `Budget: X%` when `List by task` is checked.
+     - Decimal depletion percentage formatting (e.g. `Budget: 1.5%`).
    - Update `docs/architecture.md` to document summary panel budget depletion.
 
 ## 3. Risks and Mitigations

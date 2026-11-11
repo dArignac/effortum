@@ -10,21 +10,22 @@
 - [x] Task 2: Add date-range overlapping budget calculation and summary depletion formatting utilities
   - Description: Add `getOverlappingBudgetHours` and `formatSummaryBudgetDepletion` to `src/utils/budget.ts` and unit tests in `src/utils/budget.test.ts`
     covering the date-range overlap examples from issue #265.
-  - Acceptance: Unit tests verify `0`, `30`, `130`, and `100` hour sums across the issue's 4 example date ranges and format `Spent: X%` and `X/Y hours`.
+  - Acceptance: Unit tests verify `0`, `30`, `130`, and `100` hour sums across the issue's 4 example date ranges and format `Budget: X%` (max 1 decimal place,
+    e.g. `1.5%` or `17%`) and `X/Y hours`.
   - Verify: `pnpm test src/utils/budget.test.ts`
   - Files: `src/utils/budget.ts`, `src/utils/budget.test.ts`
 
-- [x] Task 3: Render project budget depletion and hover tooltip in `Summary.tsx`
-  - Description: Update `src/components/Summary.tsx` to compute overlapping budget hours per project for `selectedDateRange`, render `Spent: X%`
-    (`data-testid="summary-budget-depletion-<label>"`) below the project name when `!listByTasks` and budget sum `> 0`, and wrap it in a Mantine `Tooltip`
-    showing `X/Y hours`.
+- [x] Task 3: Render project budget depletion, hover tooltip, and rename checkbox in `Summary.tsx`
+  - Description: Update `src/components/Summary.tsx` to compute overlapping budget hours per project for `selectedDateRange`, render `Budget: X%`
+    (`data-testid="summary-budget-depletion-<label>"`) below the project name when `!listByTasks` and budget sum `> 0`, wrap it in a Mantine `Tooltip` showing
+    `X/Y hours`, and rename the "Show percentages" checkbox to "Project allocation (%)".
   - Acceptance: `pnpm tsc --noEmit` and `pnpm check:invariants` pass with zero errors.
   - Verify: `pnpm tsc --noEmit`
   - Files: `src/components/Summary.tsx`
 
 - [x] Task 4: Add Playwright E2E test for summary budget depletion and update architecture documentation
   - Description: Create `e2e/summary-budget-depletion.spec.ts` verifying summary budget depletion percentages across date ranges, `X/Y hours` hover tooltip,
-    coexistence with `Show percentages`, and hiding when `List by task` is checked. Update `docs/architecture.md`.
+    coexistence with `Project allocation (%)`, and hiding when `List by task` is checked. Update `docs/architecture.md`.
   - Acceptance: `pnpm test:e2e e2e/summary-budget-depletion.spec.ts e2e/issue-129.spec.ts e2e/issue-241.spec.ts` passes headless.
   - Verify: `pnpm test:e2e e2e/summary-budget-depletion.spec.ts`
   - Files: `e2e/summary-budget-depletion.spec.ts`, `docs/architecture.md`

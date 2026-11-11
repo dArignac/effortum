@@ -56,8 +56,8 @@ No architectural violations, test degradations, or regressions were detected.
   format without loosening assertions.
 - Comprehensive new test suites added:
   - Unit tests in `src/utils/budget.test.ts` verifying all 4 date range examples from the issue specification.
-  - End-to-end tests in `e2e/summary-budget-depletion.spec.ts` verifying rendering, hover tooltips, interaction with `Show percentages`, and toggling
-    `List by task`.
+  - End-to-end tests in `e2e/summary-budget-depletion.spec.ts` verifying rendering, hover tooltips, decimal rounding, interaction with `Project allocation (%)`,
+    and toggling `List by task`.
 
 ---
 
@@ -65,9 +65,10 @@ No architectural violations, test degradations, or regressions were detected.
 
 `docs/architecture.md` was updated accurately under the Core Data Models section:
 
-- Documents that the summary panel displays the overall project budget depletion percentage (`Spent: X%`) with an `X/Y hours` hover tooltip below the project
-  name when grouped by project (`List by task` unchecked) for projects having overlapping budgets (`hours > 0`) within the selected date range.
-- Documents the standardized summary percentage format without space (`X%`).
+- Documents that the summary panel displays the overall project budget depletion percentage (`Budget: X%` with at most 1 decimal place, e.g. `1.5%` or `17%`)
+  with an `X/Y hours` hover tooltip below the project name when grouped by project (`List by task` unchecked) for projects having overlapping budgets
+  (`hours > 0`) within the selected date range.
+- Documents the standardized summary percentage format without space (`X%`) and the `Project allocation (%)` checkbox label.
 - Documents that when `List by task` is checked or when overlapping budget hours equal zero, the depletion indicator is hidden.
 
 ---

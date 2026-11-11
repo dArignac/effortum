@@ -90,7 +90,7 @@ test.describe("Summary Panel Budget Depletion (#265)", () => {
       `summary-budget-depletion-${projectName}`,
     );
     await expect(depletionElement).toBeVisible();
-    await expect(depletionElement).toHaveText("Spent: 30%");
+    await expect(depletionElement).toHaveText("Budget: 30%");
 
     // Hover to reveal tooltip
     await depletionElement.hover();
@@ -99,7 +99,7 @@ test.describe("Summary Panel Budget Depletion (#265)", () => {
     await expect(tooltip).toHaveText("3/10 hours");
   });
 
-  test("should coexist with 'Show percentages' on separate lines", async ({
+  test("should coexist with 'Project allocation (%)' on separate lines", async ({
     page,
   }) => {
     const today = getTodayIso();
@@ -117,16 +117,16 @@ test.describe("Summary Panel Budget Depletion (#265)", () => {
 
     await navigateToTimeCollector(page);
 
-    // Enable "Show percentages"
+    // Enable "Project allocation (%)"
     await page.getByTestId("checkbox-show-percentages").click();
 
-    // Alpha time cell shows 50%, project cell shows Spent: 30%
+    // Alpha time cell shows 50%, project cell shows Budget: 30%
     await expect(
       page.getByTestId(`summary-percentage-${projectAlpha}`),
     ).toHaveText("50%");
     await expect(
       page.getByTestId(`summary-budget-depletion-${projectAlpha}`),
-    ).toHaveText("Spent: 30%");
+    ).toHaveText("Budget: 30%");
 
     // Beta time cell shows 50%, project cell has NO budget depletion
     await expect(
@@ -155,7 +155,7 @@ test.describe("Summary Panel Budget Depletion (#265)", () => {
       `summary-budget-depletion-${projectName}`,
     );
     await expect(depletion).toBeVisible();
-    await expect(depletion).toHaveText("Spent: 25%");
+    await expect(depletion).toHaveText("Budget: 25%");
 
     // Check "List by task" -> depletion should disappear
     await page.getByTestId("checkbox-list-by-task").click();
@@ -164,7 +164,7 @@ test.describe("Summary Panel Budget Depletion (#265)", () => {
     // Uncheck "List by task" -> depletion reappears
     await page.getByTestId("checkbox-list-by-task").click();
     await expect(depletion).toBeVisible();
-    await expect(depletion).toHaveText("Spent: 25%");
+    await expect(depletion).toHaveText("Budget: 25%");
   });
 
   test("should sum multiple overlapping budgets and ignore non-overlapping budgets", async ({
@@ -202,12 +202,39 @@ test.describe("Summary Panel Budget Depletion (#265)", () => {
       `summary-budget-depletion-${projectName}`,
     );
     await expect(depletion).toBeVisible();
-    await expect(depletion).toHaveText("Spent: 20%");
+    await expect(depletion).toHaveText("Budget: 20%");
 
     // Hover tooltip: 3/15 hours
     await depletion.hover();
     const tooltip = page.locator(".mantine-Tooltip-tooltip");
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toHaveText("3/15 hours");
+  });
+
+  test("should format budget depletion with at most 1 decimal place (e.g. 1.5% and 17%)", async ({
+    page,
+  }) => {
+    const today = getTodayIso();
+    const projectName = "Decimal Project";
+
+    // 01:30 = 1.5 hours on Decimal Project today
+    await addTask(page, projectName, "08:00", "09:30", "Testing Decimals");
+
+    await navigateToBudgets(page);
+    await selectProjectOnBudgetsPage(page, projectName);
+    await addBudgetOnBudgetsPage(page, today, today, "Large Budget", "100", 1);
+
+    await navigateToTimeCollector(page);
+
+    const depletion = page.getByTestId(
+      `summary-budget-depletion-${projectName}`,
+    );
+    await expect(depletion).toBeVisible();
+    await expect(depletion).toHaveText("Budget: 1.5%");
+
+    await depletion.hover();
+    const tooltip = page.locator(".mantine-Tooltip-tooltip");
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toHaveText("1.5/100 hours");
   });
 });

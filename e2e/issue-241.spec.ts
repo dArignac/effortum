@@ -7,7 +7,7 @@ test.describe("Issue #241: Make percentage value optional", () => {
     await expect(page.getByTestId("task-list-table")).toBeVisible();
   });
 
-  test("should render 'Show percentages' checkbox unchecked beneath 'List by task'", async ({
+  test("should render 'Project allocation (%)' checkbox unchecked beneath 'List by task'", async ({
     page,
   }) => {
     const listByTaskCheckbox = page.getByTestId("checkbox-list-by-task");
@@ -19,7 +19,7 @@ test.describe("Issue #241: Make percentage value optional", () => {
     await expect(showPercentagesCheckbox).toBeVisible();
     await expect(showPercentagesCheckbox).not.toBeChecked();
 
-    const label = page.locator("label", { hasText: "Show percentages" });
+    const label = page.locator("label", { hasText: "Project allocation (%)" });
     await expect(label).toBeVisible();
   });
 

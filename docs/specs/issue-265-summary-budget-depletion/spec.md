@@ -4,8 +4,9 @@
 
 Parent issue: #258 (Part 2). Depends on: #264.
 
-Display the overall project budget depletion percentage (`Spent: X%`) with a detailed hover tooltip (`X/Y hours`) below the project name in the `Summary` panel
-on the Time Collector page for the selected date range, and standardize percentage formatting in the summary from `X %` to `X%`.
+Display the overall project budget depletion percentage (`Budget: X%`, formatted to at most 1 decimal place) with a detailed hover tooltip (`X/Y hours`) below
+the project name in the `Summary` panel on the Time Collector page for the selected date range, rename the "Show percentages" checkbox to "Project allocation
+(%)", and standardize percentage formatting in the summary from `X %` to `X%`.
 
 ### Acceptance Criteria
 
@@ -19,17 +20,18 @@ on the Time Collector page for the selected date range, and standardize percenta
      precision).
    - Example with Project A budgets `01.10.26 - 31.12.26` (100h) and `15.09.26 - 01.11.26` (30h):
      - Selected range `14.09.26 - 14.09.26` → Sum = `0` → Depletion value not shown.
-     - Selected range `15.09.26 - 15.09.26` → Sum = `30` → Depletion = `round((spentHours / 30) * 100)%`.
-     - Selected range `01.10.26 - 07.10.26` → Sum = `130` → Depletion = `round((spentHours / 130) * 100)%`.
-     - Selected range `02.11.26 - 31.12.26` → Sum = `100` → Depletion = `round((spentHours / 100) * 100)%`.
+     - Selected range `15.09.26 - 15.09.26` → Sum = `30` → Depletion = `formatDepletionPercentage(spentHours, 30)` (max 1 decimal place, e.g. `1.5%` or `17%`).
+     - Selected range `01.10.26 - 07.10.26` → Sum = `130` → Depletion = `formatDepletionPercentage(spentHours, 130)`.
+     - Selected range `02.11.26 - 31.12.26` → Sum = `100` → Depletion = `formatDepletionPercentage(spentHours, 100)`.
 3. **Summary Panel Rendering & Tooltip (`src/components/Summary.tsx`):**
    - When `List by task` is unchecked and a project has an overlapping budget sum `Y > 0` for `selectedDateRange`:
-     - Render `Spent: X%` (`data-testid="summary-budget-depletion-<projectName>"`) on a second line below the project name in the project cell, regardless of
-       whether `Show percentages` is checked.
-     - When `Show percentages` is also checked, the time cell shows the time share percentage (`65%`) on its second line while the project cell shows
-       `Spent: 75%` on its second line.
-     - Hovering over the `Spent: X%` element displays a Mantine `Tooltip` with `X/Y hours`, where `X` is the project's spent hours in `selectedDateRange` and
+     - Render `Budget: X%` (`data-testid="summary-budget-depletion-<projectName>"`) on a second line below the project name in the project cell, regardless of
+       whether `Project allocation (%)` is checked.
+     - When `Project allocation (%)` is also checked, the time cell shows the time share percentage (`65%`) on its second line while the project cell shows
+       `Budget: 75%` on its second line.
+     - Hovering over the `Budget: X%` element displays a Mantine `Tooltip` with `X/Y hours`, where `X` is the project's spent hours in `selectedDateRange` and
        `Y` is the sum of valid budget hours for `selectedDateRange` (formatted via `formatBudgetMetricNumber`).
+   - The checkbox previously named "Show percentages" is renamed to "Project allocation (%)" (`data-testid="checkbox-show-percentages"`).
    - When `List by task` is checked, or when the sum of valid budgets for the project on `selectedDateRange` is `0`, no depletion value is rendered.
 
 ## Tech Stack
@@ -51,11 +53,12 @@ on the Time Collector page for the selected date range, and standardize percenta
 
 - `src/utils/time.ts` & `src/utils/time.test.ts` (modified): Change `formatPercentage` output from `"X %"` to `"X%"` and update unit tests.
 - `src/utils/budget.ts` & `src/utils/budget.test.ts` (modified): Add `getOverlappingBudgetHours` and `formatSummaryBudgetDepletion` helpers and unit tests.
-- `src/components/Summary.tsx` (modified): Render `Spent: X%` with `X/Y hours` Mantine `Tooltip` below project names when `!listByTasks` and valid budget hours
-  `> 0`.
-- `e2e/issue-129.spec.ts` & `e2e/issue-241.spec.ts` (modified): Update expected percentage strings from `"X %"` to `"X%"`.
+- `src/components/Summary.tsx` (modified): Render `Budget: X%` with `X/Y hours` Mantine `Tooltip` below project names when `!listByTasks` and valid budget hours
+  `> 0`, and rename the "Show percentages" checkbox to "Project allocation (%)".
+- `e2e/issue-129.spec.ts` & `e2e/issue-241.spec.ts` (modified): Update expected percentage strings from `"X %"` to `"X%"` and checkbox label to
+  `"Project allocation (%)"`.
 - `e2e/summary-budget-depletion.spec.ts` (new): Playwright E2E tests verifying date-range budget depletion in the summary panel, hover tooltip `X/Y hours`,
-  interaction with `Show percentages` and `List by task` checkboxes, and hiding when no budget overlaps.
+  interaction with `Project allocation (%)` and `List by task` checkboxes, and hiding when no budget overlaps.
 - `docs/architecture.md` (modified): Document summary panel project budget depletion behavior.
 
 ## Effortum Architectural Guard
@@ -77,7 +80,8 @@ on the Time Collector page for the selected date range, and standardize percenta
 ## Success Criteria
 
 - `formatPercentage` returns `"X%"` without a space, and `e2e/issue-129.spec.ts` and `e2e/issue-241.spec.ts` pass.
-- In the `Summary` panel, projects with overlapping budgets in `selectedDateRange` display `Spent: X%` below the project name when `List by task` is unchecked.
-- Hovering `Spent: X%` shows the tooltip `X/Y hours`.
-- Checking `List by task` or selecting a date range with zero overlapping budgets hides `Spent: X%`.
+- In the `Summary` panel, projects with overlapping budgets in `selectedDateRange` display `Budget: X%` (max 1 decimal place, e.g. `1.5%` or `17%`) below the
+  project name when `List by task` is unchecked.
+- Hovering `Budget: X%` shows the tooltip `X/Y hours`.
+- Checking `List by task` or selecting a date range with zero overlapping budgets hides `Budget: X%`.
 - `pnpm check:invariants`, `pnpm tsc --noEmit`, `pnpm test`, and `pnpm test:e2e` pass with zero errors.
