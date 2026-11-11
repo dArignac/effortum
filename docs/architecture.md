@@ -89,6 +89,10 @@ erDiagram
 - Each project can have multiple time-bounded budgets (`startDate`, `endDate`, `purpose` up to 50 characters, and `0 < hours <= 17520`), sorted by `startDate`
   descending (newest first). Per-budget rows enforce uniform column widths across all rows, display spent vs. budgeted hours, days in brackets based on
   `workingHoursPerDay`, and depletion percentage, and guard budget deletion with a confirmation modal.
+- Summary panel displays overall project budget depletion percentage (`Budget: X%` formatted to at most 1 decimal place, e.g. `1.5%` or `17%`) with an
+  `X/Y hours` hover tooltip below the project name when grouped by project (`List by task` unchecked) for projects having overlapping budgets (`hours > 0`)
+  within the selected date range. The project allocation percentage checkbox is labeled `Project allocation (%)`. Summary percentage formatting is standardized
+  without space (`X%`). When `List by task` is checked or when overlapping budget hours equal zero, the depletion indicator is hidden.
 - Moving tasks checks for conflicting task comments between projects, warning the user and guiding them to the Task Management page if needed.
 - Legacy project-name fields are kept during rollout for import/export compatibility and recovery.
 - Overtime and settings are single-record entities identified by fixed IDs.

@@ -68,10 +68,10 @@ export function calculatePercentage(part: number, total: number): number {
 }
 
 /**
- * Formats the percentage as "X %" (e.g. "17 %").
+ * Formats the percentage as "X%" (e.g. "17%").
  */
 export function formatPercentage(part: number, total: number): string {
-  return `${calculatePercentage(part, total)} %`;
+  return `${calculatePercentage(part, total)}%`;
 }
 
 /**

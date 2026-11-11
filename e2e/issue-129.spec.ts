@@ -7,7 +7,7 @@ test.describe("Issue #129: Show spent time per project in percent", () => {
     await expect(page.getByTestId("task-list-table")).toBeVisible();
   });
 
-  test("should display spent time per project in percent matching Example 2 (18 %, 9 %, 74 %)", async ({
+  test("should display spent time per project in percent matching Example 2 (18%, 9%, 74%)", async ({
     page,
   }) => {
     // Project A: 01:30 (90 min)
@@ -30,13 +30,13 @@ test.describe("Issue #129: Show spent time per project in percent", () => {
 
     // Check individual percentages
     await expect(page.getByTestId("summary-percentage-Project A")).toHaveText(
-      "18 %",
+      "18%",
     );
     await expect(page.getByTestId("summary-percentage-Project B")).toHaveText(
-      "9 %",
+      "9%",
     );
     await expect(page.getByTestId("summary-percentage-Project C")).toHaveText(
-      "74 %",
+      "74%",
     );
 
     // Check footer sum row does NOT display any percentage
@@ -73,14 +73,14 @@ test.describe("Issue #129: Show spent time per project in percent", () => {
     // Enable "Show percentages"
     await page.getByTestId("checkbox-show-percentages").click();
 
-    // 1 hour / 3 hours = 33 %
-    // 2 hours / 3 hours = 67 %
+    // 1 hour / 3 hours = 33%
+    // 2 hours / 3 hours = 67%
     await expect(page.getByTestId("summary-percentage-Design work")).toHaveText(
-      "33 %",
+      "33%",
     );
     await expect(
       page.getByTestId("summary-percentage-Development work"),
-    ).toHaveText("67 %");
+    ).toHaveText("67%");
 
     // Check footer sum row does NOT display any percentage
     await expect(page.getByTestId("summary-sum-row")).not.toContainText("%");

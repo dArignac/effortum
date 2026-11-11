@@ -6,6 +6,7 @@ const changelogEntries = [
     version: "0.22.0",
     description: [
       "Adds project budget management page to track budgeted vs. spent hours (#264, #258).",
+      "Shows project budget depletion in summary panel and standardizes percentage formatting (#265, #258).",
     ],
   },
   {
