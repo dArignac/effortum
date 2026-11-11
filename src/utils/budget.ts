@@ -1,6 +1,7 @@
 import { ProjectBudget } from "@/models/ProjectBudget";
+import { Task } from "@/models/Task";
 import { normalizeDate } from "./date";
-import { calculatePercentage } from "./time";
+import { calculatePercentage, getDuration } from "./time";
 
 export const MAX_BUDGET_PURPOSE_LENGTH = 50;
 export const MAX_BUDGET_HOURS = 17520;
@@ -127,6 +128,109 @@ export function getOverlappingBudgetHours(
   }
 
   return totalHours;
+}
+
+/**
+ * Calculates cumulative spent hours for each overlapping budget of a project from
+ * budget.startDate up to min(budget.endDate, rangeEnd).
+ * When multiple budgets for the project overlap the selected date range, the total
+ * spent hours is the sum of spent hours across all active budgets.
+ */
+export function calculateOverlappingBudgetSpentHours(
+  budgets: ProjectBudget[],
+  tasks: Task[],
+  projectId: string,
+  selectedDateRange: [string | null, string | null],
+): number {
+  if (
+    !projectId ||
+    !budgets ||
+    budgets.length === 0 ||
+    !tasks ||
+    tasks.length === 0
+  ) {
+    return 0;
+  }
+
+  const [rawStart, rawEnd] = selectedDateRange;
+  const startDay = rawStart ? normalizeDate(rawStart) : null;
+  const endDay = normalizeDate(rawEnd ?? rawStart);
+
+  const hasDateFilter = Boolean(startDay?.isValid() && endDay?.isValid());
+  const rangeStart = hasDateFilter
+    ? startDay!.isAfter(endDay!, "day")
+      ? endDay
+      : startDay
+    : null;
+  const rangeEnd = hasDateFilter
+    ? startDay!.isAfter(endDay!, "day")
+      ? startDay
+      : endDay
+    : null;
+
+  const activeBudgetIntervals: Array<[string, string]> = [];
+
+  for (const budget of budgets) {
+    if (budget.projectId !== projectId) {
+      continue;
+    }
+
+    const budgetStart = normalizeDate(budget.startDate);
+    const budgetEnd = normalizeDate(budget.endDate);
+
+    if (!budgetStart?.isValid() || !budgetEnd?.isValid()) {
+      continue;
+    }
+
+    if (rangeStart && rangeEnd) {
+      const overlaps =
+        !budgetStart.isAfter(rangeEnd, "day") &&
+        !budgetEnd.isBefore(rangeStart, "day");
+
+      if (!overlaps) {
+        continue;
+      }
+    }
+
+    const effectiveEnd =
+      rangeEnd && rangeEnd.isBefore(budgetEnd, "day") ? rangeEnd : budgetEnd;
+
+    activeBudgetIntervals.push([
+      budgetStart.format("YYYY-MM-DD"),
+      effectiveEnd.format("YYYY-MM-DD"),
+    ]);
+  }
+
+  if (activeBudgetIntervals.length === 0) {
+    return 0;
+  }
+
+  const projectTasks = tasks.filter(
+    (task) => task.projectId === projectId && Boolean(task.timeEnd),
+  );
+
+  let totalSpentMinutes = 0;
+
+  for (const task of projectTasks) {
+    const taskDay = normalizeDate(task.date);
+    if (!taskDay?.isValid()) {
+      continue;
+    }
+    const taskDate = taskDay.format("YYYY-MM-DD");
+
+    const isInActiveBudget = activeBudgetIntervals.some(
+      ([start, end]) => taskDate >= start && taskDate <= end,
+    );
+
+    if (isInActiveBudget) {
+      const duration = getDuration(task.timeStart, task.timeEnd);
+      if (duration > 0) {
+        totalSpentMinutes += duration;
+      }
+    }
+  }
+
+  return totalSpentMinutes / 60;
 }
 
 export interface SummaryBudgetDepletion {

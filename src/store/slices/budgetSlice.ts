@@ -7,6 +7,7 @@ import {
   StoreSet,
 } from "@/store/types";
 import {
+  calculateOverlappingBudgetSpentHours,
   MAX_BUDGET_HOURS,
   MAX_BUDGET_PURPOSE_LENGTH,
 } from "../../utils/budget";
@@ -170,5 +171,28 @@ export const createBudgetSlice = (set: StoreSet, get: StoreGet) => ({
     }
 
     return totalSeconds / 3600;
+  },
+
+  getProjectBudgetSpentHours: async (
+    projectId: string,
+    selectedDateRange: [string | null, string | null],
+  ) => {
+    if (!projectId) {
+      return 0;
+    }
+
+    const budgets = get().budgets;
+    const projectBudgets = budgets.filter((b) => b.projectId === projectId);
+    if (projectBudgets.length === 0) {
+      return 0;
+    }
+
+    const tasks = await db.tasks.where("projectId").equals(projectId).toArray();
+    return calculateOverlappingBudgetSpentHours(
+      projectBudgets,
+      tasks,
+      projectId,
+      selectedDateRange,
+    );
   },
 });

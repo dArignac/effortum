@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ProjectBudget } from "@/models/ProjectBudget";
+import { Task } from "@/models/Task";
 import {
+  calculateOverlappingBudgetSpentHours,
   formatBudgetMetricNumber,
   formatBudgetMetrics,
   formatDepletionPercentage,
@@ -289,6 +291,167 @@ describe("budget utilities", () => {
         label: "Budget: 33.3%",
         tooltip: "3.33/10 hours",
       });
+    });
+  });
+
+  describe("calculateOverlappingBudgetSpentHours", () => {
+    const budgets: ProjectBudget[] = [
+      {
+        id: "b1",
+        projectId: "proj-1",
+        startDate: "2026-10-01",
+        endDate: "2026-10-30",
+        purpose: "B-1",
+        hours: 100,
+      },
+      {
+        id: "b2",
+        projectId: "proj-1",
+        startDate: "2026-08-01",
+        endDate: "2026-10-15",
+        purpose: "B-2",
+        hours: 50,
+      },
+    ];
+
+    const tasks: Task[] = [
+      {
+        id: "t1",
+        projectId: "proj-1",
+        project: "Project 1",
+        date: "2026-08-10",
+        timeStart: "08:00",
+        timeEnd: "13:00", // 5 hours
+      },
+      {
+        id: "t2",
+        projectId: "proj-1",
+        project: "Project 1",
+        date: "2026-09-25",
+        timeStart: "08:00",
+        timeEnd: "18:00", // 10 hours
+      },
+      {
+        id: "t3",
+        projectId: "proj-1",
+        project: "Project 1",
+        date: "2026-10-01",
+        timeStart: "09:00",
+        timeEnd: "11:00", // 2 hours
+      },
+      {
+        id: "t4",
+        projectId: "proj-1",
+        project: "Project 1",
+        date: "2026-10-12",
+        timeStart: "09:00",
+        timeEnd: "12:00", // 3 hours
+      },
+      {
+        id: "t5",
+        projectId: "proj-1",
+        project: "Project 1",
+        date: "2026-10-20",
+        timeStart: "10:00",
+        timeEnd: "14:00", // 4 hours
+      },
+      {
+        id: "t-other",
+        projectId: "proj-other",
+        project: "Other",
+        date: "2026-10-01",
+        timeStart: "08:00",
+        timeEnd: "16:00", // 8 hours (ignored)
+      },
+      {
+        id: "t-running",
+        projectId: "proj-1",
+        project: "Project 1",
+        date: "2026-10-01",
+        timeStart: "14:00",
+        timeEnd: "", // running (ignored)
+      },
+    ];
+
+    it("calculates spent hours for date range 01.10.26 - 01.10.26 (Example 1 from #270)", () => {
+      const spent = calculateOverlappingBudgetSpentHours(
+        budgets,
+        tasks,
+        "proj-1",
+        ["2026-10-01", "2026-10-01"],
+      );
+      expect(spent).toBe(17);
+    });
+
+    it("calculates spent hours for date range 20.09.26 - 31.12.26 (Example 2 from #270)", () => {
+      const spent = calculateOverlappingBudgetSpentHours(
+        budgets,
+        tasks,
+        "proj-1",
+        ["2026-09-20", "2026-12-31"],
+      );
+      expect(spent).toBe(24);
+    });
+
+    it("calculates spent hours for date range 15.09.26 - 10.10.26 (Example 3 from #270)", () => {
+      const spent = calculateOverlappingBudgetSpentHours(
+        budgets,
+        tasks,
+        "proj-1",
+        ["2026-09-15", "2026-10-10"],
+      );
+      expect(spent).toBe(17);
+    });
+
+    it("handles single-day selection with null end date", () => {
+      const spent = calculateOverlappingBudgetSpentHours(
+        budgets,
+        tasks,
+        "proj-1",
+        ["2026-10-01", null],
+      );
+      expect(spent).toBe(17);
+    });
+
+    it("handles reversed date range gracefully", () => {
+      const spent = calculateOverlappingBudgetSpentHours(
+        budgets,
+        tasks,
+        "proj-1",
+        ["2026-10-10", "2026-09-15"],
+      );
+      expect(spent).toBe(17);
+    });
+
+    it("returns 0 for range with no overlapping budgets", () => {
+      const spent = calculateOverlappingBudgetSpentHours(
+        budgets,
+        tasks,
+        "proj-1",
+        ["2026-01-01", "2026-01-31"],
+      );
+      expect(spent).toBe(0);
+    });
+
+    it("returns 0 when project has no budgets or no tasks", () => {
+      expect(
+        calculateOverlappingBudgetSpentHours([], tasks, "proj-1", [
+          "2026-10-01",
+          "2026-10-01",
+        ]),
+      ).toBe(0);
+      expect(
+        calculateOverlappingBudgetSpentHours(budgets, [], "proj-1", [
+          "2026-10-01",
+          "2026-10-01",
+        ]),
+      ).toBe(0);
+      expect(
+        calculateOverlappingBudgetSpentHours(budgets, tasks, "proj-unknown", [
+          "2026-10-01",
+          "2026-10-01",
+        ]),
+      ).toBe(0);
     });
   });
 });

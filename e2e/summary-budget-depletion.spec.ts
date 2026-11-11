@@ -237,4 +237,46 @@ test.describe("Summary Panel Budget Depletion (#265)", () => {
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toHaveText("1.5/100 hours");
   });
+
+  test("should calculate cumulative budget spent hours up to date range end (Issue #270)", async ({
+    page,
+  }) => {
+    const today = getTodayIso();
+    const projectName = "Cumulative Budget Project";
+
+    // 1. Add 2h task today to create project
+    await addTask(page, projectName, "08:00", "10:00", "Work part 1");
+
+    // 2. Navigate to Budgets and add a 10h budget covering today
+    await navigateToBudgets(page);
+    await selectProjectOnBudgetsPage(page, projectName);
+    await addBudgetOnBudgetsPage(
+      page,
+      today,
+      today,
+      "Cumulative Scope",
+      "10",
+      1,
+    );
+
+    // 3. Return to Time Collector
+    await navigateToTimeCollector(page);
+
+    // Depletion: 2h / 10h = 20%
+    const depletion = page.getByTestId(
+      `summary-budget-depletion-${projectName}`,
+    );
+    await expect(depletion).toBeVisible();
+    await expect(depletion).toHaveText("Budget: 20%");
+
+    // 4. Add another 3h task today
+    await addTask(page, projectName, "10:00", "13:00", "Work part 2");
+
+    // Depletion should now update to 5h / 10h = 50%
+    await expect(depletion).toHaveText("Budget: 50%");
+    await depletion.hover();
+    const tooltip = page.locator(".mantine-Tooltip-tooltip");
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toHaveText("5/10 hours");
+  });
 });
