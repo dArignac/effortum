@@ -3,12 +3,6 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
-    version: "0.22.2",
-    description: [
-      "Renames E2E test files according to capability and functionality tested (#277).",
-    ],
-  },
-  {
     version: "0.22.1",
     description: [
       "Fixes project budget depletion calculation in summary to show cumulative used budget until end date (#270).",
