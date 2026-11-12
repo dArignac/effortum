@@ -131,7 +131,7 @@ Create an isolated directory for the issue: `docs/specs/issue-<id>-<slug>/`. Dra
 - **Store Slice Boundaries:** [Which slices in src/store/slices/ are modified? UI must only access data through store]
 - **Date & Time Operations:** [All date/time logic must use dayjs. No raw new Date()]
 - **Single Running Task Invariant:** [Does this touch task start/stop behavior? Ensure only one running task at a time]
-- **Testing Requirements:** [Specify unit tests (*.test.ts) and Playwright E2E flows (e2e/issue-<id>.spec.ts)]
+- **Testing Requirements:** [Specify unit tests (*.test.ts) and Playwright E2E flows (e2e/<functional-name>.spec.ts)]
 
 ## Boundaries
 
@@ -179,8 +179,8 @@ Draft `docs/specs/issue-<id>-<slug>/tasks.md` breaking the plan into discrete ve
 - [ ] Task 3: [E2E verification flow]
   - Description: [Add Playwright E2E test verifying end-to-end user experience]
   - Acceptance: [E2E test passes headless]
-  - Verify: [pnpm test:e2e e2e/issue-<id>.spec.ts]
-  - Files: [e2e/issue-<id>.spec.ts]
+  - Verify: [pnpm test:e2e e2e/<functional-name>.spec.ts]
+  - Files: [e2e/<functional-name>.spec.ts]
 ```
 
 ---
@@ -224,7 +224,7 @@ EXECUTION DISCIPLINE (incremental-implementation):
 1. Execute tasks in tasks.md ONE BY ONE in sequential order. Do NOT attempt all tasks at once.
 2. For each task slice:
    a. Implement the smallest complete piece of functionality in src/.
-   b. Write/update unit tests (*.test.ts) or Playwright flows (e2e/issue-<id>.spec.ts).
+   b. Write/update unit tests (*.test.ts) or Playwright flows (e2e/<functional-name>.spec.ts).
    c. Verify: Run the task's verify command, plus `pnpm tsc --noEmit` and `pnpm check:invariants`.
    d. Checkpoint: Mark the task completed in tasks.md before moving to the next task.
 3. Rule 0 (Simplicity First): Write the simplest working implementation. No speculative abstractions.

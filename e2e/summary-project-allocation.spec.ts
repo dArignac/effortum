@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { addTask } from "./utils";
 
-test.describe("Issue #129: Show spent time per project in percent", () => {
+test.describe("Summary project allocation percentages", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();

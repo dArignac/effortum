@@ -16,7 +16,7 @@ You receive a frozen contract: `spec.md`, `plan.md`, and `tasks.md`. Never attem
 `tasks.md` strictly one by one in sequential order:
 
 1. **Implement:** Write the smallest complete piece of functionality in `src/` conforming to Mantine UI and Zustand store slice patterns.
-2. **Test:** Write unit tests (`*.test.ts`) alongside code using Vitest, or Playwright E2E flows (`e2e/issue-<id>.spec.ts`).
+2. **Test:** Write unit tests (`*.test.ts`) alongside code using Vitest, or Playwright E2E flows (`e2e/<functional-name>.spec.ts`).
 3. **Verify:** Run the task's verification command, plus `pnpm tsc --noEmit` and `pnpm check:invariants`.
 4. **Checkpoint:** Check off the task in `tasks.md` before picking up the next slice.
 

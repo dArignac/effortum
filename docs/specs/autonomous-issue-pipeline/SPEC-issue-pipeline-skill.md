@@ -82,7 +82,7 @@ The Builder agent is focused purely on disciplined execution, applying the verti
   - **Task-by-Task Slicing:** Executes the task list from `tasks.md` sequentially one task at a time. Never bundles multiple tasks into one blind pass.
   - **The Increment Cycle:** For each slice:
     1. _Implement:_ Write the smallest complete piece of functionality in `src/` conforming to Mantine and Zustand slice conventions.
-    2. _Test:_ Write alongside unit tests (`*.test.ts`) using Vitest or Playwright E2E flows (`e2e/issue-<id>.spec.ts`).
+    2. _Test:_ Write alongside unit tests (`*.test.ts`) using Vitest or Playwright E2E flows (`e2e/<functional-name>.spec.ts`).
     3. _Verify:_ Confirm tests pass (`pnpm test`), TypeScript compiles (`pnpm tsc --noEmit`), and invariants hold (`pnpm check:invariants`).
     4. _Checkpoint:_ Mark the task completed in `tasks.md` before picking up the next slice.
   - **Simplicity First (Rule 0):** Build the simplest thing that could work. Three similar lines of code beat a premature abstraction. Optimize only after

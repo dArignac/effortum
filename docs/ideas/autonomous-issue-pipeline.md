@@ -56,7 +56,7 @@ checkpoints:
 2. **Builder Subagent (Implementation Worker):**
    - Receives the frozen `spec.md`. Runs hands-free in an isolated subagent context.
    - Modifies codebase in `src/` following Mantine and Zustand slice patterns.
-   - Writes unit tests in Vitest alongside code (`*.test.ts`) and E2E flows in Playwright (`e2e/issue-<id>.spec.ts`).
+   - Writes unit tests in Vitest alongside code (`*.test.ts`) and E2E flows in Playwright (`e2e/<functional-name>.spec.ts`).
    - Self-heals compilation/test errors up to a maximum of **3 cycles**. Hands off the completed diff to the Auditor.
 
 3. **Independent Auditor Subagent (Clean-Context Guard):**

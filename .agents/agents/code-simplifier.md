@@ -48,7 +48,7 @@ Apply one simplification at a time and verify incrementally after each change:
 1. Run `pnpm test` (Vitest unit tests).
 2. Run `pnpm tsc --noEmit` (TypeScript type checking).
 3. Run `pnpm check:invariants` (Effortum architectural invariant guard).
-4. If E2E flows (`e2e/issue-<id>.spec.ts`) or UI behavior were touched, run the relevant `pnpm test:e2e` test.
+4. If E2E flows (`e2e/<functional-name>.spec.ts`) or UI behavior were touched, run the relevant `pnpm test:e2e` test.
 5. Format modified files with Prettier (`pnpm prettier --write <files>`).
 
 If any simplification breaks a test, introduces a type error, or violates an invariant, immediately revert that change. If the code is already clean and no
