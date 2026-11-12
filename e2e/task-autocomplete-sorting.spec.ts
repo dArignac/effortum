@@ -27,7 +27,7 @@ async function addTaskOnYesterday(
   });
 }
 
-test.describe("Issue #128: Sort tasks by usage (last used)", () => {
+test.describe("Task autocomplete sorting by last used", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();

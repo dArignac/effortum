@@ -169,7 +169,7 @@ implementation of GitHub issues labeled `ready-for-implementation` using a Separ
 2. **Builder Subagent (`feature-implementer`)**:
    - Explicit persona defined in `agents/feature-implementer.md`.
    - Executes implementation task-by-task applying `incremental-implementation` (simplicity first, scope discipline, 3 self-heal cycles).
-   - Writes code and tests (`*.test.ts`, `e2e/issue-<id>.spec.ts`) leaving repository compilable and passing after each slice.
+   - Writes code and tests (`*.test.ts`, `e2e/<functional-name>.spec.ts`) leaving repository compilable and passing after each slice.
 3. **Simplifier Subagent (`code-simplifier`)**:
    - Explicit persona defined in `agents/code-simplifier.md`.
    - Runs after implementation and before auditing to apply `code-simplification` strictly to the newly created or modified files.

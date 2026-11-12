@@ -34,7 +34,7 @@ Execute `pnpm check:invariants` (`scripts/check-invariants.ts`). Enforces:
 ### 4. Test Integrity & Regression Audit
 
 - Verify that no existing tests were deleted, commented out, or had assertions weakened to force a green build.
-- Confirm new features have matching unit tests (`*.test.ts`) and user flows have matching E2E tests (`e2e/issue-<id>.spec.ts`).
+- Confirm new features have matching unit tests (`*.test.ts`) and user flows have matching E2E tests (`e2e/<functional-name>.spec.ts`).
 
 ### 5. Architecture Synchronization
 

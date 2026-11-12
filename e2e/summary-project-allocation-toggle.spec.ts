@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { addTask } from "./utils";
 
-test.describe("Issue #241: Make percentage value optional", () => {
+test.describe("Summary project allocation percentage visibility toggle", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("task-list-table")).toBeVisible();

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Prefill start time on manual finished task addition (#51)", () => {
+test.describe("Prefill start time on manual finished task addition", () => {
   test("prefills start time with end time and resets end, project, and comment while keeping selected date", async ({
     page,
   }) => {
