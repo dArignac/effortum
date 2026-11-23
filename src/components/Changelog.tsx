@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 
 const changelogEntries = [
   {
+    version: "0.23.0",
+    description: [
+      "Allows starting a task while another task is running, automatically stopping the active task (#291).",
+    ],
+  },
+  {
     version: "0.22.1",
     description: [
       "Fixes project budget depletion calculation in summary to show cumulative used budget until end date (#270).",
