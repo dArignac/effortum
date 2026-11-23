@@ -8,7 +8,7 @@ import {
   IconPlayerPlay,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Task } from "../models/Task";
 import { useEffortumStore } from "../store";
 import {
@@ -57,7 +57,6 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
   const [hasChanges, setHasChanges] = useState(false);
 
   const canStopTask = isRunningTask(task);
-  const hasRunningTask = useMemo(() => tasks.some(isRunningTask), [tasks]);
 
   const currentProjectName =
     projects.find((project) => project.id === task.projectId)?.name ||
@@ -88,6 +87,11 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
       setHasChanges(value !== task.timeEnd);
     },
   });
+
+  useEffect(() => {
+    fieldEnd.setValue(task.timeEnd || "");
+    setHasChanges(false);
+  }, [task.timeEnd]);
 
   const fieldProject = useField({
     initialValue: currentProjectName,
@@ -195,9 +199,10 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
 
   /**
    * Starts a new running task with this task's project and comment at the current time.
+   * If another task is currently running, stops it first with the same timestamp.
    */
   const restartTask = async () => {
-    const startTime = applyTimeRounding(
+    const currentTime = applyTimeRounding(
       dayjs().format("HH:mm"),
       roundToNearest5Minutes,
     );
@@ -206,11 +211,18 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
     const commentToUse = fieldComment.getValue() || task.comment || "";
 
     try {
+      const runningTask = tasks.find(isRunningTask);
+      if (runningTask) {
+        await updateTask(runningTask.id, {
+          timeEnd: currentTime,
+        });
+      }
+
       setEndTimeOfLastStoppedTask(null);
       await addTask({
         id: crypto.randomUUID(),
         date: today,
-        timeStart: startTime,
+        timeStart: currentTime,
         timeEnd: "",
         projectId: task.projectId,
         projectName: projectToUse,
@@ -283,7 +295,7 @@ function TaskListRowContent(props: { task: Task; projectNames?: string[] }) {
               <IconClockPause />
             </ActionIcon>
           )}
-          {!hasRunningTask && (
+          {!canStopTask && (
             <ActionIcon
               variant="subtle"
               size="md"
