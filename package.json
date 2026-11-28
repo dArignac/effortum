@@ -41,7 +41,7 @@
     "@playwright/test": "1.65.1",
     "@tanstack/devtools-vite": "0.8.7",
     "@types/node": "26.6.10",
-    "@types/react": "19.3.1",
+    "@types/react": "19.3.2",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.3.0",
     "jsdom": "31.0.1",
@@ -51,7 +51,7 @@
     "prettier": "^3.9.9",
     "typescript": "7.0.2",
     "vite": "8.3.8",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   },
   "packageManager": "pnpm@12.18.0"
 }
